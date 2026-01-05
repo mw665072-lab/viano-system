@@ -74,8 +74,8 @@ const Page = () => {
         type: "Cottage",
         value: "$650,000",
         lastInspection: "2024-02-15",
-        status: "Blocked",
-        statusColor: "bg-red-100 text-red-800",
+        status: "Completed",
+        statusColor: "bg-emerald-100 text-emerald-800",
     },
 ]
     const handleAddProperty = () => {

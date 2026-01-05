@@ -12,23 +12,23 @@ export default function DashboardStatsCard() {
       trend: { value: 12, direction: "up" as const, color: "green" as const },
     },
     {
-      title: "Pending Analysis",
+      title: "Pending Messages",
       value: "5",
       icon: <TrendingUp size={24} className="text-blue-400" />,
-      trend: { value: 40, direction: "down" as const, color: "red" as const },
+    //   trend: { value: 40, direction: "down" as const, color: "red" as const },
     },
     {
       title: "Issues Identified",
       value: "12",
-      icon: <AlertCircle size={24} className="text-orange-500" />,
+      icon: <AlertCircle size={24} className="text-blue-400" />,
       trend: undefined,
     },
-    {
-      title: "Upcoming Closings",
-      value: "2",
-      icon: <Calendar size={24} className="text-teal-500" />,
-      trend: undefined,
-    },
+    // {
+    //   title: "Upcoming Closings",
+    //   value: "2",
+    //   icon: <Calendar size={24} className="text-teal-500" />,
+    //   trend: undefined,
+    // },
   ]
 
   return (

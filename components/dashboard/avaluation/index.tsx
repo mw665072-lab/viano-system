@@ -28,8 +28,8 @@ const properties = [
         name: "Mountain Retreat",
         subtitle: "Mountain Retreat",
         image: "https://images.unsplash.com/photo-1570129477492-45a003537e1f?w=200&h=120&fit=crop",
-        status: "Blocked",
-        statusColor: "bg-red-100 text-red-800",
+        status: "Pending",
+        statusColor: "bg-amber-100 text-amber-800",
     },
     {
         id: 4,

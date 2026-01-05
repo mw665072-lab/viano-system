@@ -27,21 +27,13 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
         },
         {
             id: 2,
-            name: "Sentry Audit",
+            name: "Home Inspection",
             progress: 65,
             timestamp: "in progress",
             icon: "clock",
             color: "bg-blue-500",
         },
-        {
-            id: 3,
-            name: "Gas Inspection",
-            progress: 0,
-            timestamp: "",
-            icon: "pending",
-            color: "bg-slate-300",
-            status: "Pending",
-        },
+       
     ]
 
     return (
@@ -102,7 +94,7 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-xs text-slate-600">{doc.progress}%</p>
-                                        {doc.status && <p className="text-xs text-slate-600">{doc.status}</p>}
+                                        {/* {doc.status && <p className="text-xs text-slate-600">{doc.status}</p>} */}
                                         {doc.timestamp && <p className="text-[10px] leading-[15px] text-right" style={{ fontFamily: "Inter, sans-serif", fontWeight: 400, color: "#64748B" }}>{doc.timestamp}</p>}
                                     </div>
                                 </div>
