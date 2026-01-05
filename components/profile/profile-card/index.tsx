@@ -9,7 +9,7 @@ export default function ProfilePage() {
 
       <div className="max-w-full mx-auto px-4 py-6 md:py-10">
         {/* Profile Header Card */}
-        <Card className="bg-white shadow-sm rounded-3xl p-6 md:p-8 mb-6">
+        <Card className="bg-white shadow-sm rounded-[32px] p-6 md:p-8 mb-6">
           <div className="flex flex-col items-center text-center md:flex-row md:text-left md:items-start gap-6">
             {/* Profile Image */}
             <div className="relative">
@@ -74,7 +74,7 @@ export default function ProfilePage() {
         {/* Contact Information Grid */}
         <div className="grid md:grid-cols-1 gap-6 mb-6">
           {/* Contact Details */}
-          <Card className="bg-white shadow-sm rounded-3xl p-6">
+          <Card className="bg-white shadow-sm rounded-[32px] p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h2>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
