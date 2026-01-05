@@ -39,6 +39,9 @@ export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
 
           <div className="flex items-center justify-between">
             <Button
+            onClick={()=>{
+             router.push('/profile')
+            }}
               variant="ghost"
               className="flex items-center gap-2 px-3 py-2 h-auto rounded-lg"
             >
@@ -54,6 +57,9 @@ export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
             </Button>
 
             <Button
+            onClick={()=>{
+                router.push('/notifications')
+            }}
               variant="ghost"
               size="icon"
               className="relative h-10 w-10 rounded-lg hover:bg-gray-100"
