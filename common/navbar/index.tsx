@@ -77,6 +77,9 @@ export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
 
           <div className="flex items-center gap-3">
             <Button
+            onClick={()=>{
+                router.push("/profile")
+            }}
               variant="ghost"
               className="flex items-center gap-2 px-3 py-2 h-auto rounded-lg"
             >

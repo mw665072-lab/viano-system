@@ -49,6 +49,12 @@ const Layout = ({ children }: LayoutProps) => {
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {pathname === "/" ? (
                         <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+                    ) : pathname === "/profile" || pathname?.startsWith("/profile/") ? (
+                        <PageHeader
+                            title="Profile"
+                            showBack={true}
+                            onBack={() => router.back()}
+                        />
                     ) : pathname === "/notifications" || pathname?.startsWith("/notifications/") ? (
                         <PageHeader
                             title="Notifications"
