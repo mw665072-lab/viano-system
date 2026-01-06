@@ -32,12 +32,12 @@ const Layout = ({ children }: LayoutProps) => {
                 <div className="hidden lg:block">
                     <Sidebar />
                 </div>
-                
+
                 {/* Mobile sidebar overlay */}
                 {isSidebarOpen && (
                     <>
-                        <div 
-                            className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
+                        <div
+                            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
                             onClick={() => setIsSidebarOpen(false)}
                         />
                         <div className="fixed left-0 top-0 bottom-0 z-50 lg:hidden">
@@ -65,13 +65,19 @@ const Layout = ({ children }: LayoutProps) => {
                             actionIcon={null}
                             actionVariant="secondary"
                         />
+                    ) : pathname === "/manage-properties/add-properties" ? (
+                        <PageHeader
+                            title="Manage Properties"
+                            showBack={true}
+                            backHref="/manage-properties"
+                        />
                     ) : (
                         <PageHeader
                             title="Manage Properties"
                             showBack={true}
                             onBack={() => router.back()}
                             actionLabel="Add New Property"
-                            onAction={handleAddProperty}
+                            actionHref="/manage-properties/add-properties"
                         />
                     )}
                     <main className="flex-1 p-4 lg:p-6 overflow-auto rotate-0 opacity-100 rounded-tl-[32px] bg-[#EFF6FF]">
