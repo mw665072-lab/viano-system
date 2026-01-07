@@ -25,11 +25,10 @@ export function PropertyList({ properties, selectedProperty, onSelectProperty }:
       {properties.map((property) => (
         <Card
           key={property.id}
-          className={`cursor-pointer transition-all h-[100px] rounded-[16px] ${
-            selectedProperty.id === property.id
+          className={`cursor-pointer transition-all h-[100px] rounded-[16px] ${selectedProperty.id === property.id
               ? "bg-[#007AFF0D] border border-[#F3F4F4] py-3 px-4"
               : "bg-white hover:bg-slate-50 p-3"
-          }`}
+            }`}
           onClick={() => onSelectProperty(property)}
         >
           <div className="flex items-center justify-between gap-3 w-full">

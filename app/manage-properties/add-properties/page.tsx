@@ -48,10 +48,50 @@ const AddPropertyPage = () => {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Form submitted:', formData, uploadedFiles);
-        // TODO: Implement actual form submission logic
+        setIsSubmitting(true);
+
+        try {
+            const formDataPayload = new FormData();
+
+            // Append text fields
+            formDataPayload.append('propertyName', formData.propertyName);
+            formDataPayload.append('address', formData.address);
+            formDataPayload.append('city', formData.city);
+            formDataPayload.append('state', formData.state);
+            formDataPayload.append('closingDate', formData.closingDate);
+
+            // Append files
+            uploadedFiles.forEach((file) => {
+                // Adjust 'documents' key based on your backend requirement
+                formDataPayload.append('documents', file);
+            });
+
+            // API Call
+            // TODO: Update the URL below with your actual API endpoint
+            const response = await fetch('YOUR_API_ENDPOINT/api/properties', {
+                method: 'POST',
+                body: formDataPayload,
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to submit property');
+            }
+
+            const result = await response.json();
+            console.log('Success:', result);
+            alert('Property added successfully!');
+            // Optional: Redirect or reset form here
+
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            alert('Failed to add property. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -133,8 +173,8 @@ const AddPropertyPage = () => {
                         <div className="col-span-1 md:col-span-2">
                             <div
                                 className={`w-full min-h-[200px] lg:min-h-[272px] rounded-[16px] border-2 border-dashed p-4 flex flex-col items-center justify-center cursor-pointer transition-colors ${isDragOver
-                                        ? 'border-[#00346C] bg-[#ECF2FE]'
-                                        : 'border-[#D9D9D9] bg-white hover:border-[#00346C] hover:bg-[#F8FAFC]'
+                                    ? 'border-[#00346C] bg-[#ECF2FE]'
+                                    : 'border-[#D9D9D9] bg-white hover:border-[#00346C] hover:bg-[#F8FAFC]'
                                     }`}
                                 style={{
                                     backgroundImage: `url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%23${isDragOver ? '00346C' : 'D9D9D9'}' stroke-width='2' stroke-dasharray='7%2c 7' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e")`,
@@ -188,8 +228,9 @@ const AddPropertyPage = () => {
                                     fontFamily: 'Roboto',
                                     fontWeight: 500
                                 }}
+                                disabled={isSubmitting}
                             >
-                                Submit
+                                {isSubmitting ? 'Submitting...' : 'Submit'}
                             </Button>
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -8,21 +8,24 @@ import { ArrowLeft, Pencil, ChevronRight } from "lucide-react"
 import Image from "next/image"
 
 export default function ProfilePage() {
+  const [profile, setProfile] = useState({
+    name: "Leslie John",
+    role: "Property Evaluation Specialist",
+    email: "leslie.john@example.com",
+    phone: "+1 (555) 123-4567",
+    joined: "January 2023",
+    location: "Miami, FL",
+    avatar: "/profile-placeholder.jpg"
+  });
+
   const [preferences, setPreferences] = useState({
     email: true,
     sms: false,
     weekly: true,
     marketing: false,
-  })
+  });
 
-  const togglePreference = (key: keyof typeof preferences) => {
-    setPreferences((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }))
-  }
-
-  const audits = [
+  const [audits, setAudits] = useState([
     {
       name: "Wayland Beach House",
       type: "4 Point Evaluation",
@@ -44,9 +47,9 @@ export default function ProfilePage() {
       status: "blocked",
       initial: "P",
     },
-  ]
+  ]);
 
-  const stats = [
+  const [stats, setStats] = useState([
     {
       label: "TOTAL AUDITS",
       value: "47",
@@ -75,7 +78,70 @@ export default function ProfilePage() {
       trendColor: null,
       indicator: "bg-red-500",
     },
-  ]
+  ]);
+
+  useEffect(() => {
+    // Fetch initial data
+    const fetchData = async () => {
+      try {
+        // TODO: Update these URLs with your actual backend endpoints
+
+        // 1. Fetch Profile
+        const profileRes = await fetch('YOUR_API_ENDPOINT/user/profile');
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          setProfile(profileData);
+        }
+
+        // 2. Fetch Audits
+        const auditsRes = await fetch('YOUR_API_ENDPOINT/user/audits');
+        if (auditsRes.ok) {
+          const auditsData = await auditsRes.json();
+          setAudits(auditsData);
+        }
+
+        // 3. Fetch Stats
+        const statsRes = await fetch('YOUR_API_ENDPOINT/user/stats');
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setStats(statsData);
+        }
+
+      } catch (error) {
+        console.error("Failed to fetch data from API. Ensure backend is running.", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const togglePreference = async (key: keyof typeof preferences) => {
+    // Optimistic UI update
+    setPreferences((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+
+    try {
+      // TODO: Update URL
+      const response = await fetch('YOUR_API_ENDPOINT/user/preferences', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ [key]: !preferences[key] }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update preference');
+
+    } catch (error) {
+      console.error("Failed to update preference", error);
+      // Revert on failure
+      setPreferences((prev) => ({
+        ...prev,
+        [key]: !prev[key],
+      }));
+    }
+  }
 
   const preferenceItems = [
     { label: "Email Notifications", key: "email" as const },
@@ -156,26 +222,26 @@ export default function ProfilePage() {
 
                     {/* Info Section */}
                     <div className="flex-1 text-center sm:text-left">
-                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Leslie John</h2>
-                      <p className="text-gray-500 mt-1">Property Evaluation Specialist</p>
+                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{profile.name}</h2>
+                      <p className="text-gray-500 mt-1">{profile.role}</p>
 
                       {/* Contact Grid */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                         <div>
                           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">EMAIL</p>
-                          <p className="text-sm text-gray-900 mt-1">leslie.john@example.com</p>
+                          <p className="text-sm text-gray-900 mt-1">{profile.email}</p>
                         </div>
                         <div>
                           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">PHONE</p>
-                          <p className="text-sm text-gray-900 mt-1">+1 (555) 123-4567</p>
+                          <p className="text-sm text-gray-900 mt-1">{profile.phone}</p>
                         </div>
                         <div>
                           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">MEMBER SINCE</p>
-                          <p className="text-sm text-gray-900 mt-1">January 2023</p>
+                          <p className="text-sm text-gray-900 mt-1">{profile.joined}</p>
                         </div>
                         <div>
                           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">LOCATION</p>
-                          <p className="text-sm text-gray-900 mt-1">Miami, FL</p>
+                          <p className="text-sm text-gray-900 mt-1">{profile.location}</p>
                         </div>
                       </div>
 

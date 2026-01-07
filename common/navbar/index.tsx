@@ -9,7 +9,7 @@ type NavbarProps = {
 };
 
 export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
-    const router = useRouter();
+  const router = useRouter();
   return (
     <div className="w-full bg-white px-4 lg:px-0">
       <div className="max-w-full lg:w-[95%] py-4">
@@ -39,9 +39,9 @@ export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
 
           <div className="flex items-center justify-between">
             <Button
-            onClick={()=>{
-             router.push('/profile')
-            }}
+              onClick={() => {
+                router.push('/profile')
+              }}
               variant="ghost"
               className="flex items-center gap-2 px-3 py-2 h-auto rounded-lg"
             >
@@ -57,9 +57,9 @@ export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
             </Button>
 
             <Button
-            onClick={()=>{
+              onClick={() => {
                 router.push('/notifications')
-            }}
+              }}
               variant="ghost"
               size="icon"
               className="relative h-10 w-10 rounded-lg hover:bg-gray-100"
@@ -83,9 +83,9 @@ export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
 
           <div className="flex items-center gap-3">
             <Button
-            onClick={()=>{
+              onClick={() => {
                 router.push("/profile")
-            }}
+              }}
               variant="ghost"
               className="flex items-center gap-2 px-3 py-2 h-auto rounded-lg"
             >
@@ -101,9 +101,9 @@ export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
             </Button>
 
             <Button
-            onClick={()=>{
+              onClick={() => {
                 router.push('/notifications')
-            }}
+              }}
               variant="ghost"
               size="icon"
               className="relative h-10 w-10 rounded-lg hover:bg-gray-100"

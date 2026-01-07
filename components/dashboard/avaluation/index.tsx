@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, X } from "lucide-react"
 import { PropertyList } from "../list"
 import { PropertyDetail } from "../detail"
 
@@ -9,7 +9,7 @@ import { PropertyDetail } from "../detail"
 const properties = [
     {
         id: 1,
-        name: "Wayland Beach House",
+        name: "Wayland Beach house",
         subtitle: "Wayland Beach house",
         image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&h=120&fit=crop",
         status: "Pending",
@@ -28,8 +28,8 @@ const properties = [
         name: "Mountain Retreat",
         subtitle: "Mountain Retreat",
         image: "https://images.unsplash.com/photo-1570129477492-45a003537e1f?w=200&h=120&fit=crop",
-        status: "Pending",
-        statusColor: "bg-amber-100 text-amber-800",
+        status: "Blocked",
+        statusColor: "bg-red-100 text-red-600",
     },
     {
         id: 4,
@@ -51,23 +51,24 @@ const properties = [
 
 export function PropertyEvaluationDashboard() {
     const [selectedProperty, setSelectedProperty] = useState(properties[0])
+    const [showDetail, setShowDetail] = useState(true)
 
     return (
         <div className="rounded-[32px] opacity-100 rotate-0">
-            <div className="grid grid-cols-1 lg:grid-cols-[65%_30%] gap-4 lg:gap-6">
-                {/* Left Column - Property List */}
-                <div className="bg-white p-4 lg:p-6 rounded-[16px] lg:rounded-[32px] flex flex-col h-full lg:h-[60vh]">
-                    <div className="mb-4 lg:mb-6 flex-shrink-0">
-                        <div className="flex items-center justify-between mb-4">
+            <div className="grid grid-cols-1 lg:grid-cols-[10fr_7fr] gap-4 lg:gap-[29px]">
+                {/* Left Column - Property List (Frame 11) */}
+                <div className="bg-white w-full lg:h-[702px] rounded-[32px] p-[32px] flex flex-col opacity-100 rotate-0">
+                    <div className="mb-[32px] flex-shrink-0">
+                        <div className="flex items-center justify-between">
                             <h2
-                                className="text-[18px] lg:text-[20px] font-semibold text-[#0C1D38]"
+                                className="text-[20px] font-semibold text-[#0C1D38]"
                                 style={{ fontFamily: 'Manrope, sans-serif', lineHeight: '100%', letterSpacing: '0%' }}
                             >
                                 Evaluation Overview
                             </h2>
                             <button
                                 type="button"
-                                className="flex items-center justify-center gap-[10px] w-[100px] lg:w-[117px] h-[36px] lg:h-[40px] rounded-[32323px] px-[12px] lg:px-[16px] py-[8px] bg-[#F8F9FA] border border-[#D9D9D9] text-xs lg:text-sm text-[#0C1D38] opacity-100 rotate-0"
+                                className="flex items-center justify-center gap-[10px] w-[117px] h-[40px] rounded-[32323px] px-[16px] py-[8px] bg-[#F8F9FA] border border-[#D9D9D9] text-sm text-[#0C1D38] opacity-100 rotate-0"
                             >
                                 View All
                                 <ChevronRight className="w-4 h-4" />
@@ -83,9 +84,20 @@ export function PropertyEvaluationDashboard() {
                     </div>
                 </div>
 
-                {/* Right Column - Property Detail */}
-                <div className="rounded-[16px] lg:rounded-[32px] opacity-100 rotate-0 overflow-y-auto h-full lg:h-[60vh]">
-                    <PropertyDetail property={selectedProperty} />
+                {/* Right Column - Property Detail (Frame 162) */}
+                <div className="hidden lg:block w-full lg:h-[702px] rounded-[32px] opacity-100 rotate-0 overflow-y-auto relative">
+                    {showDetail && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => setShowDetail(false)}
+                                className="absolute top-4 left-4 z-10 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors"
+                            >
+                                <X className="w-4 h-4 text-gray-600" />
+                            </button>
+                            <PropertyDetail property={selectedProperty} />
+                        </>
+                    )}
                 </div>
             </div>
         </div>

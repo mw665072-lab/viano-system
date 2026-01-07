@@ -8,7 +8,8 @@ export default function Sidebar() {
   const router = useRouter();
 
   const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: Home ,
+    {
+      id: "dashboard", label: "Dashboard", icon: Home,
       href: "/"
     },
     { id: "properties", label: "Manage Properties", icon: Building2, href: "/manage-properties" },
@@ -36,12 +37,13 @@ export default function Sidebar() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => {setActiveItem(item.id)
-                      router.push(item.href)
+                  onClick={() => {
+                    setActiveItem(item.id)
+                    router.push(item.href)
                   }}
                   className={`w-[209px] h-[40px] flex items-center gap-[10px] px-4 py-2 rounded-[12px] text-sm font-medium transition-colors rotate-0 opacity-100 ${isActive
-                      ? "bg-[#D8E6FD] text-blue-600"
-                      : "text-gray-700 hover:bg-gray-50"
+                    ? "bg-[#D8E6FD] text-blue-600"
+                    : "text-gray-700 hover:bg-gray-50"
                     }`}
                 >
                   <Icon size={20} />
