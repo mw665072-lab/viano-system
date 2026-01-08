@@ -4,17 +4,48 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Pencil, ChevronRight } from "lucide-react"
+import { ArrowLeft, Pencil, ChevronRight, Loader2 } from "lucide-react"
 import Image from "next/image"
+import { authAPI, processAPI, propertyAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, getCurrentUserId } from "@/lib/api"
+
+interface ProfileData {
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  joined: string;
+  location: string;
+  avatar: string;
+}
+
+interface AuditItem {
+  name: string;
+  type: string;
+  date: string;
+  status: string;
+  initial: string;
+  propertyId: string;
+}
+
+interface StatItem {
+  label: string;
+  value: string;
+  trend: string | null;
+  trendColor: string | null;
+  indicator: string | null;
+}
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState({
-    name: "Leslie John",
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [profile, setProfile] = useState<ProfileData>({
+    name: "",
     role: "Property Evaluation Specialist",
-    email: "leslie.john@example.com",
-    phone: "+1 (555) 123-4567",
-    joined: "January 2023",
-    location: "Miami, FL",
+    email: "",
+    phone: "",
+    joined: "",
+    location: "Florida, US",
     avatar: "/profile-placeholder.jpg"
   });
 
@@ -25,92 +56,104 @@ export default function ProfilePage() {
     marketing: false,
   });
 
-  const [audits, setAudits] = useState([
-    {
-      name: "Wayland Beach House",
-      type: "4 Point Evaluation",
-      date: "2024-01-15",
-      status: "completed",
-      initial: "P",
-    },
-    {
-      name: "Lakeview Cabin",
-      type: "Sentry Audit",
-      date: "2024-01-10",
-      status: "pending",
-      initial: "P",
-    },
-    {
-      name: "Mountain Retreat",
-      type: "Gas Inspection",
-      date: "2024-01-05",
-      status: "blocked",
-      initial: "P",
-    },
-  ]);
+  const [audits, setAudits] = useState<AuditItem[]>([]);
 
-  const [stats, setStats] = useState([
-    {
-      label: "TOTAL AUDITS",
-      value: "47",
-      trend: "+8%",
-      trendColor: "text-green-500",
-      indicator: null,
-    },
-    {
-      label: "COMPLETED",
-      value: "42",
-      trend: null,
-      trendColor: null,
-      indicator: "bg-green-500",
-    },
-    {
-      label: "PENDING",
-      value: "3",
-      trend: null,
-      trendColor: null,
-      indicator: "bg-amber-400",
-    },
-    {
-      label: "ISSUES FOUND",
-      value: "2",
-      trend: null,
-      trendColor: null,
-      indicator: "bg-red-500",
-    },
+  const [stats, setStats] = useState<StatItem[]>([
+    { label: "TOTAL AUDITS", value: "0", trend: null, trendColor: null, indicator: null },
+    { label: "COMPLETED", value: "0", trend: null, trendColor: null, indicator: "bg-green-500" },
+    { label: "PENDING", value: "0", trend: null, trendColor: null, indicator: "bg-amber-400" },
+    { label: "IN PROGRESS", value: "0", trend: null, trendColor: null, indicator: "bg-blue-500" },
   ]);
 
   useEffect(() => {
-    // Fetch initial data
     const fetchData = async () => {
       try {
-        // TODO: Update these URLs with your actual backend endpoints
+        setIsLoading(true);
+        setError(null);
 
-        // 1. Fetch Profile
-        const profileRes = await fetch('YOUR_API_ENDPOINT/user/profile');
-        if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          setProfile(profileData);
+        // Get user ID from localStorage
+        const userId = getCurrentUserId();
+        if (!userId) {
+          setError('User not logged in. Please login first.');
+          setIsLoading(false);
+          return;
         }
 
-        // 2. Fetch Audits
-        const auditsRes = await fetch('YOUR_API_ENDPOINT/user/audits');
-        if (auditsRes.ok) {
-          const auditsData = await auditsRes.json();
-          setAudits(auditsData);
+        // 1. Fetch User Profile from API
+        const userData: UserResponse = await authAPI.getUser(userId);
+
+        // Format the date
+        const joinedDate = userData.created_at
+          ? new Date(userData.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+          : 'N/A';
+
+        setProfile({
+          name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 'User',
+          role: userData.role || 'Property Evaluation Specialist',
+          email: userData.email || '',
+          phone: userData.mobile_number || 'Not provided',
+          joined: joinedDate,
+          location: 'Florida, US',
+          avatar: '/profile-placeholder.jpg'
+        });
+
+        // 2. Fetch User Processes from API
+        let processesData: ProcessSummaryResponse[] = [];
+        try {
+          processesData = await processAPI.getUserProcesses(userId);
+        } catch (e) {
+          console.log('No processes found or error fetching processes');
+          processesData = [];
         }
 
-        // 3. Fetch Stats
-        const statsRes = await fetch('YOUR_API_ENDPOINT/user/stats');
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          setStats(statsData);
+        // 3. Fetch User Properties to get property names
+        let propertiesData: PropertyResponse[] = [];
+        try {
+          propertiesData = await propertyAPI.getUserProperties(userId);
+        } catch (e) {
+          console.log('No properties found or error fetching properties');
+          propertiesData = [];
         }
 
-      } catch (error) {
-        console.error("Failed to fetch data from API. Ensure backend is running.", error);
+        // Create a map of property_id to property_name
+        const propertyMap = new Map<string, string>();
+        propertiesData.forEach(prop => {
+          propertyMap.set(prop.property_id, prop.property_name);
+        });
+
+        // Transform processes to audit format
+        const auditItems: AuditItem[] = processesData.slice(0, 5).map((process) => ({
+          name: propertyMap.get(process.property_id) || 'Property',
+          type: '4 Point Evaluation',
+          date: process.process_start
+            ? new Date(process.process_start).toLocaleDateString('en-US')
+            : 'N/A',
+          status: process.status,
+          initial: (propertyMap.get(process.property_id) || 'P').charAt(0).toUpperCase(),
+          propertyId: process.property_id,
+        }));
+        setAudits(auditItems);
+
+        // 4. Calculate Stats from processes
+        const completed = processesData.filter(p => p.status === 'completed').length;
+        const pending = processesData.filter(p => p.status === 'pending').length;
+        const inProgress = processesData.filter(p => p.status === 'in_progress' || p.status === 'processing').length;
+
+        setStats([
+          { label: "TOTAL AUDITS", value: String(processesData.length), trend: null, trendColor: null, indicator: null },
+          { label: "COMPLETED", value: String(completed), trend: null, trendColor: null, indicator: "bg-green-500" },
+          { label: "PENDING", value: String(pending), trend: null, trendColor: null, indicator: "bg-amber-400" },
+          { label: "IN PROGRESS", value: String(inProgress), trend: null, trendColor: null, indicator: "bg-blue-500" },
+        ]);
+
+      } catch (err) {
+        console.error("Failed to fetch data from API:", err);
+        setError(err instanceof Error ? err.message : 'Failed to load profile data');
+      } finally {
+        setIsLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
@@ -120,27 +163,6 @@ export default function ProfilePage() {
       ...prev,
       [key]: !prev[key],
     }));
-
-    try {
-      // TODO: Update URL
-      const response = await fetch('YOUR_API_ENDPOINT/user/preferences', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ [key]: !preferences[key] }),
-      });
-
-      if (!response.ok) throw new Error('Failed to update preference');
-
-    } catch (error) {
-      console.error("Failed to update preference", error);
-      // Revert on failure
-      setPreferences((prev) => ({
-        ...prev,
-        [key]: !prev[key],
-      }));
-    }
   }
 
   const preferenceItems = [
@@ -151,16 +173,61 @@ export default function ProfilePage() {
   ]
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "completed":
         return "bg-green-50 text-green-700 border-green-200"
       case "pending":
         return "bg-amber-50 text-amber-700 border-amber-200"
-      case "blocked":
+      case "in_progress":
+      case "processing":
+        return "bg-blue-50 text-blue-700 border-blue-200"
+      case "failed":
+      case "error":
         return "bg-red-50 text-red-700 border-red-200"
       default:
         return "bg-gray-100 text-gray-700"
     }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "completed": return "Completed";
+      case "pending": return "Pending";
+      case "in_progress": return "In Progress";
+      case "processing": return "Processing";
+      case "failed": return "Failed";
+      case "error": return "Error";
+      default: return status;
+    }
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md text-center">
+          <p className="text-red-700 font-medium mb-4">{error}</p>
+          <Button
+            onClick={() => window.location.href = '/login'}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Go to Login
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -211,7 +278,8 @@ export default function ProfilePage() {
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
-                            target.parentElement!.innerHTML = '<div class="w-full h-full bg-gradient-to-br from-amber-200 to-amber-400 flex items-center justify-center text-3xl font-bold text-white">LJ</div>';
+                            const initials = profile.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+                            target.parentElement!.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-amber-200 to-amber-400 flex items-center justify-center text-3xl font-bold text-white">${initials}</div>`;
                           }}
                         />
                       </div>
@@ -277,30 +345,37 @@ export default function ProfilePage() {
                     </button>
                   </div>
 
-                  <div className="space-y-4">
-                    {audits.map((audit, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl"
-                      >
-                        <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                          <span className="text-lg font-bold text-gray-600">{audit.initial}</span>
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-semibold text-gray-900">{audit.name}</h3>
-                          <p className="text-xs text-gray-500 mt-0.5">{audit.type}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{audit.date}</p>
-                        </div>
-
-                        <Badge
-                          className={`${getStatusColor(audit.status)} text-xs capitalize rounded-md px-3 py-1 font-medium border`}
+                  {audits.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No audit history yet.</p>
+                      <p className="text-sm mt-1">Your completed audits will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {audits.map((audit, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl"
                         >
-                          {audit.status === "completed" ? "Completed" : audit.status === "pending" ? "Pending" : "Blocked"}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
+                          <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <span className="text-lg font-bold text-gray-600">{audit.initial}</span>
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-semibold text-gray-900">{audit.name}</h3>
+                            <p className="text-xs text-gray-500 mt-0.5">{audit.type}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{audit.date}</p>
+                          </div>
+
+                          <Badge
+                            className={`${getStatusColor(audit.status)} text-xs capitalize rounded-md px-3 py-1 font-medium border`}
+                          >
+                            {getStatusLabel(audit.status)}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
               </div>
 

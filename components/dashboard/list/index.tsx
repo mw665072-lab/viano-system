@@ -9,7 +9,7 @@ interface Property {
   name: string
   subtitle: string
   image: string
-  status: string
+  status: "Pending" | "Completed"
   statusColor: string
 }
 
@@ -26,8 +26,8 @@ export function PropertyList({ properties, selectedProperty, onSelectProperty }:
         <Card
           key={property.id}
           className={`cursor-pointer transition-all h-[100px] rounded-[16px] ${selectedProperty.id === property.id
-              ? "bg-[#007AFF0D] border border-[#F3F4F4] py-3 px-4"
-              : "bg-white hover:bg-slate-50 p-3"
+            ? "bg-[#007AFF0D] border border-[#F3F4F4] py-3 px-4"
+            : "bg-white hover:bg-slate-50 p-3"
             }`}
           onClick={() => onSelectProperty(property)}
         >

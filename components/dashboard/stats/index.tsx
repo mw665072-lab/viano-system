@@ -11,7 +11,7 @@ export default function DashboardStatsCard() {
       trend: { value: 12, direction: "up" as const, color: "green" as const },
     },
     {
-      title: "Pending Analysis",
+      title: "Pending Messages for 180 Days",
       value: "5",
       icon: <span className="text-2xl">🔍</span>,
       trend: { value: 40, direction: "down" as const, color: "red" as const },

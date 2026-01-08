@@ -7,7 +7,7 @@ interface Property {
     name: string
     subtitle: string
     image: string
-    status: string
+    status: "Pending" | "Completed"
     statusColor: string
 }
 
@@ -27,19 +27,11 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
         },
         {
             id: 2,
-            name: "Sentry Audit",
+            name: "Home Inspection",
             progress: 65,
             timestamp: "In progress",
             icon: "clock",
             color: "bg-[#007AFF]",
-        },
-        {
-            id: 3,
-            name: "Gas Inspection",
-            progress: 0,
-            timestamp: "Pending",
-            icon: "pending",
-            color: "bg-slate-300",
         },
     ]
 

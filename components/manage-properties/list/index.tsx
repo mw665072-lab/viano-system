@@ -3,13 +3,7 @@
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { MoreVertical, ChevronLeft, ChevronRight } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface Property {
@@ -19,26 +13,39 @@ interface Property {
   image: string
   type: string
   value: string
-  lastInspection: string
-  status: string
+  closingDate: string
+  status: "Pending" | "Completed"
   statusColor: string
 }
 
 interface PropertyListProps {
   properties: Property[]
+  selectedPropertyId?: number | null
+  onSelectProperty?: (property: Property) => void
   currentPage?: number
   totalPages?: number
   onPageChange?: (page: number) => void
 }
 
-export function PropertyList({ properties, currentPage = 1, totalPages = 1, onPageChange }: PropertyListProps) {
+export function PropertyList({
+  properties,
+  selectedPropertyId,
+  onSelectProperty,
+  currentPage = 1,
+  totalPages = 1,
+  onPageChange,
+}: PropertyListProps) {
   return (
     <div className="flex flex-col h-full">
-      <div className="space-y-3 flex-1">
+      <div className="space-y-3 flex-1 overflow-y-auto">
         {properties.map((property) => (
           <Card
             key={property.id}
-            className={`cursor-pointer transition-all rounded-[16px] bg-white hover:bg-slate-50 p-4`}
+            onClick={() => onSelectProperty?.(property)}
+            className={`cursor-pointer transition-all rounded-[16px] p-4 border ${selectedPropertyId === property.id
+                ? "bg-[#007AFF0D] border-[#007AFF] shadow-sm"
+                : "bg-white hover:bg-slate-50 border-transparent"
+              }`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
               <div className="relative w-20 h-20 sm:w-[80px] sm:h-[80px] flex-shrink-0 rounded-[12px] overflow-hidden bg-[#D9D9D9]">
@@ -59,7 +66,7 @@ export function PropertyList({ properties, currentPage = 1, totalPages = 1, onPa
                     <span className="font-medium">VALUE:</span> {property.value}
                   </span>
                   <span>
-                    <span className="font-medium">LAST INSPECTION:</span> {property.lastInspection}
+                    <span className="font-medium">LAST INSPECTION:</span> {property.closingDate}
                   </span>
                 </div>
               </div>
@@ -69,16 +76,6 @@ export function PropertyList({ properties, currentPage = 1, totalPages = 1, onPa
                 >
                   {property.status}
                 </Badge>
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="p-1 hover:bg-gray-100 rounded-md transition-colors">
-                    <MoreVertical className="w-5 h-5 text-gray-600" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                    <DropdownMenuItem>Edit Property</DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
             </div>
           </Card>
@@ -94,11 +91,10 @@ export function PropertyList({ properties, currentPage = 1, totalPages = 1, onPa
             variant={currentPage === 1 ? "default" : "outline"}
             size="sm"
             onClick={() => onPageChange?.(1)}
-            className={`h-9 w-9 p-0 rounded-full ${
-              currentPage === 1
-                ? "bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90 border-0"
-                : "border-gray-300 hover:bg-gray-50 text-gray-700"
-            }`}
+            className={`h-9 w-9 p-0 rounded-full ${currentPage === 1
+              ? "bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90 border-0"
+              : "border-gray-300 hover:bg-gray-50 text-gray-700"
+              }`}
           >
             1
           </Button>
@@ -109,11 +105,10 @@ export function PropertyList({ properties, currentPage = 1, totalPages = 1, onPa
               variant={currentPage === 2 ? "default" : "outline"}
               size="sm"
               onClick={() => onPageChange?.(2)}
-              className={`h-9 w-9 p-0 rounded-full ${
-                currentPage === 2
-                  ? "bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90 border-0"
-                  : "border-gray-300 hover:bg-gray-50 text-gray-700"
-              }`}
+              className={`h-9 w-9 p-0 rounded-full ${currentPage === 2
+                ? "bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90 border-0"
+                : "border-gray-300 hover:bg-gray-50 text-gray-700"
+                }`}
             >
               2
             </Button>
@@ -125,11 +120,10 @@ export function PropertyList({ properties, currentPage = 1, totalPages = 1, onPa
               variant={currentPage === 3 ? "default" : "outline"}
               size="sm"
               onClick={() => onPageChange?.(3)}
-              className={`h-9 w-9 p-0 rounded-full ${
-                currentPage === 3
-                  ? "bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90 border-0"
-                  : "border-gray-300 hover:bg-gray-50 text-gray-700"
-              }`}
+              className={`h-9 w-9 p-0 rounded-full ${currentPage === 3
+                ? "bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90 border-0"
+                : "border-gray-300 hover:bg-gray-50 text-gray-700"
+                }`}
             >
               3
             </Button>
@@ -146,11 +140,10 @@ export function PropertyList({ properties, currentPage = 1, totalPages = 1, onPa
               variant={currentPage === totalPages ? "default" : "outline"}
               size="sm"
               onClick={() => onPageChange?.(totalPages)}
-              className={`h-9 w-9 p-0 rounded-full ${
-                currentPage === totalPages
-                  ? "bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90 border-0"
-                  : "border-gray-300 hover:bg-gray-50 text-gray-700"
-              }`}
+              className={`h-9 w-9 p-0 rounded-full ${currentPage === totalPages
+                ? "bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90 border-0"
+                : "border-gray-300 hover:bg-gray-50 text-gray-700"
+                }`}
             >
               {totalPages}
             </Button>
@@ -200,3 +193,4 @@ export function PropertyList({ properties, currentPage = 1, totalPages = 1, onPa
     </div>
   )
 }
+

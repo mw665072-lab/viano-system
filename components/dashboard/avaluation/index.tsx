@@ -25,14 +25,6 @@ const properties = [
     },
     {
         id: 3,
-        name: "Mountain Retreat",
-        subtitle: "Mountain Retreat",
-        image: "https://images.unsplash.com/photo-1570129477492-45a003537e1f?w=200&h=120&fit=crop",
-        status: "Blocked",
-        statusColor: "bg-red-100 text-red-600",
-    },
-    {
-        id: 4,
         name: "Seaside Villa",
         subtitle: "Seaside Villa",
         image: "https://images.unsplash.com/photo-1613228060223-461bfa1220a0?w=200&h=120&fit=crop",
@@ -40,7 +32,7 @@ const properties = [
         statusColor: "bg-amber-100 text-amber-800",
     },
     {
-        id: 5,
+        id: 4,
         name: "Urban Penthouse",
         subtitle: "Urban Penthouse",
         image: "https://images.unsplash.com/photo-1512917774080-9b274b5ce7c0?w=200&h=120&fit=crop",
