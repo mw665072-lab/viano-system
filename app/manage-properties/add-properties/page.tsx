@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Upload, Loader2, X, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, Loader2, X, AlertCircle, CheckCircle, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { propertyAPI, documentAPI, CreatePropertyRequest, getCurrentUserId } from '@/lib/api';
+import { propertyAPI, documentAPI, processAPI, CreatePropertyRequest, getCurrentUserId } from '@/lib/api';
 
 const AddPropertyPage = () => {
     const router = useRouter();
@@ -15,9 +15,13 @@ const AddPropertyPage = () => {
         city: '',
         state: '',
         closingDate: '',
+        clientName: '',
     });
-    const [isDragOver, setIsDragOver] = useState(false);
-    const [uploadedFiles, setUploadedFiles] = useState<{ file: File; docType: '4point' | 'home_inspection' }[]>([]);
+
+    // Separate state for each document type
+    const [fourPointFile, setFourPointFile] = useState<File | null>(null);
+    const [homeInspectionFile, setHomeInspectionFile] = useState<File | null>(null);
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
@@ -32,34 +36,24 @@ const AddPropertyPage = () => {
         if (error) setError(null);
     };
 
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragOver(true);
-    };
-
-    const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragOver(false);
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        setIsDragOver(false);
-        const files = Array.from(e.dataTransfer.files);
-        const newFiles = files.map(file => ({ file, docType: '4point' as const }));
-        setUploadedFiles(prev => [...prev, ...newFiles]);
-    };
-
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            const files = Array.from(e.target.files);
-            const newFiles = files.map(file => ({ file, docType: '4point' as const }));
-            setUploadedFiles(prev => [...prev, ...newFiles]);
+    const handleFourPointSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setFourPointFile(e.target.files[0]);
         }
     };
 
-    const removeFile = (index: number) => {
-        setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    const handleHomeInspectionSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setHomeInspectionFile(e.target.files[0]);
+        }
+    };
+
+    const removeFourPointFile = () => {
+        setFourPointFile(null);
+    };
+
+    const removeHomeInspectionFile = () => {
+        setHomeInspectionFile(null);
     };
 
     const validateForm = (): boolean => {
@@ -97,9 +91,9 @@ const AddPropertyPage = () => {
                 throw new Error('User not logged in. Please login first.');
             }
 
+            // Step 1: Create property
             setUploadProgress('Creating property...');
 
-            // Combine city and state for location field
             const location = `${formData.city.trim()}, ${formData.state.trim()}`;
 
             const propertyData: CreatePropertyRequest = {
@@ -107,24 +101,53 @@ const AddPropertyPage = () => {
                 property_name: formData.propertyName.trim(),
                 location: location,
                 address: formData.address.trim(),
+                client_name: formData.clientName.trim(),
                 property_closing_date: formData.closingDate || null,
             };
 
             const createdProperty = await propertyAPI.create(propertyData);
             console.log('Property created:', createdProperty);
 
-            if (uploadedFiles.length > 0) {
-                setUploadProgress(`Uploading ${uploadedFiles.length} document(s)...`);
+            // Step 2: Upload documents if any
+            const filesToUpload: File[] = [];
+            const docTypes: ('4point' | 'home_inspection')[] = [];
 
-                let uploadedCount = 0;
-                for (const { file, docType } of uploadedFiles) {
-                    try {
-                        await documentAPI.upload(userId, createdProperty.property_id, file, docType);
-                        uploadedCount++;
-                        setUploadProgress(`Uploaded ${uploadedCount}/${uploadedFiles.length} documents...`);
-                    } catch (uploadError) {
-                        console.error(`Failed to upload ${file.name}:`, uploadError);
-                    }
+            if (fourPointFile) {
+                filesToUpload.push(fourPointFile);
+                docTypes.push('4point');
+            }
+            if (homeInspectionFile) {
+                filesToUpload.push(homeInspectionFile);
+                docTypes.push('home_inspection');
+            }
+
+            if (filesToUpload.length > 0) {
+                setUploadProgress(`Uploading ${filesToUpload.length} document(s)...`);
+
+                try {
+                    await documentAPI.upload(userId, createdProperty.property_id, filesToUpload, docTypes);
+                    console.log('Documents uploaded successfully');
+                    setUploadProgress('Documents uploaded successfully!');
+                } catch (uploadError) {
+                    console.error('Failed to upload documents:', uploadError);
+                    // Continue even if upload fails - property is already created
+                    setUploadProgress('Documents upload failed, but property was created.');
+                }
+
+                // Step 3: Start the processing pipeline
+                setUploadProgress('Starting document processing...');
+
+                try {
+                    const processResult = await processAPI.start({
+                        user_id: userId,
+                        property_id: createdProperty.property_id,
+                    });
+                    console.log('Process started:', processResult);
+                    setUploadProgress('Processing started successfully!');
+                } catch (processError) {
+                    console.error('Failed to start process:', processError);
+                    // Continue even if process fails
+                    setUploadProgress('Property created, but processing could not be started.');
                 }
             }
 
@@ -190,7 +213,7 @@ const AddPropertyPage = () => {
                         </div>
                     )}
 
-                    {/* Form Container - 838px width, 5 rows, 2 columns */}
+                    {/* Form Container */}
                     <form onSubmit={handleSubmit} className="w-full max-w-[838px]">
                         <div
                             className="grid grid-cols-2"
@@ -247,7 +270,18 @@ const AddPropertyPage = () => {
                                 />
                             </div>
 
-                            {/* Row 3: Closing Date (left column only) */}
+                            {/* Row 3: Client Name and Closing Date */}
+                            <div>
+                                <Input
+                                    type="text"
+                                    name="clientName"
+                                    placeholder="Client Name"
+                                    value={formData.clientName}
+                                    onChange={handleInputChange}
+                                    disabled={isSubmitting}
+                                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50"
+                                />
+                            </div>
                             <div>
                                 <Input
                                     type="date"
@@ -259,61 +293,87 @@ const AddPropertyPage = () => {
                                     className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50"
                                 />
                             </div>
-                            <div>{/* Empty cell for alignment */}</div>
 
-                            {/* Row 4: Upload Container - Spans 2 columns */}
+                            {/* Row 4: Upload Buttons - Two separate buttons */}
                             <div className="col-span-2">
-                                <div
-                                    className={`w-full h-[200px] rounded-[16px] flex flex-col items-center justify-center cursor-pointer transition-colors ${isSubmitting
-                                            ? 'opacity-50 cursor-not-allowed'
-                                            : isDragOver
-                                                ? 'bg-[#E8F0FE]'
-                                                : 'bg-white hover:bg-[#FAFBFC]'
-                                        }`}
-                                    style={{
-                                        border: '2px dashed #00346C',
-                                    }}
-                                    onDragOver={!isSubmitting ? handleDragOver : undefined}
-                                    onDragLeave={!isSubmitting ? handleDragLeave : undefined}
-                                    onDrop={!isSubmitting ? handleDrop : undefined}
-                                    onClick={() => !isSubmitting && document.getElementById('file-upload')?.click()}
-                                >
-                                    <input
-                                        id="file-upload"
-                                        type="file"
-                                        multiple
-                                        accept=".pdf"
-                                        onChange={handleFileSelect}
-                                        className="hidden"
-                                        disabled={isSubmitting}
-                                    />
-                                    <div className="flex items-center gap-2 text-[#6B7280]">
-                                        <Upload className="w-5 h-5" />
-                                        <span className="text-sm">Drag Your Audit Reports Here.</span>
-                                    </div>
-                                </div>
-
-                                {/* Uploaded Files List */}
-                                {uploadedFiles.length > 0 && (
-                                    <div className="mt-3 space-y-2">
-                                        {uploadedFiles.map((item, index) => (
-                                            <div
-                                                key={index}
-                                                className="flex items-center gap-3 p-2 bg-[#F8FAFC] rounded-lg border border-[#E5E7EB]"
+                                <p className="text-sm text-[#6B7280] mb-3">Upload Documents (PDF only)</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* 4-Point File Upload */}
+                                    <div>
+                                        <input
+                                            id="fourpoint-upload"
+                                            type="file"
+                                            accept=".pdf"
+                                            onChange={handleFourPointSelect}
+                                            className="hidden"
+                                            disabled={isSubmitting}
+                                        />
+                                        {!fourPointFile ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => document.getElementById('fourpoint-upload')?.click()}
+                                                disabled={isSubmitting}
+                                                className="w-full h-[120px] rounded-[16px] border-2 border-dashed border-[#00346C] bg-white hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                <span className="flex-1 text-sm text-[#1E1E1E] truncate">{item.file.name}</span>
+                                                <Upload className="w-6 h-6 text-[#00346C]" />
+                                                <span className="text-sm font-medium text-[#00346C]">Upload 4-Point File</span>
+                                                <span className="text-xs text-[#9CA3AF]">PDF format only</span>
+                                            </button>
+                                        ) : (
+                                            <div className="w-full h-[120px] rounded-[16px] border-2 border-solid border-[#10B981] bg-[#F0FDF4] flex flex-col items-center justify-center gap-2 relative">
                                                 <button
                                                     type="button"
-                                                    onClick={() => removeFile(index)}
-                                                    className="text-red-500 hover:text-red-700"
+                                                    onClick={removeFourPointFile}
                                                     disabled={isSubmitting}
+                                                    className="absolute top-2 right-2 text-red-500 hover:text-red-700 disabled:opacity-50"
                                                 >
                                                     <X className="w-4 h-4" />
                                                 </button>
+                                                <FileText className="w-6 h-6 text-[#10B981]" />
+                                                <span className="text-sm font-medium text-[#10B981]">4-Point File</span>
+                                                <span className="text-xs text-[#6B7280] truncate max-w-[90%] px-2">{fourPointFile.name}</span>
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
-                                )}
+
+                                    {/* Home Inspection File Upload */}
+                                    <div>
+                                        <input
+                                            id="homeinspection-upload"
+                                            type="file"
+                                            accept=".pdf"
+                                            onChange={handleHomeInspectionSelect}
+                                            className="hidden"
+                                            disabled={isSubmitting}
+                                        />
+                                        {!homeInspectionFile ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => document.getElementById('homeinspection-upload')?.click()}
+                                                disabled={isSubmitting}
+                                                className="w-full h-[120px] rounded-[16px] border-2 border-dashed border-[#00346C] bg-white hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <Upload className="w-6 h-6 text-[#00346C]" />
+                                                <span className="text-sm font-medium text-[#00346C]">Upload Home Inspection File</span>
+                                                <span className="text-xs text-[#9CA3AF]">PDF format only</span>
+                                            </button>
+                                        ) : (
+                                            <div className="w-full h-[120px] rounded-[16px] border-2 border-solid border-[#10B981] bg-[#F0FDF4] flex flex-col items-center justify-center gap-2 relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={removeHomeInspectionFile}
+                                                    disabled={isSubmitting}
+                                                    className="absolute top-2 right-2 text-red-500 hover:text-red-700 disabled:opacity-50"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                                <FileText className="w-6 h-6 text-[#10B981]" />
+                                                <span className="text-sm font-medium text-[#10B981]">Home Inspection File</span>
+                                                <span className="text-xs text-[#6B7280] truncate max-w-[90%] px-2">{homeInspectionFile.name}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
 
                                 {/* Upload Progress */}
                                 {uploadProgress && (

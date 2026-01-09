@@ -88,25 +88,46 @@ export const propertyAPI = {
      */
     getProperty: (userId: string, propertyId: string) =>
         apiRequest<PropertyResponse>(`/api/property/user/${userId}/property/${propertyId}`),
+
+    /**
+     * Delete a property for a user
+     * Only the owner can delete their property
+     */
+    delete: (userId: string, propertyId: string) =>
+        apiRequest<string>(`/api/property/user/${userId}/property/${propertyId}`, {
+            method: 'DELETE',
+        }),
 };
 
 // ============ DOCUMENT APIs ============
 export const documentAPI = {
     /**
-     * Upload a PDF document
-     * - Validate file type and doc_type
+     * Upload one or more PDF documents
+     * - Validate file types and doc_types
      * - Check storage limits (max 12 files per user)
      * - Verify property exists and belongs to user
      * - Upload to S3 with structure: {user_id}/{property_id}/{filename}
      * - Store metadata in RDS
      * 
-     * @param docType - Document type: '4point' or 'home_inspection'
+     * @param files - Array of files to upload
+     * @param docTypes - Array of document types matching each file: '4point' or 'home_inspection'
+     * 
+     * Example usage:
+     * Upload both 4point and home_inspection at once by providing:
+     * files: [4point.pdf, home_inspection.pdf]
+     * docTypes: ["4point", "home_inspection"]
      */
-    upload: async (userId: string, propertyId: string, file: File, docType: '4point' | 'home_inspection') => {
+    upload: async (
+        userId: string,
+        propertyId: string,
+        files: File[],
+        docTypes: ('4point' | 'home_inspection')[]
+    ) => {
         const formData = new FormData();
-        formData.append('file', file);
+        files.forEach(file => formData.append('files', file));
 
-        const url = `${API_BASE_URL}/api/documents/upload/${userId}/${propertyId}?doc_type=${docType}`;
+        const docTypesParam = docTypes.map(dt => `doc_types=${encodeURIComponent(dt)}`).join('&');
+        const url = `${API_BASE_URL}/api/documents/upload/${userId}/${propertyId}?${docTypesParam}`;
 
         const response = await fetch(url, {
             method: 'POST',
@@ -180,6 +201,19 @@ export const processAPI = {
         apiRequest<ProcessSummaryResponse[]>(`/api/process/user/${userId}`),
 };
 
+// ============ TWILIO APIs ============
+export const twilioAPI = {
+    /**
+     * Manually trigger the daily scheduling job
+     * Triggers the logic that looks for today's messages and schedules them.
+     * Useful for testing or recovering from missed runs.
+     */
+    triggerSchedule: () =>
+        apiRequest<string>('/twilio/trigger-schedule', {
+            method: 'POST',
+        }),
+};
+
 // ============ UTILITY APIs ============
 export const utilityAPI = {
     /**
@@ -231,6 +265,7 @@ export interface UserResponse {
     first_name: string;
     last_name: string;
     mobile_number: string;
+    last_login: string | null;
     role: string;
     created_at: string | null;
 }
@@ -240,6 +275,7 @@ export interface CreatePropertyRequest {
     property_name: string;
     location: string;
     address: string;
+    client_name: string;
     property_closing_date?: string | null;
     user_id: string;
 }
@@ -249,6 +285,7 @@ export interface PropertyResponse {
     property_name: string;
     location: string;
     address: string;
+    client_name: string;
     property_closing_date: string | null;
     user_id: string;
 }
