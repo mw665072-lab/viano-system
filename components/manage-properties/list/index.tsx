@@ -3,28 +3,30 @@
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface Property {
-  id: number
+  id: string
   name: string
   location: string
-  image: string
-  type: string
-  value: string
-  closingDate: string
+  image?: string
+  type?: string
+  value?: string
+  closingDate?: string
   status: "Pending" | "Completed"
   statusColor: string
+  clientName?: string
 }
 
 interface PropertyListProps {
   properties: Property[]
-  selectedPropertyId?: number | null
+  selectedPropertyId?: string | null
   onSelectProperty?: (property: Property) => void
   currentPage?: number
   totalPages?: number
   onPageChange?: (page: number) => void
+  isLoading?: boolean
 }
 
 export function PropertyList({
@@ -34,7 +36,29 @@ export function PropertyList({
   currentPage = 1,
   totalPages = 1,
   onPageChange,
+  isLoading = false,
 }: PropertyListProps) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <div className="w-8 h-8 border-4 border-[#00346C] border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-sm text-gray-500">Loading properties...</p>
+      </div>
+    );
+  }
+
+  if (properties.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+          <Home className="w-8 h-8 text-gray-400" />
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
+        <p className="text-sm text-gray-500">Add a new property to get started</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="space-y-3 flex-1 overflow-y-auto">
@@ -43,13 +67,19 @@ export function PropertyList({
             key={property.id}
             onClick={() => onSelectProperty?.(property)}
             className={`cursor-pointer transition-all rounded-[16px] p-4 border ${selectedPropertyId === property.id
-                ? "bg-[#007AFF0D] border-[#007AFF] shadow-sm"
-                : "bg-white hover:bg-slate-50 border-transparent"
+              ? "bg-[#007AFF0D] border-[#007AFF] shadow-sm"
+              : "bg-white hover:bg-slate-50 border-transparent"
               }`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
               <div className="relative w-20 h-20 sm:w-[80px] sm:h-[80px] flex-shrink-0 rounded-[12px] overflow-hidden bg-[#D9D9D9]">
-                <Image src={property.image || "/placeholder.svg"} alt={property.name} fill className="object-cover" />
+                {property.image ? (
+                  <Image src={property.image} alt={property.name} fill className="object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Home className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-base font-semibold text-[#1E1E1E] mb-1">
@@ -59,15 +89,21 @@ export function PropertyList({
                   {property.location}
                 </p>
                 <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-[#374151]">
-                  <span>
-                    <span className="font-medium">TYPE:</span> {property.type}
-                  </span>
-                  <span>
-                    <span className="font-medium">VALUE:</span> {property.value}
-                  </span>
-                  <span>
-                    <span className="font-medium">LAST INSPECTION:</span> {property.closingDate}
-                  </span>
+                  {property.type && (
+                    <span>
+                      <span className="font-medium">TYPE:</span> {property.type}
+                    </span>
+                  )}
+                  {property.clientName && (
+                    <span>
+                      <span className="font-medium">CLIENT:</span> {property.clientName}
+                    </span>
+                  )}
+                  {property.closingDate && (
+                    <span>
+                      <span className="font-medium">CLOSING:</span> {property.closingDate}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="mt-3 sm:mt-0 flex items-center gap-2 sm:flex-shrink-0">

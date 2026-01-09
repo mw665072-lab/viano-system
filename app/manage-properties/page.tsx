@@ -1,24 +1,26 @@
 "use client";
-import React from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import PropertyListHeader from '@/common/property-list-header';
 import { PropertyList } from '@/components/manage-properties/list';
 import { PropertyDetailPanel } from '@/components/manage-properties/detail';
-import { X } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { propertyAPI, PropertyResponse, getCurrentUserId } from '@/lib/api';
 
 interface Property {
-    id: number
+    id: string
     name: string
     location: string
-    image: string
-    type: string
-    value: string
-    closingDate: string
+    image?: string
+    type?: string
+    value?: string
+    closingDate?: string
     status: "Pending" | "Completed"
     statusColor: string
+    clientName?: string
 }
 
 interface PropertyDetail {
-    id: number
+    id: string
     name: string
     address: string
     type: string
@@ -34,172 +36,103 @@ interface PropertyDetail {
 }
 
 const Page = () => {
-    const [currentPage, setCurrentPage] = React.useState(1);
-    const [selectedProperty, setSelectedProperty] = React.useState<Property | null>(null);
-    const totalPages = 9;
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+    const [properties, setProperties] = useState<Property[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All Status');
 
-    const properties: Property[] = [
-        {
-            id: 1,
-            name: "Wayland Beach House",
-            location: "Wayland, MA",
-            image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&h=120&fit=crop",
-            type: "Beach House",
-            value: "$850,000",
-            closingDate: "2024-02-15",
-            status: "Pending",
-            statusColor: "bg-amber-100 text-amber-800",
-        },
-        {
-            id: 2,
-            name: "Lakeside Retreat",
-            location: "Lake Tahoe, CA",
-            image: "https://images.unsplash.com/photo-1535202712071-c1b9a9b1df60?w=200&h=120&fit=crop",
-            type: "Cabin",
-            value: "$1,200,000",
-            closingDate: "2024-03-20",
-            status: "Completed",
-            statusColor: "bg-emerald-100 text-emerald-800",
-        },
-        {
-            id: 3,
-            name: "Mountain View Lodge",
-            location: "Aspen, CO",
-            image: "https://images.unsplash.com/photo-1570129477492-45a003537e1f?w=200&h=120&fit=crop",
-            type: "Lodge",
-            value: "$2,500,000",
-            closingDate: "2024-04-05",
-            status: "Completed",
-            statusColor: "bg-emerald-100 text-emerald-800",
-        },
-        {
-            id: 4,
-            name: "Urban Oasis",
-            location: "New York, NY",
-            image: "https://images.unsplash.com/photo-1613228060223-461bfa1220a0?w=200&h=120&fit=crop",
-            type: "Apartment",
-            value: "$3,500,000",
-            closingDate: "2024-02-25",
-            status: "Completed",
-            statusColor: "bg-emerald-100 text-emerald-800",
-        },
-        {
-            id: 5,
-            name: "Seaside Villa",
-            location: "Miami, FL",
-            image: "https://images.unsplash.com/photo-1512917774080-9b274b5ce7c0?w=200&h=120&fit=crop",
-            type: "Villa",
-            value: "$4,800,000",
-            closingDate: "2024-05-10",
-            status: "Completed",
-            statusColor: "bg-emerald-100 text-emerald-800",
-        },
-        {
-            id: 6,
-            name: "Countryside Cottage",
-            location: "Napa Valley, CA",
-            image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&h=120&fit=crop",
-            type: "Cottage",
-            value: "$650,000",
-            closingDate: "2024-03-15",
-            status: "Completed",
-            statusColor: "bg-emerald-100 text-emerald-800",
-        },
-    ];
+    const itemsPerPage = 6;
 
-    // Extended property details (simulated data)
-    const propertyDetails: Record<number, PropertyDetail> = {
-        1: {
-            id: 1,
-            name: "Wayland Beach House",
-            address: "123 Ocean Drive, Wayland, MA 02481",
-            type: "Beach House",
-            value: "$850,000",
-            client: "Johnson Family Trust",
-            closingDays: 12,
-            status: "Completed",
-            documentsSubmitted: 4,
-            documentsTotal: 4,
-            aiAnalysisProgress: 85,
-            totalIssues: 5,
-            criticalIssues: 2,
-        },
-        2: {
-            id: 2,
-            name: "Lakeside Retreat",
-            address: "456 Lake Shore, Lake Tahoe, CA 96150",
-            type: "Cabin",
-            value: "$1,200,000",
-            client: "Smith Holdings LLC",
-            closingDays: 25,
-            status: "Completed",
-            documentsSubmitted: 4,
-            documentsTotal: 4,
-            aiAnalysisProgress: 100,
-            totalIssues: 3,
-            criticalIssues: 0,
-        },
-        3: {
-            id: 3,
-            name: "Mountain View Lodge",
-            address: "789 Alpine Way, Aspen, CO 81611",
-            type: "Lodge",
-            value: "$2,500,000",
-            client: "Alpine Ventures",
-            closingDays: 45,
-            status: "Completed",
-            documentsSubmitted: 4,
-            documentsTotal: 4,
-            aiAnalysisProgress: 100,
-            totalIssues: 1,
-            criticalIssues: 0,
-        },
-        4: {
-            id: 4,
-            name: "Urban Oasis",
-            address: "100 Park Avenue, New York, NY 10016",
-            type: "Apartment",
-            value: "$3,500,000",
-            client: "Manhattan Realty Group",
-            closingDays: 30,
-            status: "Completed",
-            documentsSubmitted: 4,
-            documentsTotal: 4,
-            aiAnalysisProgress: 100,
-            totalIssues: 2,
-            criticalIssues: 1,
-        },
-        5: {
-            id: 5,
-            name: "Seaside Villa",
-            address: "200 Ocean Blvd, Miami, FL 33139",
-            type: "Villa",
-            value: "$4,800,000",
-            client: "Coastal Properties Inc",
-            closingDays: 60,
-            status: "Completed",
-            documentsSubmitted: 4,
-            documentsTotal: 4,
-            aiAnalysisProgress: 100,
-            totalIssues: 4,
-            criticalIssues: 0,
-        },
-        6: {
-            id: 6,
-            name: "Countryside Cottage",
-            address: "300 Vineyard Lane, Napa Valley, CA 94558",
-            type: "Cottage",
-            value: "$650,000",
-            client: "Wine Country Estates",
-            closingDays: 18,
-            status: "Completed",
-            documentsSubmitted: 3,
-            documentsTotal: 4,
-            aiAnalysisProgress: 75,
-            totalIssues: 6,
-            criticalIssues: 1,
-        },
-    };
+    // Fetch properties from API on mount
+    useEffect(() => {
+        const fetchProperties = async () => {
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                const userId = getCurrentUserId();
+                if (!userId) {
+                    setError('Please login to view your properties');
+                    setIsLoading(false);
+                    return;
+                }
+
+                const apiProperties = await propertyAPI.getUserProperties(userId);
+
+                // Transform API response to component format
+                const transformedProperties: Property[] = apiProperties.map((prop: PropertyResponse) => ({
+                    id: prop.property_id,
+                    name: prop.property_name,
+                    location: prop.location,
+                    image: undefined, // API doesn't provide images
+                    type: undefined, // API doesn't provide type
+                    closingDate: prop.property_closing_date ? new Date(prop.property_closing_date).toLocaleDateString() : undefined,
+                    status: "Pending" as const, // Default status, can be updated based on process status
+                    statusColor: "bg-amber-100 text-amber-800",
+                    clientName: prop.client_name,
+                }));
+
+                setProperties(transformedProperties);
+            } catch (err) {
+                console.error('Error fetching properties:', err);
+                setError(err instanceof Error ? err.message : 'Failed to load properties');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchProperties();
+    }, []);
+
+    // Filter properties based on search query and status
+    const filteredProperties = useMemo(() => {
+        return properties.filter(property => {
+            // Search filter
+            const searchLower = searchQuery.toLowerCase();
+            const matchesSearch = searchQuery === '' ||
+                property.name.toLowerCase().includes(searchLower) ||
+                property.location.toLowerCase().includes(searchLower) ||
+                (property.clientName && property.clientName.toLowerCase().includes(searchLower));
+
+            // Status filter
+            const matchesStatus = statusFilter === 'All Status' ||
+                property.status === statusFilter;
+
+            return matchesSearch && matchesStatus;
+        });
+    }, [properties, searchQuery, statusFilter]);
+
+    // Calculate pagination
+    const totalPages = Math.max(1, Math.ceil(filteredProperties.length / itemsPerPage));
+    const paginatedProperties = filteredProperties.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, statusFilter]);
+
+    // Generate property details for selected property
+    const selectedDetail: PropertyDetail | null = selectedProperty ? {
+        id: selectedProperty.id,
+        name: selectedProperty.name,
+        address: selectedProperty.location,
+        type: selectedProperty.type || "Property",
+        value: selectedProperty.value || "N/A",
+        client: selectedProperty.clientName || "N/A",
+        closingDays: selectedProperty.closingDate ? Math.max(0, Math.ceil((new Date(selectedProperty.closingDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0,
+        status: selectedProperty.status,
+        documentsSubmitted: 0,
+        documentsTotal: 4,
+        aiAnalysisProgress: 0,
+        totalIssues: 0,
+        criticalIssues: 0,
+    } : null;
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -213,27 +146,54 @@ const Page = () => {
         setSelectedProperty(null);
     };
 
-    const selectedDetail = selectedProperty ? propertyDetails[selectedProperty.id] : null;
+    const handleSearchChange = (query: string) => {
+        setSearchQuery(query);
+    };
+
+    const handleStatusFilterChange = (status: string) => {
+        setStatusFilter(status);
+    };
 
     return (
         <div className="flex flex-col h-full">
-            <PropertyListHeader />
+            <PropertyListHeader
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+                statusFilter={statusFilter}
+                onStatusFilterChange={handleStatusFilterChange}
+            />
+
+            {/* Error Message */}
+            {error && (
+                <div className="mx-4 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                    <p className="text-red-700 text-sm">{error}</p>
+                </div>
+            )}
 
             {/* Split View Layout */}
             <div className="flex-1 mt-4 flex gap-4 lg:gap-0 overflow-hidden">
                 {/* Left Panel - Property List */}
                 <div className={`bg-white rounded-[32px] p-4 lg:p-6 flex flex-col transition-all duration-300 ${selectedProperty
-                        ? "hidden lg:flex lg:flex-1 lg:rounded-r-none"
-                        : "flex-1"
+                    ? "hidden lg:flex lg:flex-1 lg:rounded-r-none"
+                    : "flex-1"
                     }`}>
-                    <h2 className="text-xl font-semibold text-[#0C1D38] mb-4">Property List</h2>
+                    <h2 className="text-xl font-semibold text-[#0C1D38] mb-4">
+                        Property List
+                        {filteredProperties.length > 0 && (
+                            <span className="text-sm font-normal text-gray-500 ml-2">
+                                ({filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'})
+                            </span>
+                        )}
+                    </h2>
                     <PropertyList
-                        properties={properties}
+                        properties={paginatedProperties}
                         selectedPropertyId={selectedProperty?.id}
                         onSelectProperty={handleSelectProperty}
                         currentPage={currentPage}
                         totalPages={totalPages}
                         onPageChange={handlePageChange}
+                        isLoading={isLoading}
                     />
                 </div>
 

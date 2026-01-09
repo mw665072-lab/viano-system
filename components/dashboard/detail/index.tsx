@@ -1,79 +1,129 @@
+"use client"
+
 import Image from "next/image"
 import { Card } from "@/components/ui/card"
-import { CheckCircle2, Clock, AlertCircle } from "lucide-react"
+import { CheckCircle2, Clock, AlertCircle, Home } from "lucide-react"
 
 interface Property {
-    id: number
+    id: string
     name: string
     subtitle: string
-    image: string
+    image?: string
     status: "Pending" | "Completed"
     statusColor: string
+    clientName?: string
+    closingDate?: string
 }
 
 interface PropertyDetailProps {
-    property: Property
+    property: Property | null
 }
 
 export function PropertyDetail({ property }: PropertyDetailProps) {
+    if (!property) {
+        return (
+            <Card className="bg-white overflow-hidden py-0 border-0 shadow-none rounded-[32px] h-full flex items-center justify-center">
+                <div className="text-center p-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Home className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Select a property</h3>
+                    <p className="text-sm text-gray-500">Choose a property from the list to view details</p>
+                </div>
+            </Card>
+        );
+    }
+
+    // Calculate days left until closing
+    const daysLeft = property.closingDate
+        ? Math.max(0, Math.ceil((new Date(property.closingDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        : null;
+
     const documents = [
         {
             id: 1,
             name: "4 Point Evaluation",
-            progress: 100,
-            timestamp: "2 hours ago",
-            icon: "check",
+            progress: property.status === "Completed" ? 100 : 0,
+            timestamp: property.status === "Completed" ? "Completed" : "Pending",
+            icon: property.status === "Completed" ? "check" : "pending",
             color: "bg-[#007AFF]",
         },
         {
             id: 2,
             name: "Home Inspection",
-            progress: 65,
-            timestamp: "In progress",
-            icon: "clock",
+            progress: property.status === "Completed" ? 100 : 0,
+            timestamp: property.status === "Completed" ? "Completed" : "Pending",
+            icon: property.status === "Completed" ? "check" : "pending",
             color: "bg-[#007AFF]",
         },
     ]
 
+    // Format closing date for display
+    const formattedClosingDate = property.closingDate
+        ? new Date(property.closingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : "Not set";
+
     return (
         <Card className="bg-white overflow-hidden py-0 border-0 shadow-none rounded-[32px]">
             <div className="relative w-full h-[223px] bg-slate-200 overflow-hidden rounded-tl-[32px] rounded-tr-[32px]">
-                <Image
-                    src="/property-placeholder.png"
-                    alt={property.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 100vw"
-                    className="object-cover"
-                    style={{ transform: "rotate(0deg)", opacity: 1 }}
-                />
+                {property.image ? (
+                    <Image
+                        src={property.image}
+                        alt={property.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 100vw"
+                        className="object-cover"
+                        style={{ transform: "rotate(0deg)", opacity: 1 }}
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
+                        <Home className="w-16 h-16 text-slate-400" />
+                    </div>
+                )}
 
                 <div className="absolute inset-0 p-4">
                     <div
-                        className="absolute top-4 right-4 flex items-center justify-center gap-[10px] px-[10px] py-[8px] text-[#FF4D00] text-xs font-semibold rounded-[20px]"
-                        style={{ background: "rgba(255, 149, 0, 0.2)", backdropFilter: "blur(2px)", transform: "rotate(0deg)", opacity: 1 }}
+                        className={`absolute top-4 right-4 flex items-center justify-center gap-[10px] px-[10px] py-[8px] text-xs font-semibold rounded-[20px] ${property.status === "Completed"
+                                ? "text-emerald-600 bg-emerald-100/80"
+                                : "text-[#FF4D00]"
+                            }`}
+                        style={{
+                            background: property.status === "Completed"
+                                ? "rgba(16, 185, 129, 0.2)"
+                                : "rgba(255, 149, 0, 0.2)",
+                            backdropFilter: "blur(2px)"
+                        }}
                     >
-                        Evaluation Pending
+                        {property.status === "Completed" ? "Evaluation Complete" : "Evaluation Pending"}
                     </div>
 
                     <h2
-                        className="absolute left-4 bottom-4 text-white text-[18px] font-bold"
-                        style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontStyle: "normal", lineHeight: "22.5px", color: "#FFFFFF" }}
+                        className="absolute left-4 bottom-4 text-white text-[18px] font-bold drop-shadow-lg"
+                        style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, lineHeight: "22.5px" }}
                     >
-                        Wayland Beach House
+                        {property.name}
                     </h2>
                 </div>
             </div>
 
             <div className="p-[20px]">
-                <div className="flex items-center justify-between rounded-[12px] pt-[16px] pb-[16px]" style={{ transform: "rotate(0deg)", opacity: 1 }}>
+                <div className="flex items-center justify-between rounded-[12px] pt-[16px] pb-[16px]">
                     <div>
                         <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>CLIENT</p>
-                        <p className="text-[14px] leading-[21px] font-semibold" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38" }}>Sarah Johnson</p>
+                        <p className="text-[14px] leading-[21px] font-semibold" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38" }}>
+                            {property.clientName || "Not specified"}
+                        </p>
                     </div>
                     <div className="text-right">
                         <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>CLOSING</p>
-                        <p className="text-[14px] leading-[21px] font-semibold" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38", textAlign: "right" }}>Feb 15, 2024</p>
-                        <p className="text-xs text-[#FF3B30] font-medium">0 days left</p>
+                        <p className="text-[14px] leading-[21px] font-semibold" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38", textAlign: "right" }}>
+                            {formattedClosingDate}
+                        </p>
+                        {daysLeft !== null && (
+                            <p className={`text-xs font-medium ${daysLeft <= 7 ? "text-[#FF3B30]" : daysLeft <= 14 ? "text-amber-500" : "text-emerald-500"}`}>
+                                {daysLeft} days left
+                            </p>
+                        )}
                     </div>
                 </div>
 
