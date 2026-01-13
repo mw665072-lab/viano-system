@@ -18,7 +18,6 @@ interface Property {
     location: string
     image?: string
     type?: string
-    value?: string
     closingDate?: string
     status: DisplayStatus
     detailedStatus: string // Raw status from API
@@ -35,7 +34,6 @@ interface PropertyDetail {
     name: string
     address: string
     type: string
-    value: string
     client: string
     closingDays: number
     status: "Pending" | "Completed"
@@ -225,10 +223,22 @@ const Page = () => {
         loadData();
     }, [fetchPropertiesWithStatus]);
 
-    // Auto-refresh every 1 minute (60000ms)
+    // Check if any properties have active processing
+    const hasActiveProcessing = useMemo(() => {
+        return properties.some(p =>
+            p.detailedStatus === 'started' ||
+            p.detailedStatus === 'downloading' ||
+            p.detailedStatus === 'generating_messages' ||
+            p.detailedStatus === 'storing_messages'
+        );
+    }, [properties]);
+
+    // Smart auto-refresh: 5 seconds when processing, 60 seconds when idle
     useEffect(() => {
+        const pollInterval = hasActiveProcessing ? 5000 : 60000; // 5s when active, 60s when idle
+
         const refreshInterval = setInterval(async () => {
-            console.log('Auto-refreshing status at:', new Date().toISOString());
+            console.log(`Auto-refreshing status (${hasActiveProcessing ? 'active' : 'idle'} mode) at:`, new Date().toISOString());
             await fetchPropertiesWithStatus();
 
             // Update selected property if it exists
@@ -239,10 +249,10 @@ const Page = () => {
                     return updated || prev;
                 });
             }
-        }, 60000); // Poll every 1 minute
+        }, pollInterval);
 
         return () => clearInterval(refreshInterval);
-    }, [fetchPropertiesWithStatus, selectedProperty, properties]);
+    }, [fetchPropertiesWithStatus, selectedProperty, properties, hasActiveProcessing]);
 
     // Download AI-generated report for a property
     const handleDownload = useCallback(async (propertyId: string, processId?: string) => {
@@ -420,7 +430,6 @@ const Page = () => {
         name: selectedProperty.name,
         address: selectedProperty.location,
         type: selectedProperty.type || "Property",
-        value: selectedProperty.value || "N/A",
         client: selectedProperty.clientName || "N/A",
         closingDays: selectedProperty.closingDate ? Math.max(0, Math.ceil((new Date(selectedProperty.closingDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0,
         status: selectedProperty.status === "Completed" ? "Completed" : "Pending",
@@ -489,7 +498,7 @@ const Page = () => {
             {/* Last Refresh Indicator */}
             <div className="mx-4 mt-1 text-[10px] text-gray-400 flex items-center gap-2">
                 <span>Updated: {lastRefresh.toLocaleTimeString()}</span>
-                <span>• Auto-refreshes every minute</span>
+                <span>• {hasActiveProcessing ? '🔄 Live updates (5s)' : 'Auto-refreshes every minute'}</span>
             </div>
 
             {/* Split View Layout */}

@@ -308,7 +308,6 @@ const AddPropertyPage = () => {
                                         value={formData.closingDate}
                                         onChange={handleInputChange}
                                         disabled={isSubmitting}
-                                        min={new Date().toISOString().split('T')[0]}
                                         className={`h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50 cursor-pointer ${formData.closingDate ? 'text-[#1E1E1E]' : 'text-[#9CA3AF]'}`}
                                     />
                                 </div>

@@ -9,7 +9,6 @@ interface PropertyDetailData {
     name: string
     address: string
     type: string
-    value: string
     client: string
     closingDays: number
     status: "Pending" | "Completed"
@@ -158,10 +157,6 @@ export function PropertyDetailPanel({
                         <div className="flex items-center justify-between">
                             <span className="text-sm text-[#64748B]">TYPE:</span>
                             <span className="text-sm font-medium text-[#0C1D38]">{property.type}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-[#64748B]">VALUE:</span>
-                            <span className="text-sm font-medium text-[#0C1D38]">{property.value}</span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-sm text-[#64748B]">CLIENT:</span>
