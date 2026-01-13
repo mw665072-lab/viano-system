@@ -15,6 +15,13 @@ const Layout = ({ children }: LayoutProps) => {
     const pathname = usePathname();
     const router = useRouter();
 
+    // Auth pages should bypass the sidebar/navbar layout
+    const isAuthPage = pathname === "/login" || pathname === "/signup";
+
+    if (isAuthPage) {
+        return <>{children}</>;
+    }
+
     const handleAddProperty = () => {
         // Add your property creation logic here
         console.log("Add new property clicked");
@@ -90,3 +97,4 @@ const Layout = ({ children }: LayoutProps) => {
 };
 
 export default Layout;
+

@@ -224,10 +224,13 @@ const AddPropertyPage = () => {
                         >
                             {/* Row 1: Name of the Property and Address */}
                             <div>
+                                <label className="block text-sm font-medium text-[#374151] mb-2">
+                                    Property Name <span className="text-red-500">*</span>
+                                </label>
                                 <Input
                                     type="text"
                                     name="propertyName"
-                                    placeholder="Name of the Property"
+                                    placeholder="Enter property name"
                                     value={formData.propertyName}
                                     onChange={handleInputChange}
                                     disabled={isSubmitting}
@@ -235,10 +238,13 @@ const AddPropertyPage = () => {
                                 />
                             </div>
                             <div>
+                                <label className="block text-sm font-medium text-[#374151] mb-2">
+                                    Address <span className="text-red-500">*</span>
+                                </label>
                                 <Input
                                     type="text"
                                     name="address"
-                                    placeholder="Address"
+                                    placeholder="Enter street address"
                                     value={formData.address}
                                     onChange={handleInputChange}
                                     disabled={isSubmitting}
@@ -248,10 +254,13 @@ const AddPropertyPage = () => {
 
                             {/* Row 2: City and State */}
                             <div>
+                                <label className="block text-sm font-medium text-[#374151] mb-2">
+                                    City <span className="text-red-500">*</span>
+                                </label>
                                 <Input
                                     type="text"
                                     name="city"
-                                    placeholder="City"
+                                    placeholder="Enter city"
                                     value={formData.city}
                                     onChange={handleInputChange}
                                     disabled={isSubmitting}
@@ -259,10 +268,13 @@ const AddPropertyPage = () => {
                                 />
                             </div>
                             <div>
+                                <label className="block text-sm font-medium text-[#374151] mb-2">
+                                    State <span className="text-red-500">*</span>
+                                </label>
                                 <Input
                                     type="text"
                                     name="state"
-                                    placeholder="State"
+                                    placeholder="Enter state"
                                     value={formData.state}
                                     onChange={handleInputChange}
                                     disabled={isSubmitting}
@@ -272,10 +284,13 @@ const AddPropertyPage = () => {
 
                             {/* Row 3: Client Name and Closing Date */}
                             <div>
+                                <label className="block text-sm font-medium text-[#374151] mb-2">
+                                    Client Name
+                                </label>
                                 <Input
                                     type="text"
                                     name="clientName"
-                                    placeholder="Client Name"
+                                    placeholder="Enter client name"
                                     value={formData.clientName}
                                     onChange={handleInputChange}
                                     disabled={isSubmitting}
@@ -283,15 +298,21 @@ const AddPropertyPage = () => {
                                 />
                             </div>
                             <div>
-                                <Input
-                                    type="date"
-                                    name="closingDate"
-                                    placeholder="Closing Date"
-                                    value={formData.closingDate}
-                                    onChange={handleInputChange}
-                                    disabled={isSubmitting}
-                                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50"
-                                />
+                                <label className="block text-sm font-medium text-[#374151] mb-2">
+                                    Property Closing Date
+                                </label>
+                                <div className="relative">
+                                    <Input
+                                        type="date"
+                                        name="closingDate"
+                                        value={formData.closingDate}
+                                        onChange={handleInputChange}
+                                        disabled={isSubmitting}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        className={`h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50 cursor-pointer ${formData.closingDate ? 'text-[#1E1E1E]' : 'text-[#9CA3AF]'}`}
+                                    />
+                                </div>
+                                <p className="text-xs text-[#9CA3AF] mt-1">Format: MM/DD/YYYY</p>
                             </div>
 
                             {/* Row 4: Upload Buttons - Two separate buttons */}

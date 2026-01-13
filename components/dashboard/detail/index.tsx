@@ -9,7 +9,7 @@ interface Property {
     name: string
     subtitle: string
     image?: string
-    status: "Pending" | "Completed"
+    status: "Pending" | "Completed" | "In Progress"
     statusColor: string
     clientName?: string
     closingDate?: string
@@ -84,8 +84,8 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                 <div className="absolute inset-0 p-4">
                     <div
                         className={`absolute top-4 right-4 flex items-center justify-center gap-[10px] px-[10px] py-[8px] text-xs font-semibold rounded-[20px] ${property.status === "Completed"
-                                ? "text-emerald-600 bg-emerald-100/80"
-                                : "text-[#FF4D00]"
+                            ? "text-emerald-600 bg-emerald-100/80"
+                            : "text-[#FF4D00]"
                             }`}
                         style={{
                             background: property.status === "Completed"
