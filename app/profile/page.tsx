@@ -312,19 +312,6 @@ export default function ProfilePage() {
                           <p className="text-sm text-gray-900 mt-1">{profile.location}</p>
                         </div>
                       </div>
-
-                      {/* Buttons */}
-                      <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 py-2.5 text-sm font-medium">
-                          Edit Profile
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="rounded-lg px-6 py-2.5 text-sm font-medium border-gray-300 text-gray-700 hover:bg-gray-50"
-                        >
-                          Account Settings
-                        </Button>
-                      </div>
                     </div>
                   </div>
                 </Card>

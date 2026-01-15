@@ -1,12 +1,11 @@
 "use client";
 import { Home, Building2, User, LogOut } from "lucide-react";
-import { useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { clearAuth } from '@/lib/api';
 
 export default function Sidebar() {
-  const [activeItem, setActiveItem] = useState("dashboard");
   const router = useRouter();
+  const pathname = usePathname();
 
   const menuItems = [
     {
@@ -16,6 +15,16 @@ export default function Sidebar() {
     { id: "properties", label: "Manage Properties", icon: Building2, href: "/manage-properties" },
     { id: "profile", label: "Profile", icon: User, href: "/profile" },
   ];
+
+  // Determine which menu item is active based on current pathname
+  const getActiveId = () => {
+    if (pathname === '/') return 'dashboard';
+    if (pathname.startsWith('/manage-properties') || pathname.startsWith('/add-properties')) return 'properties';
+    if (pathname.startsWith('/profile')) return 'profile';
+    return 'dashboard';
+  };
+
+  const activeItem = getActiveId();
 
   const handleLogout = () => {
     // Clear all auth data from localStorage
@@ -45,10 +54,7 @@ export default function Sidebar() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => {
-                    setActiveItem(item.id)
-                    router.push(item.href)
-                  }}
+                  onClick={() => router.push(item.href)}
                   className={`w-[209px] h-[40px] flex items-center gap-[10px] px-4 py-2 rounded-[12px] text-sm font-medium transition-colors rotate-0 opacity-100 ${isActive
                     ? "bg-[#D8E6FD] text-blue-600"
                     : "text-gray-700 hover:bg-gray-50"

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { ChevronRight, X, AlertCircle } from "lucide-react"
+import { ChevronRight, X, AlertCircle, Plus } from "lucide-react"
 import { PropertyList } from "../list"
 import { PropertyDetail } from "../detail"
 import { propertyAPI, processAPI, PropertyResponse, ProcessSummaryResponse, getCurrentUserId } from "@/lib/api"
@@ -23,6 +23,7 @@ interface DashboardProperty {
     clientName?: string
     closingDate?: string
     progress: number
+    processId?: string // Added for fetching messages
 }
 
 // Status configuration with colors and messages
@@ -147,6 +148,7 @@ export function PropertyEvaluationDashboard() {
                     clientName: prop.client_name,
                     closingDate: prop.property_closing_date || undefined,
                     progress: progress,
+                    processId: process?.process_id,
                 };
             });
 
@@ -180,15 +182,34 @@ export function PropertyEvaluationDashboard() {
         loadData()
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Auto-refresh every 1 minute (60000ms)
+    // Smart refresh - only poll when there are active processes
     useEffect(() => {
+        // Check if any properties have active processing
+        const hasActiveProcessing = properties.some(p =>
+            p.detailedStatus &&
+            ['pending', 'started', 'downloading', 'generating_messages', 'storing_messages'].includes(p.detailedStatus)
+        );
+
+        // Only set up polling if there are active processes
+        if (!hasActiveProcessing) {
+            return; // No active processes, don't poll
+        }
+
+        // Poll every 10 seconds when there are active processes
         const refreshInterval = setInterval(async () => {
-            console.log('Dashboard: Auto-refreshing status at:', new Date().toISOString());
             await fetchPropertiesWithStatus();
-        }, 60000); // Poll every 1 minute
+        }, 10000);
 
         return () => clearInterval(refreshInterval);
-    }, [fetchPropertiesWithStatus]);
+    }, [fetchPropertiesWithStatus, properties]);
+
+    // Handler for property selection from list
+    const handleSelectProperty = (property: { id: string; status: "Pending" | "Completed" | "In Progress" }) => {
+        const fullProperty = properties.find(p => p.id === property.id);
+        if (fullProperty) {
+            setSelectedProperty(fullProperty);
+        }
+    };
 
     return (
         <div className="rounded-[32px] opacity-100 rotate-0">
@@ -209,17 +230,23 @@ export function PropertyEvaluationDashboard() {
                                         </span>
                                     )}
                                 </h2>
-                                <p className="text-xs text-gray-400 mt-1">
-                                    Updated: {lastRefresh.toLocaleTimeString()} • Auto-refreshes every minute
-                                </p>
                             </div>
-                            <Link
-                                href="/manage-properties"
-                                className="flex items-center justify-center gap-[10px] w-[117px] h-[40px] rounded-[32323px] px-[16px] py-[8px] bg-[#F8F9FA] border border-[#D9D9D9] text-sm text-[#0C1D38] opacity-100 rotate-0 hover:bg-gray-100 transition-colors"
-                            >
-                                View All
-                                <ChevronRight className="w-4 h-4" />
-                            </Link>
+                            <div className="flex flex-col gap-2">
+                                <Link
+                                    href="/manage-properties/add-properties"
+                                    className="group flex items-center justify-center gap-2 h-[40px] px-5 rounded-full bg-gradient-to-r from-[#00346C] to-[#0052A3] text-white text-sm font-medium shadow-md hover:shadow-lg hover:from-[#002752] hover:to-[#00346C] transition-all duration-300"
+                                >
+                                    <Plus className="w-4 h-4 transition-transform group-hover:rotate-90 duration-300" />
+                                    <span>Add Property</span>
+                                </Link>
+                                <Link
+                                    href="/manage-properties"
+                                    className="flex items-center justify-center gap-2 h-[40px] rounded-full px-4 py-2 bg-white border border-[#E5E7EB] text-sm text-[#0C1D38] font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                                >
+                                    View All
+                                    <ChevronRight className="w-4 h-4" />
+                                </Link>
+                            </div>
                         </div>
                     </div>
 
@@ -235,7 +262,7 @@ export function PropertyEvaluationDashboard() {
                         <PropertyList
                             properties={properties}
                             selectedProperty={selectedProperty}
-                            onSelectProperty={setSelectedProperty}
+                            onSelectProperty={handleSelectProperty}
                             isLoading={isLoading}
                         />
                     </div>
@@ -243,20 +270,7 @@ export function PropertyEvaluationDashboard() {
 
                 {/* Right Column - Property Detail */}
                 <div className="hidden lg:block w-full lg:h-[702px] rounded-[32px] opacity-100 rotate-0 overflow-y-auto relative">
-                    {showDetail && (
-                        <>
-                            {selectedProperty && (
-                                <button
-                                    type="button"
-                                    onClick={() => setShowDetail(false)}
-                                    className="absolute top-4 left-4 z-10 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors"
-                                >
-                                    <X className="w-4 h-4 text-gray-600" />
-                                </button>
-                            )}
-                            <PropertyDetail property={selectedProperty} />
-                        </>
-                    )}
+                    <PropertyDetail property={selectedProperty} />
                 </div>
             </div>
         </div>

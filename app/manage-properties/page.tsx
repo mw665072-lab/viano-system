@@ -3,8 +3,10 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import PropertyListHeader from '@/common/property-list-header';
 import { PropertyList } from '@/components/manage-properties/list';
 import { PropertyDetailPanel } from '@/components/manage-properties/detail';
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, EngineResultResponse, MessageResponse, getCurrentUserId } from '@/lib/api';
+import { AlertCircle, Loader2, X, Upload, FileText, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, EngineResultResponse, MessageResponse, UpdatePropertyRequest, getCurrentUserId } from '@/lib/api';
 
 // All possible process statuses from the workflow
 type ProcessStatus = "pending" | "started" | "downloading" | "generating_messages" | "storing_messages" | "completed" | "failed";
@@ -42,6 +44,7 @@ interface PropertyDetail {
     aiAnalysisProgress: number
     totalIssues: number
     criticalIssues: number
+    processId?: string
 }
 
 // Status configuration with colors and messages
@@ -125,6 +128,26 @@ const Page = () => {
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadError, setDownloadError] = useState<string | null>(null);
     const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+
+    // Edit modal state
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
+    const [editFourPointFile, setEditFourPointFile] = useState<File | null>(null);
+    const [editHomeInspectionFile, setEditHomeInspectionFile] = useState<File | null>(null);
+
+    // Delete confirmation modal state
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [propertyToDelete, setPropertyToDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Toast notification state
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    // Show toast helper
+    const showToast = (message: string, type: 'success' | 'error') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
 
     const itemsPerPage = 6;
 
@@ -223,22 +246,21 @@ const Page = () => {
         loadData();
     }, [fetchPropertiesWithStatus]);
 
-    // Check if any properties have active processing
-    const hasActiveProcessing = useMemo(() => {
-        return properties.some(p =>
-            p.detailedStatus === 'started' ||
-            p.detailedStatus === 'downloading' ||
-            p.detailedStatus === 'generating_messages' ||
-            p.detailedStatus === 'storing_messages'
-        );
-    }, [properties]);
-
-    // Smart auto-refresh: 5 seconds when processing, 60 seconds when idle
+    // Smart refresh - only poll when there are active processes
     useEffect(() => {
-        const pollInterval = hasActiveProcessing ? 5000 : 60000; // 5s when active, 60s when idle
+        // Check if any properties have active processing
+        const hasActiveProcessing = properties.some(p =>
+            p.detailedStatus &&
+            ['pending', 'started', 'downloading', 'generating_messages', 'storing_messages'].includes(p.detailedStatus)
+        );
 
+        // Only set up polling if there are active processes
+        if (!hasActiveProcessing) {
+            return; // No active processes, don't poll
+        }
+
+        // Poll every 10 seconds when there are active processes
         const refreshInterval = setInterval(async () => {
-            console.log(`Auto-refreshing status (${hasActiveProcessing ? 'active' : 'idle'} mode) at:`, new Date().toISOString());
             await fetchPropertiesWithStatus();
 
             // Update selected property if it exists
@@ -249,10 +271,10 @@ const Page = () => {
                     return updated || prev;
                 });
             }
-        }, pollInterval);
+        }, 10000); // Poll every 10 seconds only when active
 
         return () => clearInterval(refreshInterval);
-    }, [fetchPropertiesWithStatus, selectedProperty, properties, hasActiveProcessing]);
+    }, [fetchPropertiesWithStatus, selectedProperty, properties]);
 
     // Download AI-generated report for a property
     const handleDownload = useCallback(async (propertyId: string, processId?: string) => {
@@ -360,30 +382,103 @@ const Page = () => {
         }
     }, [properties]);
 
-    // Delete a property
-    const handleDelete = useCallback(async (propertyId: string) => {
+    // Open delete confirmation modal
+    const openDeleteModal = (propertyId: string) => {
+        setPropertyToDelete(propertyId);
+        setIsDeleteModalOpen(true);
+    };
+
+    // Confirm and execute delete
+    const confirmDelete = useCallback(async () => {
+        if (!propertyToDelete) return;
+
         const userId = getCurrentUserId();
         if (!userId) {
-            setError('Please login to delete properties');
+            showToast('Please login to delete properties', 'error');
+            setIsDeleteModalOpen(false);
             return;
         }
 
-        if (!confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
-            return;
-        }
-
+        setIsDeleting(true);
         try {
-            await propertyAPI.delete(userId, propertyId);
+            // Delete from backend API
+            await propertyAPI.delete(userId, propertyToDelete);
 
-            // Remove from local state
-            setProperties(prev => prev.filter(p => p.id !== propertyId));
+            // Remove from local state after successful API delete
+            setProperties(prev => prev.filter(p => p.id !== propertyToDelete));
             setSelectedProperty(null);
+            showToast('Property deleted successfully!', 'success');
 
         } catch (err) {
             console.error('Error deleting property:', err);
-            alert(err instanceof Error ? err.message : 'Failed to delete property');
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            showToast('Failed to delete property: ' + errorMessage, 'error');
+        } finally {
+            setIsDeleting(false);
+            setIsDeleteModalOpen(false);
+            setPropertyToDelete(null);
         }
+    }, [propertyToDelete]);
+
+    // Open restart process modal
+    const handleOpenEditModal = useCallback((property: Property) => {
+        setEditFourPointFile(null);
+        setEditHomeInspectionFile(null);
+        setIsEditModalOpen(true);
     }, []);
+
+    const handleSavePropertyEdit = useCallback(async () => {
+        if (!selectedProperty) return;
+
+        const userId = getCurrentUserId();
+        if (!userId) {
+            setError('Please login to edit properties');
+            return;
+        }
+
+        // Check if any documents are being uploaded
+        const filesToUpload: File[] = [];
+        const docTypes: ('4point' | 'home_inspection')[] = [];
+
+        if (editFourPointFile) {
+            filesToUpload.push(editFourPointFile);
+            docTypes.push('4point');
+        }
+        if (editHomeInspectionFile) {
+            filesToUpload.push(editHomeInspectionFile);
+            docTypes.push('home_inspection');
+        }
+
+        if (filesToUpload.length === 0) {
+            showToast('Please upload at least one document.', 'error');
+            return;
+        }
+
+        setIsSavingEdit(true);
+        try {
+            // 1. Upload new documents
+            await documentAPI.upload(userId, selectedProperty.id, filesToUpload, docTypes);
+
+            // 2. Restart processing pipeline
+            await processAPI.start({
+                user_id: userId,
+                property_id: selectedProperty.id,
+            });
+
+            // Refresh properties list
+            await fetchPropertiesWithStatus();
+            setIsEditModalOpen(false);
+            setEditFourPointFile(null);
+            setEditHomeInspectionFile(null);
+            showToast('Property edited successfully!', 'success');
+
+        } catch (err) {
+            console.error('Error restarting process:', err);
+            showToast(err instanceof Error ? err.message : 'Failed to restart process. Please try again.', 'error');
+        } finally {
+            setIsSavingEdit(false);
+        }
+    }, [selectedProperty, editFourPointFile, editHomeInspectionFile, fetchPropertiesWithStatus]);
 
     // Filter properties based on search query and status
     const filteredProperties = useMemo(() => {
@@ -438,6 +533,7 @@ const Page = () => {
         aiAnalysisProgress: selectedProperty.progress,
         totalIssues: 0,
         criticalIssues: 0,
+        processId: selectedProperty.processId,
     } : null;
 
     const handlePageChange = (page: number) => {
@@ -495,11 +591,7 @@ const Page = () => {
                 </div>
             )}
 
-            {/* Last Refresh Indicator */}
-            <div className="mx-4 mt-1 text-[10px] text-gray-400 flex items-center gap-2">
-                <span>Updated: {lastRefresh.toLocaleTimeString()}</span>
-                <span>• {hasActiveProcessing ? '🔄 Live updates (5s)' : 'Auto-refreshes every minute'}</span>
-            </div>
+
 
             {/* Split View Layout */}
             <div className="flex-1 mt-2 flex gap-4 lg:gap-0 min-h-0">
@@ -537,9 +629,9 @@ const Page = () => {
                             <PropertyDetailPanel
                                 property={selectedDetail}
                                 onClose={handleCloseDetail}
-                                onEdit={() => console.log("Edit clicked")}
+                                onEdit={() => handleOpenEditModal(selectedProperty)}
                                 onDownload={() => handleDownload(selectedProperty.id)}
-                                onDelete={() => handleDelete(selectedProperty.id)}
+                                onDelete={() => openDeleteModal(selectedProperty.id)}
                             />
                             {isDownloading && (
                                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
@@ -554,9 +646,9 @@ const Page = () => {
                                 <PropertyDetailPanel
                                     property={selectedDetail}
                                     onClose={handleCloseDetail}
-                                    onEdit={() => console.log("Edit clicked")}
+                                    onEdit={() => handleOpenEditModal(selectedProperty)}
                                     onDownload={() => handleDownload(selectedProperty.id)}
-                                    onDelete={() => handleDelete(selectedProperty.id)}
+                                    onDelete={() => openDeleteModal(selectedProperty.id)}
                                 />
                                 {isDownloading && (
                                     <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
@@ -568,6 +660,203 @@ const Page = () => {
                     </>
                 )}
             </div>
+
+            {/* Edit Property Modal */}
+            {isEditModalOpen && selectedProperty && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-2xl w-full shadow-xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-900">Edit Property</h3>
+                                <p className="text-sm text-gray-500">Upload new documents to update the property</p>
+                            </div>
+                            <button
+                                onClick={() => setIsEditModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            {/* Property Info Display */}
+                            <div className="p-4 bg-gray-50 rounded-lg">
+                                <h4 className="font-medium text-gray-900 mb-2">{selectedProperty.name}</h4>
+                                <p className="text-sm text-gray-600">{selectedProperty.location}</p>
+                                {selectedProperty.clientName && (
+                                    <p className="text-sm text-gray-500 mt-1">Client: {selectedProperty.clientName}</p>
+                                )}
+                            </div>
+
+                            {/* Document Upload Section */}
+                            <div className="pt-4">
+                                <div className="flex items-center justify-between mb-1">
+                                    <p className="text-sm font-medium text-gray-700">Upload Documents</p>
+                                    <span className="text-sm font-medium text-blue-600">
+                                        {(editFourPointFile ? 1 : 0) + (editHomeInspectionFile ? 1 : 0)} document(s) selected
+                                    </span>
+                                </div>
+                                <p className="text-xs text-gray-500 mb-4">Upload at least one document to update the property</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* 4-Point File Upload */}
+                                    <div>
+                                        <input
+                                            id="edit-fourpoint-upload"
+                                            type="file"
+                                            accept=".pdf"
+                                            onChange={(e) => e.target.files && setEditFourPointFile(e.target.files[0])}
+                                            className="hidden"
+                                        />
+                                        {!editFourPointFile ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => document.getElementById('edit-fourpoint-upload')?.click()}
+                                                className="w-full h-[100px] rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors flex flex-col items-center justify-center gap-2"
+                                            >
+                                                <Upload className="w-5 h-5 text-gray-400" />
+                                                <span className="text-sm text-gray-500">4-Point File</span>
+                                            </button>
+                                        ) : (
+                                            <div className="w-full h-[100px] rounded-lg border-2 border-green-500 bg-green-50 flex flex-col items-center justify-center gap-2 relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditFourPointFile(null)}
+                                                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                                <FileText className="w-5 h-5 text-green-600" />
+                                                <span className="text-xs text-gray-600 truncate max-w-[90%] px-2">{editFourPointFile.name}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Home Inspection File Upload */}
+                                    <div>
+                                        <input
+                                            id="edit-homeinspection-upload"
+                                            type="file"
+                                            accept=".pdf"
+                                            onChange={(e) => e.target.files && setEditHomeInspectionFile(e.target.files[0])}
+                                            className="hidden"
+                                        />
+                                        {!editHomeInspectionFile ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => document.getElementById('edit-homeinspection-upload')?.click()}
+                                                className="w-full h-[100px] rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors flex flex-col items-center justify-center gap-2"
+                                            >
+                                                <Upload className="w-5 h-5 text-gray-400" />
+                                                <span className="text-sm text-gray-500">Home Inspection</span>
+                                            </button>
+                                        ) : (
+                                            <div className="w-full h-[100px] rounded-lg border-2 border-green-500 bg-green-50 flex flex-col items-center justify-center gap-2 relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditHomeInspectionFile(null)}
+                                                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                                <FileText className="w-5 h-5 text-green-600" />
+                                                <span className="text-xs text-gray-600 truncate max-w-[90%] px-2">{editHomeInspectionFile.name}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 p-6 border-t sticky bottom-0 bg-white">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsEditModalOpen(false)}
+                                className="flex-1"
+                                disabled={isSavingEdit}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleSavePropertyEdit}
+                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                disabled={isSavingEdit}
+                            >
+                                {isSavingEdit ? (
+                                    <span className="flex items-center gap-2">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Saving...
+                                    </span>
+                                ) : (
+                                    'Submit'
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full shadow-xl overflow-hidden">
+                        <div className="p-6 text-center">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Trash2 className="w-8 h-8 text-red-600" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-gray-900 mb-2">Delete Property</h3>
+                            <p className="text-gray-500 mb-6">
+                                Are you sure you want to delete this property? This action cannot be undone.
+                            </p>
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setIsDeleteModalOpen(false);
+                                        setPropertyToDelete(null);
+                                    }}
+                                    className="flex-1"
+                                    disabled={isDeleting}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={confirmDelete}
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? (
+                                        <span className="flex items-center gap-2">
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Deleting...
+                                        </span>
+                                    ) : (
+                                        'Delete'
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Toast Notification */}
+            {toast && (
+                <div className={`fixed bottom-6 right-6 z-50 px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 transform transition-all duration-300 ${toast.type === 'success'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-red-600 text-white'
+                    }`}>
+                    {toast.type === 'success' ? (
+                        <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                    ) : (
+                        <AlertCircle className="w-6 h-6" />
+                    )}
+                    <span className="font-medium">{toast.message}</span>
+                </div>
+            )}
         </div>
     )
 }

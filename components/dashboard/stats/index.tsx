@@ -22,8 +22,13 @@ export default function DashboardStatsCard() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    let isFirstLoad = true
+
     const fetchStats = async () => {
-      setIsLoading(true)
+      // Only show loading on first load, not on background refreshes
+      if (isFirstLoad) {
+        setIsLoading(true)
+      }
 
       try {
         const userId = getCurrentUserId()
@@ -55,10 +60,21 @@ export default function DashboardStatsCard() {
           // Count pending processes (not completed)
           pendingMessages = processes.filter(p => p.status !== 'completed').length
 
-          // For issues, we would need to fetch engine results for each process
-          // For now, we'll estimate based on completed processes
-          const completedProcesses = processes.filter(p => p.status === 'completed').length
-          issuesIdentified = completedProcesses * 2 // Estimate - replace with actual API call if available
+          // Fetch actual messages from all completed processes
+          const completedProcesses = processes.filter(p => p.status === 'completed')
+
+          // Fetch messages for each completed process in parallel
+          const messagePromises = completedProcesses.map(async (process) => {
+            try {
+              const messages = await processAPI.getMessages(process.process_id)
+              return messages.length
+            } catch {
+              return 0
+            }
+          })
+
+          const messageCounts = await Promise.all(messagePromises)
+          issuesIdentified = messageCounts.reduce((total, count) => total + count, 0)
         } catch (err) {
           console.log('Process API not available, using defaults')
         }
@@ -74,11 +90,15 @@ export default function DashboardStatsCard() {
       } catch (err) {
         console.error('Error fetching dashboard stats:', err)
       } finally {
-        setIsLoading(false)
+        if (isFirstLoad) {
+          setIsLoading(false)
+          isFirstLoad = false
+        }
       }
     }
 
     fetchStats()
+    // No auto-refresh - stats are fetched only on page load to reduce server load
   }, [])
 
   const statCards = [
@@ -104,17 +124,11 @@ export default function DashboardStatsCard() {
       icon: <span className="text-2xl">📋</span>,
       trend: undefined,
     },
-    {
-      title: "Upcoming Closings",
-      value: isLoading ? "..." : stats.upcomingClosings.toString(),
-      icon: <span className="text-2xl">📅</span>,
-      trend: undefined,
-    },
   ]
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-[31px]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-[31px]">
         {statCards.map((stat, index) => (
           <StatCard key={index} title={stat.title} value={stat.value} icon={stat.icon} trend={stat.trend} />
         ))}

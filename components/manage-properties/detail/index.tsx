@@ -1,8 +1,10 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { processAPI } from "@/lib/api"
 
 interface PropertyDetailData {
     id: string
@@ -17,6 +19,7 @@ interface PropertyDetailData {
     aiAnalysisProgress: number
     totalIssues: number
     criticalIssues: number
+    processId?: string
 }
 
 interface PropertyDetailPanelProps {
@@ -34,7 +37,34 @@ export function PropertyDetailPanel({
     onDownload,
     onDelete,
 }: PropertyDetailPanelProps) {
+    const [messageCount, setMessageCount] = useState<number>(property.totalIssues)
+    const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+
+    // Fetch messages when property or processId changes
+    useEffect(() => {
+        const fetchMessages = async () => {
+            if (!property.processId) {
+                setMessageCount(property.totalIssues)
+                return
+            }
+
+            setIsLoadingMessages(true)
+            try {
+                const messages = await processAPI.getMessages(property.processId)
+                setMessageCount(messages.length)
+            } catch (err) {
+                console.error('Error fetching messages:', err)
+                setMessageCount(property.totalIssues)
+            } finally {
+                setIsLoadingMessages(false)
+            }
+        }
+
+        fetchMessages()
+    }, [property.processId, property.totalIssues])
+
     const documentsProgress = (property.documentsSubmitted / property.documentsTotal) * 100
+
 
     return (
         <div className="h-full flex flex-col bg-white rounded-tl-[32px] lg:rounded-none shadow-[0px_2px_6px_0px_rgba(0,0,0,0.15)]">
@@ -226,7 +256,9 @@ export function PropertyDetailPanel({
 
                     <div className="flex items-center justify-between">
                         <div>
-                            <span className="text-4xl font-bold text-[#0C1D38]">{property.totalIssues}</span>
+                            <span className="text-4xl font-bold text-[#0C1D38]">
+                                {isLoadingMessages ? "..." : messageCount}
+                            </span>
                             {property.criticalIssues > 0 && (
                                 <Badge className="ml-3 bg-emerald-600 text-white rounded-full px-3 py-1 text-xs font-medium">
                                     CRITICAL: {property.criticalIssues}

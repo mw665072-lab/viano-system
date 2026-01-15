@@ -63,6 +63,15 @@ export const authAPI = {
      */
     getUser: (userId: string) =>
         apiRequest<UserResponse>(`/api/auth/user/${userId}`),
+
+    /**
+     * Update user profile data
+     */
+    updateUser: (userId: string, data: UpdateUserRequest) =>
+        apiRequest<UserResponse>(`/api/auth/user/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
 };
 
 // ============ PROPERTY APIs ============
@@ -88,6 +97,15 @@ export const propertyAPI = {
      */
     getProperty: (userId: string, propertyId: string) =>
         apiRequest<PropertyResponse>(`/api/property/user/${userId}/property/${propertyId}`),
+
+    /**
+     * Update a property for a user
+     */
+    update: (userId: string, propertyId: string, data: UpdatePropertyRequest) =>
+        apiRequest<PropertyResponse>(`/api/property/user/${userId}/property/${propertyId}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
 
     /**
      * Delete a property for a user
@@ -288,6 +306,20 @@ export interface PropertyResponse {
     client_name: string;
     property_closing_date: string | null;
     user_id: string;
+}
+
+export interface UpdateUserRequest {
+    first_name?: string;
+    last_name?: string;
+    mobile_number?: string;
+}
+
+export interface UpdatePropertyRequest {
+    property_name?: string;
+    location?: string;
+    address?: string;
+    client_name?: string;
+    property_closing_date?: string | null;
 }
 
 // Process Types

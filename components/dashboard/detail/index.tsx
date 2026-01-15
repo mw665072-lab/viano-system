@@ -1,8 +1,10 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card } from "@/components/ui/card"
-import { CheckCircle2, Clock, AlertCircle, Home } from "lucide-react"
+import { CheckCircle2, Clock, AlertCircle, Home, MessageSquare } from "lucide-react"
+import { processAPI, MessageResponse } from "@/lib/api"
 
 interface Property {
     id: string
@@ -13,6 +15,7 @@ interface Property {
     statusColor: string
     clientName?: string
     closingDate?: string
+    processId?: string
 }
 
 interface PropertyDetailProps {
@@ -20,6 +23,32 @@ interface PropertyDetailProps {
 }
 
 export function PropertyDetail({ property }: PropertyDetailProps) {
+    const [messageCount, setMessageCount] = useState<number>(0)
+    const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+
+    // Fetch messages when property or processId changes
+    useEffect(() => {
+        const fetchMessages = async () => {
+            if (!property?.processId) {
+                setMessageCount(0)
+                return
+            }
+
+            setIsLoadingMessages(true)
+            try {
+                const messages = await processAPI.getMessages(property.processId)
+                setMessageCount(messages.length)
+            } catch (err) {
+                console.error('Error fetching messages:', err)
+                setMessageCount(0)
+            } finally {
+                setIsLoadingMessages(false)
+            }
+        }
+
+        fetchMessages()
+    }, [property?.processId])
+
     if (!property) {
         return (
             <Card className="bg-white overflow-hidden py-0 border-0 shadow-none rounded-[32px] h-full flex items-center justify-center">
@@ -127,6 +156,26 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                     </div>
                 </div>
 
+                {/* Issue Summary Section */}
+                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <MessageSquare className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium text-gray-500">Issues Summary</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-2xl font-bold text-blue-600">
+                                {isLoadingMessages ? "..." : messageCount}
+                            </p>
+                            <p className="text-xs text-gray-400">Total Issues</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div>
                     <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium mb-4" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>DOCUMENTS</p>
 
@@ -157,3 +206,4 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
         </Card>
     )
 }
+
