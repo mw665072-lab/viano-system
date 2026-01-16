@@ -1,3 +1,5 @@
+"use client"
+
 import { Search, ChevronDown } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -8,7 +10,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
- function PropertyListHeader({title}: {title?: string}) {
+interface PropertyListHeaderProps {
+  title?: string;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (status: string) => void;
+}
+
+function PropertyListHeader({
+  title,
+  searchQuery = "",
+  onSearchChange,
+  statusFilter = "All Status",
+  onStatusFilterChange,
+}: PropertyListHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full p-4 rounded-xl gap-3 sm:gap-0">
       <h1 className="text-lg sm:text-[20px] font-semibold leading-[30px] text-[#1E1E1E] w-full sm:w-auto mb-2 sm:mb-0" style={{ fontFamily: 'Manrope' }}>{title || "Property List"}</h1>
@@ -18,6 +34,8 @@ import {
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search properties..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange?.(e.target.value)}
             className="pr-10 h-9 bg-white border border-[#D9D9D9] rounded-full focus-visible:ring-1 focus-visible:ring-slate-300 py-2 px-3 sm:py-[9px] sm:px-[13px]"
           />
         </div>
@@ -28,15 +46,14 @@ import {
               variant="outline"
               className="bg-white border border-[#D9D9D9] rounded-xl h-9 px-3 py-2 flex items-center gap-2.5 font-normal text-slate-600 hover:bg-slate-50 w-full sm:w-auto"
             >
-              All Status
+              {statusFilter}
               <ChevronDown className="w-4 h-4 text-slate-400" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>All Status</DropdownMenuItem>
-            <DropdownMenuItem>Active</DropdownMenuItem>
-            <DropdownMenuItem>Inactive</DropdownMenuItem>
-            <DropdownMenuItem>Pending</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onStatusFilterChange?.("All Status")}>All Status</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onStatusFilterChange?.("Pending")}>Pending</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onStatusFilterChange?.("Completed")}>Completed</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

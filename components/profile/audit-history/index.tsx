@@ -16,14 +16,14 @@ export default function AuditHistory() {
       type: "Safety Audit",
       date: "2024-01-10",
       status: "pending",
-      initial: "P",
+      initial: "L",
     },
     {
       name: "Mountain Retreat",
-      type: "Bias Inspection",
+      type: "4 Point Evaluation",
       date: "2024-01-05",
-      status: "blocked",
-      initial: "P",
+      status: "completed",
+      initial: "M",
     },
   ]
 
@@ -33,8 +33,6 @@ export default function AuditHistory() {
         return "bg-green-100 text-green-700"
       case "pending":
         return "bg-amber-100 text-amber-700"
-      case "blocked":
-        return "bg-red-100 text-red-700"
       default:
         return "bg-gray-100 text-gray-700"
     }
