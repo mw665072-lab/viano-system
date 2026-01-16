@@ -158,3 +158,5 @@ export function AddPropertyForm() {
     </form>
   )
 }
+
+export default AddPropertyForm

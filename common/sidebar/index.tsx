@@ -10,7 +10,7 @@ export default function Sidebar() {
   const menuItems = [
     {
       id: "dashboard", label: "Dashboard", icon: Home,
-      href: "/"
+      href: "/dashboard"
     },
     { id: "properties", label: "Manage Properties", icon: Building2, href: "/manage-properties" },
     { id: "profile", label: "Profile", icon: User, href: "/profile" },
