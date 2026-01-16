@@ -2,7 +2,7 @@
 // Updated to match exact backend OpenAPI schemas
 
 // Base API URL - Update this in .env.local
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = "https://api.viano.io"
 
 // Generic fetch wrapper with error handling
 async function apiRequest<T>(
