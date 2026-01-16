@@ -110,11 +110,59 @@ export const propertyAPI = {
     /**
      * Delete a property for a user
      * Only the owner can delete their property
+     * Cascades deletion to related documents, processes, and messages
      */
     delete: (userId: string, propertyId: string) =>
         apiRequest<string>(`/api/property/user/${userId}/property/${propertyId}`, {
             method: 'DELETE',
         }),
+
+    /**
+     * Edit property documents
+     * - Remove existing documents by providing document IDs
+     * - Upload new documents with their types
+     * - Both operations are optional and can be done independently or together
+     */
+    editDocuments: async (
+        userId: string,
+        propertyId: string,
+        options: {
+            documentsToRemove?: string[];
+            files?: File[];
+            docTypes?: ('4point' | 'home_inspection')[];
+        }
+    ) => {
+        const formData = new FormData();
+
+        // Add files if provided
+        if (options.files) {
+            options.files.forEach(file => formData.append('files', file));
+        }
+
+        // Build query params
+        const params = new URLSearchParams();
+        if (options.documentsToRemove) {
+            options.documentsToRemove.forEach(id => params.append('documents_to_remove', id));
+        }
+        if (options.docTypes) {
+            options.docTypes.forEach(dt => params.append('doc_types', dt));
+        }
+
+        const queryString = params.toString();
+        const url = `${API_BASE_URL}/api/property/user/${userId}/property/${propertyId}/documents${queryString ? `?${queryString}` : ''}`;
+
+        const response = await fetch(url, {
+            method: 'PUT',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ detail: 'Failed to edit documents' }));
+            throw new Error(error.detail || 'Failed to edit documents');
+        }
+
+        return response.json();
+    },
 };
 
 // ============ DOCUMENT APIs ============
@@ -217,6 +265,25 @@ export const processAPI = {
      */
     getUserProcesses: (userId: string) =>
         apiRequest<ProcessSummaryResponse[]>(`/api/process/user/${userId}`),
+
+    /**
+     * SSE endpoint for real-time process status updates
+     * Keeps the connection open and pushes updates every second until:
+     * - Process reaches 100% progress, or
+     * - Process status becomes 'completed' or 'error'
+     * 
+     * Returns an EventSource. Use like:
+     * const eventSource = processAPI.statusStream(processId);
+     * eventSource.onmessage = (event) => {
+     *   const data = JSON.parse(event.data);
+     *   console.log(data.progress, data.status);
+     * };
+     * eventSource.onerror = () => eventSource.close();
+     */
+    statusStream: (processId: string): EventSource => {
+        const url = `${API_BASE_URL}/api/process/status-stream/${processId}`;
+        return new EventSource(url);
+    },
 };
 
 // ============ TWILIO APIs ============
@@ -351,6 +418,7 @@ export interface MessageResponse {
     status: string;
     scheduled_for: string | null;
     created_at: string | null;
+    priority_level: number | null;
 }
 
 export interface EngineResultResponse {

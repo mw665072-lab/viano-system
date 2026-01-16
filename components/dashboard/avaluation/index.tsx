@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import { ChevronRight, X, AlertCircle, Plus } from "lucide-react"
 import { PropertyList } from "../list"
 import { PropertyDetail } from "../detail"
@@ -94,7 +94,6 @@ export function PropertyEvaluationDashboard() {
     const [showDetail, setShowDetail] = useState(true)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
 
     // Fetch ALL properties from API with their process statuses
     const fetchPropertiesWithStatus = useCallback(async () => {
@@ -154,7 +153,6 @@ export function PropertyEvaluationDashboard() {
 
             console.log('Dashboard: Displaying', transformedProperties.length, 'properties')
             setProperties(transformedProperties)
-            setLastRefresh(new Date())
 
             // Update selected property if it exists
             if (selectedProperty) {
@@ -182,26 +180,45 @@ export function PropertyEvaluationDashboard() {
         loadData()
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Smart refresh - only poll when there are active processes
+    // Use ref to track if there are active processes (avoids stale closure)
+    const hasActiveProcessRef = React.useRef(false);
+
+    // All statuses that indicate an active/in-progress process (not completed or failed)
+    const ACTIVE_STATUSES = ['pending', 'started', 'downloading', 'generating_messages', 'storing_messages', 'in_progress', 'processing'];
+
+    // Update the ref whenever properties change
     useEffect(() => {
-        // Check if any properties have active processing
-        const hasActiveProcessing = properties.some(p =>
+        const hasActive = properties.some(p =>
             p.detailedStatus &&
-            ['pending', 'started', 'downloading', 'generating_messages', 'storing_messages'].includes(p.detailedStatus)
+            ACTIVE_STATUSES.includes(p.detailedStatus)
         );
+        hasActiveProcessRef.current = hasActive;
+        console.log('Dashboard: Active process check:', hasActive, 'statuses:', properties.map(p => p.detailedStatus));
+    }, [properties]);
 
-        // Only set up polling if there are active processes
-        if (!hasActiveProcessing) {
-            return; // No active processes, don't poll
+    // Always running polling - checks ref for active processes
+    useEffect(() => {
+        const pollInterval = setInterval(async () => {
+            // Check ref (not stale closure) for active processes
+            if (hasActiveProcessRef.current) {
+                console.log('Dashboard Polling: Active process detected, fetching fresh data...');
+                await fetchPropertiesWithStatus();
+            }
+        }, 30000); // 30 seconds - only polls when there are active processes
+
+        return () => clearInterval(pollInterval);
+    }, [fetchPropertiesWithStatus]);
+
+    // Keep selectedProperty in sync with properties
+    useEffect(() => {
+        if (selectedProperty) {
+            const updated = properties.find(p => p.id === selectedProperty.id);
+            if (updated && JSON.stringify(updated) !== JSON.stringify(selectedProperty)) {
+                console.log('Dashboard Sync: Updating selectedProperty with latest data');
+                setSelectedProperty(updated);
+            }
         }
-
-        // Poll every 10 seconds when there are active processes
-        const refreshInterval = setInterval(async () => {
-            await fetchPropertiesWithStatus();
-        }, 10000);
-
-        return () => clearInterval(refreshInterval);
-    }, [fetchPropertiesWithStatus, properties]);
+    }, [properties, selectedProperty]);
 
     // Handler for property selection from list
     const handleSelectProperty = (property: { id: string; status: "Pending" | "Completed" | "In Progress" }) => {

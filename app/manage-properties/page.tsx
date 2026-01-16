@@ -127,7 +127,6 @@ const Page = () => {
     const [statusFilter, setStatusFilter] = useState('All Status');
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadError, setDownloadError] = useState<string | null>(null);
-    const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
     // Edit modal state
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -227,8 +226,8 @@ const Page = () => {
                 })
             );
 
+
             setProperties(transformedProperties);
-            setLastRefresh(new Date());
         } catch (err) {
             console.error('Error fetching properties:', err);
             setError(err instanceof Error ? err.message : 'Failed to load properties');
@@ -246,35 +245,46 @@ const Page = () => {
         loadData();
     }, [fetchPropertiesWithStatus]);
 
-    // Smart refresh - only poll when there are active processes
+    // Use ref to track if there are active processes (avoids stale closure)
+    const hasActiveProcessRef = React.useRef(false);
+
+    // All statuses that indicate an active/in-progress process (not completed or failed)
+    const ACTIVE_STATUSES = ['pending', 'started', 'downloading', 'generating_messages', 'storing_messages', 'in_progress', 'processing'];
+
+    // Update the ref whenever properties change
     useEffect(() => {
-        // Check if any properties have active processing
-        const hasActiveProcessing = properties.some(p =>
+        const hasActive = properties.some(p =>
             p.detailedStatus &&
-            ['pending', 'started', 'downloading', 'generating_messages', 'storing_messages'].includes(p.detailedStatus)
+            ACTIVE_STATUSES.includes(p.detailedStatus)
         );
+        hasActiveProcessRef.current = hasActive;
+        console.log('Active process check:', hasActive, 'statuses:', properties.map(p => p.detailedStatus));
+    }, [properties]);
 
-        // Only set up polling if there are active processes
-        if (!hasActiveProcessing) {
-            return; // No active processes, don't poll
-        }
-
-        // Poll every 10 seconds when there are active processes
-        const refreshInterval = setInterval(async () => {
-            await fetchPropertiesWithStatus();
-
-            // Update selected property if it exists
-            if (selectedProperty) {
-                setSelectedProperty(prev => {
-                    if (!prev) return null;
-                    const updated = properties.find(p => p.id === prev.id);
-                    return updated || prev;
-                });
+    // Always running polling - checks ref for active processes
+    useEffect(() => {
+        const pollInterval = setInterval(async () => {
+            // Check ref (not stale closure) for active processes
+            if (hasActiveProcessRef.current) {
+                console.log('Polling: Active process detected, fetching fresh data...');
+                await fetchPropertiesWithStatus();
             }
-        }, 10000); // Poll every 10 seconds only when active
+        }, 30000); // 30 seconds - only polls when there are active processes
 
-        return () => clearInterval(refreshInterval);
-    }, [fetchPropertiesWithStatus, selectedProperty, properties]);
+        return () => clearInterval(pollInterval);
+    }, [fetchPropertiesWithStatus]);
+
+    // Keep selectedProperty in sync with properties
+    useEffect(() => {
+        if (selectedProperty) {
+            const updated = properties.find(p => p.id === selectedProperty.id);
+            if (updated && JSON.stringify(updated) !== JSON.stringify(selectedProperty)) {
+                console.log('Sync: Updating selectedProperty with latest data');
+                setSelectedProperty(updated);
+            }
+        }
+    }, [properties, selectedProperty]);
+
 
     // Download AI-generated report for a property
     const handleDownload = useCallback(async (propertyId: string, processId?: string) => {
@@ -354,6 +364,7 @@ const Page = () => {
                     messageId: msg.message_id,
                     text: msg.message_text,
                     status: msg.status,
+                    tier: msg.priority_level, // Priority level: 1=Critical, 2=High, 3=Medium, 4=Low
                     scheduledFor: msg.scheduled_for,
                     createdAt: msg.created_at,
                 })),

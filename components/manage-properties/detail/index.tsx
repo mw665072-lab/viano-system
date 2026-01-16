@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star } from "lucide-react"
+import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { processAPI } from "@/lib/api"
+import { processAPI, MessageResponse } from "@/lib/api"
 
 interface PropertyDetailData {
     id: string
@@ -30,6 +30,21 @@ interface PropertyDetailPanelProps {
     onDelete?: () => void
 }
 
+// Helper to get tier label and color from priority_level
+function getTierInfo(priorityLevel: number | null): { label: string; color: string; icon: React.ReactNode } {
+    switch (priorityLevel) {
+        case 1:
+            return { label: "Critical", color: "bg-red-100 text-red-700 border-red-200", icon: <AlertTriangle className="w-3 h-3" /> };
+        case 2:
+            return { label: "High", color: "bg-orange-100 text-orange-700 border-orange-200", icon: <AlertCircle className="w-3 h-3" /> };
+        case 3:
+            return { label: "Medium", color: "bg-amber-100 text-amber-700 border-amber-200", icon: <Info className="w-3 h-3" /> };
+        case 4:
+        default:
+            return { label: "Low", color: "bg-blue-100 text-blue-700 border-blue-200", icon: <Info className="w-3 h-3" /> };
+    }
+}
+
 export function PropertyDetailPanel({
     property,
     onClose,
@@ -37,6 +52,7 @@ export function PropertyDetailPanel({
     onDownload,
     onDelete,
 }: PropertyDetailPanelProps) {
+    const [messages, setMessages] = useState<MessageResponse[]>([])
     const [messageCount, setMessageCount] = useState<number>(property.totalIssues)
     const [isLoadingMessages, setIsLoadingMessages] = useState(false)
 
@@ -45,16 +61,19 @@ export function PropertyDetailPanel({
         const fetchMessages = async () => {
             if (!property.processId) {
                 setMessageCount(property.totalIssues)
+                setMessages([])
                 return
             }
 
             setIsLoadingMessages(true)
             try {
-                const messages = await processAPI.getMessages(property.processId)
-                setMessageCount(messages.length)
+                const fetchedMessages = await processAPI.getMessages(property.processId)
+                setMessages(fetchedMessages)
+                setMessageCount(fetchedMessages.length)
             } catch (err) {
                 console.error('Error fetching messages:', err)
                 setMessageCount(property.totalIssues)
+                setMessages([])
             } finally {
                 setIsLoadingMessages(false)
             }
@@ -62,6 +81,14 @@ export function PropertyDetailPanel({
 
         fetchMessages()
     }, [property.processId, property.totalIssues])
+
+    // Calculate tier breakdown
+    const tierBreakdown = {
+        critical: messages.filter(m => m.priority_level === 1).length,
+        high: messages.filter(m => m.priority_level === 2).length,
+        medium: messages.filter(m => m.priority_level === 3).length,
+        low: messages.filter(m => m.priority_level === 4 || m.priority_level === null).length,
+    }
 
     const documentsProgress = (property.documentsSubmitted / property.documentsTotal) * 100
 
@@ -254,19 +281,47 @@ export function PropertyDetailPanel({
                         <Star className="w-5 h-5 text-amber-500" />
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-4">
                         <div>
                             <span className="text-4xl font-bold text-[#0C1D38]">
                                 {isLoadingMessages ? "..." : messageCount}
                             </span>
-                            {property.criticalIssues > 0 && (
-                                <Badge className="ml-3 bg-emerald-600 text-white rounded-full px-3 py-1 text-xs font-medium">
-                                    CRITICAL: {property.criticalIssues}
-                                </Badge>
-                            )}
                         </div>
                         <span className="text-sm text-[#64748B]">TOTAL ISSUES</span>
                     </div>
+
+                    {/* Tier Breakdown */}
+                    {!isLoadingMessages && messageCount > 0 && (
+                        <div className="space-y-2 pt-3 border-t border-gray-100">
+                            <p className="text-xs font-medium text-[#64748B] uppercase tracking-wide mb-2">By Priority</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                {tierBreakdown.critical > 0 && (
+                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 border border-red-200">
+                                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                                        <span className="text-sm font-medium text-red-700">Critical: {tierBreakdown.critical}</span>
+                                    </div>
+                                )}
+                                {tierBreakdown.high > 0 && (
+                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-orange-50 border border-orange-200">
+                                        <AlertCircle className="w-4 h-4 text-orange-600" />
+                                        <span className="text-sm font-medium text-orange-700">High: {tierBreakdown.high}</span>
+                                    </div>
+                                )}
+                                {tierBreakdown.medium > 0 && (
+                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 border border-amber-200">
+                                        <Info className="w-4 h-4 text-amber-600" />
+                                        <span className="text-sm font-medium text-amber-700">Medium: {tierBreakdown.medium}</span>
+                                    </div>
+                                )}
+                                {tierBreakdown.low > 0 && (
+                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-50 border border-blue-200">
+                                        <Info className="w-4 h-4 text-blue-600" />
+                                        <span className="text-sm font-medium text-blue-700">Low: {tierBreakdown.low}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

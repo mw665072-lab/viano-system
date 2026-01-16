@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -156,6 +156,82 @@ export default function ProfilePage() {
 
     fetchData();
   }, []);
+
+  // Use ref to track if there are active audits (avoids stale closure)
+  const hasActiveAuditRef = React.useRef(false);
+
+  // All statuses that indicate an active/in-progress audit (not completed or failed)
+  const ACTIVE_STATUSES = ['pending', 'started', 'downloading', 'generating_messages', 'storing_messages', 'in_progress', 'processing'];
+
+  // Update the ref whenever audits change
+  useEffect(() => {
+    const hasActive = audits.some(a =>
+      a.status &&
+      ACTIVE_STATUSES.includes(a.status)
+    );
+    hasActiveAuditRef.current = hasActive;
+    console.log('Profile: Active audit check:', hasActive, 'statuses:', audits.map(a => a.status));
+  }, [audits]);
+
+  // Fetch function to refresh profile data
+  const refreshProfileData = useCallback(async () => {
+    const userId = getCurrentUserId();
+    if (!userId) return;
+
+    console.log('Profile Polling: Active audit detected, fetching fresh data...');
+
+    try {
+      // Fetch fresh processes data
+      const processesData = await processAPI.getUserProcesses(userId);
+      const propertiesData = await propertyAPI.getUserProperties(userId);
+
+      // Create property name map
+      const propertyMap = new Map<string, string>();
+      propertiesData.forEach(prop => {
+        propertyMap.set(prop.property_id, prop.property_name);
+      });
+
+      // Update audits
+      const auditItems = processesData.slice(0, 5).map((process) => ({
+        name: propertyMap.get(process.property_id) || 'Property',
+        type: '4 Point Evaluation',
+        date: process.process_start
+          ? new Date(process.process_start).toLocaleDateString('en-US')
+          : 'N/A',
+        status: process.status,
+        initial: (propertyMap.get(process.property_id) || 'P').charAt(0).toUpperCase(),
+        propertyId: process.property_id,
+      }));
+      setAudits(auditItems);
+
+      // Update stats
+      const completed = processesData.filter(p => p.status === 'completed').length;
+      const pending = processesData.filter(p => p.status === 'pending').length;
+      const inProgress = processesData.filter(p =>
+        ['started', 'downloading', 'generating_messages', 'storing_messages'].includes(p.status)).length;
+
+      setStats([
+        { label: "TOTAL AUDITS", value: String(processesData.length), trend: null, trendColor: null, indicator: null },
+        { label: "COMPLETED", value: String(completed), trend: null, trendColor: null, indicator: "bg-green-500" },
+        { label: "PENDING", value: String(pending), trend: null, trendColor: null, indicator: "bg-amber-400" },
+        { label: "IN PROGRESS", value: String(inProgress), trend: null, trendColor: null, indicator: "bg-blue-500" },
+      ]);
+    } catch (err) {
+      console.error('Profile Polling: Error refreshing data', err);
+    }
+  }, []);
+
+  // Always running polling - checks ref for active audits
+  useEffect(() => {
+    const pollInterval = setInterval(async () => {
+      // Check ref (not stale closure) for active audits
+      if (hasActiveAuditRef.current) {
+        await refreshProfileData();
+      }
+    }, 30000); // 30 seconds - only polls when there are active processes
+
+    return () => clearInterval(pollInterval);
+  }, [refreshProfileData]);
 
   const togglePreference = async (key: keyof typeof preferences) => {
     // Optimistic UI update

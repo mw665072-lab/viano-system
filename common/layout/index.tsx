@@ -15,8 +15,8 @@ const Layout = ({ children }: LayoutProps) => {
     const pathname = usePathname();
     const router = useRouter();
 
-    // Auth pages should bypass the sidebar/navbar layout
-    const isAuthPage = pathname === "/login" || pathname === "/signup";
+    // Auth and landing pages should bypass the sidebar/navbar layout
+    const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/landing";
 
     if (isAuthPage) {
         return <>{children}</>;
