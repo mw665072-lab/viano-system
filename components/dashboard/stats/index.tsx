@@ -22,23 +22,34 @@ export default function DashboardStatsCard() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    let isFirstLoad = true
+    let isMounted = true
+    let timeoutId: NodeJS.Timeout
 
     const fetchStats = async () => {
-      // Only show loading on first load, not on background refreshes
-      if (isFirstLoad) {
-        setIsLoading(true)
-      }
-
       try {
+        // Set a timeout to force loading to stop after 10 seconds
+        timeoutId = setTimeout(() => {
+          if (isMounted) {
+            setIsLoading(false)
+            console.warn('Stats fetch timeout - setting default values')
+          }
+        }, 10000)
+
         const userId = getCurrentUserId()
         if (!userId) {
-          setIsLoading(false)
+          if (isMounted) setIsLoading(false)
           return
         }
 
-        // Fetch properties
-        const properties = await propertyAPI.getUserProperties(userId)
+        // Fetch properties with timeout
+        const properties = await Promise.race([
+          propertyAPI.getUserProperties(userId),
+          new Promise<PropertyResponse[]>((_, reject) => 
+            setTimeout(() => reject(new Error('Properties fetch timeout')), 8000)
+          )
+        ]).catch(() => [] as PropertyResponse[])
+
+        if (!isMounted) return
 
         // Calculate upcoming closings (properties with closing date within 30 days)
         const now = new Date()
@@ -55,18 +66,30 @@ export default function DashboardStatsCard() {
         let issuesIdentified = 0
 
         try {
-          const processes = await processAPI.getUserProcesses(userId)
+          const processes = await Promise.race([
+            processAPI.getUserProcesses(userId),
+            new Promise<any[]>((_, reject) => 
+              setTimeout(() => reject(new Error('Processes fetch timeout')), 5000)
+            )
+          ]).catch(() => [])
+
+          if (!isMounted) return
 
           // Count pending processes (not completed)
           pendingMessages = processes.filter(p => p.status !== 'completed').length
 
-          // Fetch actual messages from all completed processes
-          const completedProcesses = processes.filter(p => p.status === 'completed')
+          // Fetch actual messages from all completed processes (limit to first 10 to optimize)
+          const completedProcesses = processes.filter(p => p.status === 'completed').slice(0, 10)
 
-          // Fetch messages for each completed process in parallel
+          // Fetch messages for each completed process in parallel with individual timeouts
           const messagePromises = completedProcesses.map(async (process) => {
             try {
-              const messages = await processAPI.getMessages(process.process_id)
+              const messages = await Promise.race([
+                processAPI.getMessages(process.process_id),
+                new Promise<any[]>((_, reject) => 
+                  setTimeout(() => reject(new Error('Messages fetch timeout')), 3000)
+                )
+              ])
               return messages.length
             } catch {
               return 0
@@ -79,6 +102,8 @@ export default function DashboardStatsCard() {
           console.log('Process API not available, using defaults')
         }
 
+        if (!isMounted) return
+
         setStats({
           totalProperties: properties.length,
           pendingMessages,
@@ -90,15 +115,20 @@ export default function DashboardStatsCard() {
       } catch (err) {
         console.error('Error fetching dashboard stats:', err)
       } finally {
-        if (isFirstLoad) {
+        if (isMounted) {
+          clearTimeout(timeoutId)
           setIsLoading(false)
-          isFirstLoad = false
         }
       }
     }
 
     fetchStats()
-    // No auto-refresh - stats are fetched only on page load to reduce server load
+
+    // Cleanup function
+    return () => {
+      isMounted = false
+      clearTimeout(timeoutId)
+    }
   }, [])
 
   const statCards = [
