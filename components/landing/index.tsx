@@ -1,17 +1,13 @@
-"use client";
-
+import React from 'react'
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Check, MessageSquare, Clock, Users, Star, ChevronDown } from "lucide-react";
 
-export default function LandingPage() {
-    const [openFaq, setOpenFaq] = useState<number | null>(null);
-
-    return (
-        <div className="min-h-screen bg-white font-manrope">
-            {/* Navigation Header */}
-            <header className="w-full h-[99px] border-b border-gray-200/50 px-6 lg:px-16 flex items-center justify-between">
+const LandingUsman = () => {
+  return (
+ <>
+   <header className="w-full h-[99px] border-b border-gray-200/50 px-6 lg:px-16 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                         <Star className="w-4 h-4 text-white" />
@@ -325,8 +321,8 @@ export default function LandingPage() {
                     </div>
                 </div>
             </section>
-
-          
-        </div>
-    );
+ </>
+  )
 }
+
+export default LandingUsman
