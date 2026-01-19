@@ -29,7 +29,7 @@ export default function SignupPage() {
   // Check if already logged in
   useEffect(() => {
     if (isAuthenticated()) {
-      router.replace("/manage-properties");
+      router.replace("/dashboard");
     }
   }, [router]);
 

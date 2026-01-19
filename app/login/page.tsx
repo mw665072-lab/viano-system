@@ -23,7 +23,7 @@ export default function LoginPage() {
   // Check if already logged in
   useEffect(() => {
     if (isAuthenticated()) {
-      router.replace("/manage-properties");
+      router.replace("/dashboard");
     }
   }, [router]);
 
@@ -63,7 +63,7 @@ export default function LoginPage() {
         saveAuth(response);
 
         // Redirect to dashboard/manage properties
-        router.push("/manage-properties");
+        router.push("/dashboard");
       } else {
         setError("Login failed. Please check your credentials.");
       }

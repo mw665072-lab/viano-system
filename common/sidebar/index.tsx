@@ -18,7 +18,7 @@ export default function Sidebar() {
 
   // Determine which menu item is active based on current pathname
   const getActiveId = () => {
-    if (pathname === '/') return 'dashboard';
+    if (pathname === '/dashboard' || pathname === '/') return 'dashboard';
     if (pathname.startsWith('/manage-properties') || pathname.startsWith('/add-properties')) return 'properties';
     if (pathname.startsWith('/profile')) return 'profile';
     return 'dashboard';

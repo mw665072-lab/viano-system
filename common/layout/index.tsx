@@ -16,7 +16,7 @@ const Layout = ({ children }: LayoutProps) => {
     const router = useRouter();
 
     // Auth and landing pages should bypass the sidebar/navbar layout
-    const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/";
+    const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/" || pathname === "/landing-page";
 
     if (isAuthPage) {
         return <>{children}</>;
@@ -54,7 +54,13 @@ const Layout = ({ children }: LayoutProps) => {
                 )}
 
                 <div className="flex-1 flex flex-col overflow-hidden">
-                    {pathname === "/" ? (
+                    {/* Dashboard - no back button, just title */}
+                    {pathname === "/dashboard" ? (
+                        <PageHeader
+                            title="Dashboard"
+                            showBack={false}
+                        />
+                    ) : pathname === "/" ? (
                         <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
                     ) : pathname === "/profile" || pathname?.startsWith("/profile/") ? (
                         <PageHeader
@@ -74,17 +80,22 @@ const Layout = ({ children }: LayoutProps) => {
                         />
                     ) : pathname === "/manage-properties/add-properties" ? (
                         <PageHeader
-                            title="Manage Properties"
+                            title="Add Property"
                             showBack={true}
                             backHref="/manage-properties"
                         />
-                    ) : (
+                    ) : pathname === "/manage-properties" || pathname?.startsWith("/manage-properties") ? (
                         <PageHeader
                             title="Manage Properties"
-                            showBack={true}
-                            onBack={() => router.back()}
+                            showBack={false}
                             actionLabel="Add New Property"
                             actionHref="/manage-properties/add-properties"
+                        />
+                    ) : (
+                        <PageHeader
+                            title="Viano Systems"
+                            showBack={true}
+                            onBack={() => router.back()}
                         />
                     )}
                     <main className="flex-1 p-4 lg:p-6 overflow-auto rotate-0 opacity-100 rounded-tl-[32px] bg-[#EFF6FF]">
