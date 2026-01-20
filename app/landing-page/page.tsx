@@ -160,43 +160,104 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section - Matching Figma exactly */}
+      {/* Hero Section - Professional Split-Screen Design */}
       <section className="relative min-h-[90vh] flex items-center pt-16 overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/hero-bg.png"
-            alt="City Skyline"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0B1A2F]/85 via-[#0B1A2F]/70 to-[#0B1A2F]" />
-        </div>
-
-        {/* Animated Stars - Figma style positioned on right */}
-        <div className="absolute top-32 right-[10%] sm:right-[15%] z-10">
-          <StarIcon className="text-[#A78BFA] animate-[pulse_2s_ease-in-out_infinite]" size={32} />
-        </div>
-        <div className="absolute top-48 right-[20%] sm:right-[25%] z-10">
-          <StarIcon className="text-[#7C5CFC] animate-[pulse_2s_ease-in-out_infinite_0.5s]" size={20} />
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-          <div className="max-w-lg">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-bold text-white leading-[1.15] mb-8">
-              <span className="inline-block animate-[fadeInUp_0.6s_ease-out_forwards]">Property Intelligence AI</span>
-              <br />
-              <span className="inline-block animate-[fadeInUp_0.6s_ease-out_0.2s_forwards] opacity-0">for Elite Realtors</span>
-            </h1>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 bg-[#7C5CFC] hover:bg-[#6B4FE0] text-white px-7 py-3.5 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#7C5CFC]/30 active:scale-95 animate-[fadeInUp_0.6s_ease-out_0.4s_forwards] opacity-0 group"
-            >
-              Get Started
-              <ArrowRight className="group-hover:translate-x-1 transition-transform duration-300" size={16} />
-            </Link>
+        {/* Split Background Container */}
+        <div className="absolute inset-0 z-0 flex">
+          {/* Left Side - Dark Content Area with Curved Edge */}
+          <div className="relative w-full lg:w-[55%] h-full">
+            <div
+              className="absolute inset-0 bg-[#0B1A2F]"
+              style={{
+                clipPath: 'ellipse(100% 100% at 0% 50%)',
+              }}
+            />
+            {/* Enhanced curved overlay for smoother transition */}
+            <div
+              className="absolute inset-0 bg-gradient-to-r from-[#0B1A2F] via-[#0B1A2F] to-transparent hidden lg:block"
+              style={{
+                clipPath: 'ellipse(85% 120% at 0% 50%)',
+              }}
+            />
           </div>
+
+          {/* Right Side - Property Image */}
+          <div className="absolute inset-0 lg:left-[35%]">
+            <Image
+              src="/hero-bg.png"
+              alt="Luxury Property"
+              fill
+              className="object-cover object-center"
+              priority
+            />
+            {/* Gradient overlay for smooth blend on mobile */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0B1A2F] via-[#0B1A2F]/80 to-transparent lg:via-transparent" />
+          </div>
+        </div>
+
+        {/* Content Container */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 w-full">
+          <div className="max-w-xl lg:max-w-lg">
+            {/* Animated Star Icon - Top Left */}
+            <div className="mb-6 animate-[floatStar_3s_ease-in-out_infinite]">
+              <div className="relative inline-block">
+                {/* Gradient Star using SVG with defs */}
+                <svg width={48} height={48} viewBox="0 0 24 24" className="relative z-10">
+                  <defs>
+                    <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#7C5CFC" />
+                      <stop offset="50%" stopColor="#A78BFA" />
+                      <stop offset="100%" stopColor="#7C5CFC" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"
+                    fill="url(#starGradient)"
+                  />
+                </svg>
+                {/* Glowing star effect */}
+                <div className="absolute inset-0 blur-md opacity-60">
+                  <StarIcon className="text-[#7C5CFC]" size={48} />
+                </div>
+                {/* Small orbiting star */}
+                <div className="absolute -top-1 -right-1 animate-[pulse_2s_ease-in-out_infinite]">
+                  <StarIcon className="text-[#A78BFA]" size={16} />
+                </div>
+              </div>
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-bold text-white leading-[1.1] mb-8">
+              <span className="inline-block animate-[fadeInUp_0.6s_ease-out_forwards]">
+                Property Intelligence AI
+              </span>
+              <br />
+              <span className="inline-block animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]" style={{ animationFillMode: 'both' }}>
+                for Elite Realtors
+              </span>
+            </h1>
+
+            {/* CTA Button - Visible immediately */}
+            <div className="animate-[fadeInUp_0.6s_ease-out_0.3s_forwards]" style={{ animationFillMode: 'both' }}>
+              <Link
+                href="/signup"
+                className="inline-flex items-center gap-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white px-7 py-3.5 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#3B82F6]/40 active:scale-95 group relative overflow-hidden"
+              >
+                {/* Button glow effect */}
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                <span className="relative">Get Started</span>
+                <ArrowRight className="relative group-hover:translate-x-1 transition-transform duration-300" size={16} />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Decorative floating elements */}
+        <div className="absolute bottom-20 right-[15%] hidden lg:block animate-[floatStar_4s_ease-in-out_infinite_0.5s]">
+          <StarIcon className="text-[#A78BFA]/30" size={24} />
+        </div>
+        <div className="absolute top-40 right-[25%] hidden lg:block animate-[floatStar_5s_ease-in-out_infinite_1s]">
+          <StarIcon className="text-[#7C5CFC]/20" size={18} />
         </div>
       </section>
 
@@ -735,6 +796,15 @@ export default function LandingPage() {
           to {
             opacity: 1;
             transform: translateY(0);
+          }
+        }
+        
+        @keyframes floatStar {
+          0%, 100% {
+            transform: translateY(0) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-8px) rotate(5deg);
           }
         }
       `}</style>
