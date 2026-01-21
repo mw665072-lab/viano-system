@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { processAPI, MessageResponse } from "@/lib/api"
+import { processAPI, documentAPI, MessageResponse, getCurrentUserId } from "@/lib/api"
 
 interface PropertyDetailData {
     id: string
@@ -56,6 +56,10 @@ export function PropertyDetailPanel({
     const [messageCount, setMessageCount] = useState<number>(property.totalIssues)
     const [isLoadingMessages, setIsLoadingMessages] = useState(false)
 
+    // Document count state - initialize to 0 until we fetch the real count
+    const [documentCount, setDocumentCount] = useState<number>(0)
+    const [isLoadingDocs, setIsLoadingDocs] = useState(true)
+
     // Fetch messages when property or processId changes
     useEffect(() => {
         const fetchMessages = async () => {
@@ -82,6 +86,35 @@ export function PropertyDetailPanel({
         fetchMessages()
     }, [property.processId, property.totalIssues])
 
+    // Fetch actual document count when property changes
+    useEffect(() => {
+        const fetchDocumentCount = async () => {
+            setIsLoadingDocs(true)
+            const userId = getCurrentUserId()
+            if (!userId) {
+                setDocumentCount(0)
+                setIsLoadingDocs(false)
+                return
+            }
+
+            try {
+                const docs = await documentAPI.getPropertyDocuments(userId, property.id)
+                if (Array.isArray(docs)) {
+                    setDocumentCount(docs.length)
+                } else {
+                    setDocumentCount(0)
+                }
+            } catch (err) {
+                console.error('Error fetching document count:', err)
+                setDocumentCount(0)
+            } finally {
+                setIsLoadingDocs(false)
+            }
+        }
+
+        fetchDocumentCount()
+    }, [property.id])
+
     // Calculate tier breakdown
     const tierBreakdown = {
         critical: messages.filter(m => m.priority_level === 1).length,
@@ -90,7 +123,7 @@ export function PropertyDetailPanel({
         low: messages.filter(m => m.priority_level === 4 || m.priority_level === null).length,
     }
 
-    const documentsProgress = (property.documentsSubmitted / property.documentsTotal) * 100
+    const documentsProgress = (documentCount / property.documentsTotal) * 100
 
 
     return (
@@ -272,13 +305,13 @@ export function PropertyDetailPanel({
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm text-[#64748B]">DOCUMENTS:</span>
                                 <span className="text-sm font-medium text-[#0C1D38]">
-                                    {property.documentsSubmitted}/{property.documentsTotal} Submitted
+                                    {isLoadingDocs ? "..." : `${documentCount}/${property.documentsTotal}`} Submitted
                                 </span>
                             </div>
                             <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-                                    style={{ width: `${documentsProgress}%` }}
+                                    style={{ width: isLoadingDocs ? '0%' : `${documentsProgress}%` }}
                                 />
                             </div>
                         </div>

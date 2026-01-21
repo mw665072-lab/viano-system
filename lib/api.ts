@@ -100,10 +100,49 @@ export const propertyAPI = {
         }),
 
     /**
-     * Edit property documents
+     * Reset and reprocess a property
+     * This endpoint:
+     * - Deletes all existing documents (from S3 and RDS)
+     * - Deletes all related processes, messages, and engine results
+     * - Uploads new documents to S3 and stores metadata in RDS
+     * - Starts a new processing pipeline
+     * Returns immediately with process_id for tracking.
+     */
+    resetAndReprocess: async (
+        userId: string,
+        propertyId: string,
+        files: File[],
+        docTypes: ('4point' | 'home_inspection')[]
+    ): Promise<{ process_id: string }> => {
+        const formData = new FormData();
+
+        // Add files
+        files.forEach(file => formData.append('files', file));
+
+        // Build query params for doc_types
+        const params = new URLSearchParams();
+        docTypes.forEach(dt => params.append('doc_types', dt));
+
+        const queryString = params.toString();
+        const url = `${API_BASE_URL}/api/property/user/${userId}/property/${propertyId}/reset-and-reprocess${queryString ? `?${queryString}` : ''}`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ detail: 'Failed to reset and reprocess' }));
+            throw new Error(error.detail || 'Failed to reset and reprocess');
+        }
+
+        return response.json();
+    },
+
+    /**
+     * Edit property documents (legacy - use resetAndReprocess for better handling)
      * - Remove existing documents by providing document IDs
      * - Upload new documents with their types
-     * - Both operations are optional and can be done independently or together
      */
     editDocuments: async (
         userId: string,
