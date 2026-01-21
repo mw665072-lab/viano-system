@@ -94,44 +94,43 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
 
     return (
         <Card className="bg-white overflow-hidden py-0 border-0 shadow-none rounded-[32px]">
-            <div className="relative w-full h-[223px] bg-slate-200 overflow-hidden rounded-tl-[32px] rounded-tr-[32px]">
-                {property.image ? (
-                    <Image
-                        src={property.image}
-                        alt={property.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 100vw"
-                        className="object-cover"
-                        style={{ transform: "rotate(0deg)", opacity: 1 }}
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
-                        <Home className="w-16 h-16 text-slate-400" />
-                    </div>
-                )}
+            {/* Property Header Image */}
+            <div className="relative w-full h-[200px] bg-gradient-to-br from-sky-100 via-blue-50 to-emerald-50 overflow-hidden rounded-tl-[32px] rounded-tr-[32px]">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 50%)' }} />
 
-                <div className="absolute inset-0 p-4">
-                    <div
-                        className={`absolute top-4 right-4 flex items-center justify-center gap-[10px] px-[10px] py-[8px] text-xs font-semibold rounded-[20px] ${property.status === "Completed"
-                            ? "text-emerald-600 bg-emerald-100/80"
-                            : "text-[#FF4D00]"
-                            }`}
-                        style={{
-                            background: property.status === "Completed"
-                                ? "rgba(16, 185, 129, 0.2)"
-                                : "rgba(255, 149, 0, 0.2)",
-                            backdropFilter: "blur(2px)"
-                        }}
-                    >
-                        {property.status === "Completed" ? "Evaluation Complete" : "Evaluation Pending"}
-                    </div>
+                {/* Property Image */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    {property.image ? (
+                        <Image
+                            src={property.image}
+                            alt={property.name}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 100vw"
+                            className="object-cover"
+                        />
+                    ) : (
+                        <img
+                            src="/property-default.png"
+                            alt="Property"
+                            className="w-full h-full object-cover"
+                        />
+                    )}
+                </div>
 
-                    <h2
-                        className="absolute left-4 bottom-4 text-white text-[18px] font-bold drop-shadow-lg"
-                        style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, lineHeight: "22.5px" }}
-                    >
-                        {property.name}
-                    </h2>
+                {/* Status Badge */}
+                <div className="absolute top-4 right-4">
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-md ${property.status === "Completed"
+                        ? "bg-emerald-500 text-white"
+                        : "bg-amber-500 text-white"
+                        }`}>
+                        {property.status === "Completed" ? "✓ Complete" : "⏳ Pending"}
+                    </span>
+                </div>
+
+                {/* Property Name Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white/90 to-transparent pt-8 pb-3 px-4">
+                    <h2 className="text-lg font-bold text-[#0C1D38] truncate">{property.name}</h2>
                 </div>
             </div>
 
@@ -144,7 +143,7 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                         </p>
                     </div>
                     <div className="text-right">
-                        <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>CLOSING</p>
+                        <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>INSPECTION DATE</p>
                         <p className="text-[14px] leading-[21px] font-semibold" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38", textAlign: "right" }}>
                             {formattedClosingDate}
                         </p>
@@ -176,12 +175,12 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                     </div>
                 </div>
 
-                <div>
+                <div className="p-4 bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl border border-gray-100">
                     <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium mb-4" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>DOCUMENTS</p>
 
                     <div className="space-y-4">
                         {documents.map((doc) => (
-                            <div key={doc.id} className="space-y-2">
+                            <div key={doc.id} className="space-y-2 p-3 bg-white rounded-lg shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-semibold text-slate-900">{doc.name}</span>

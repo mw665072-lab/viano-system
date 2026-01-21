@@ -150,7 +150,7 @@ export default function SignupPage() {
         {/* LEFT SIDE: Image */}
         <div className="relative hidden w-1/2 md:block">
           <Image
-            src="/auth-bg.jpg"
+            src="/auth-background.png"
             alt="City Night"
             fill
             className="object-cover"

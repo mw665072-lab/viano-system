@@ -242,8 +242,8 @@ export function PropertyEvaluationDashboard() {
                                 >
                                     Evaluation Overview
                                     {properties.length > 0 && (
-                                        <span className="text-sm font-normal text-gray-500 ml-2">
-                                            ({properties.length} {properties.length === 1 ? 'property' : 'properties'})
+                                        <span className="text-[20px] font-semibold text-gray-500 ml-1">
+                                            ({properties.length})
                                         </span>
                                     )}
                                 </h2>
@@ -251,10 +251,10 @@ export function PropertyEvaluationDashboard() {
                             <div className="flex flex-col gap-2">
                                 <Link
                                     href="/manage-properties/add-properties"
-                                    className="group flex items-center justify-center gap-2 h-[40px] px-5 rounded-full bg-gradient-to-r from-[#00346C] to-[#0052A3] text-white text-sm font-medium shadow-md hover:shadow-lg hover:from-[#002752] hover:to-[#00346C] transition-all duration-300"
+                                    className="group flex items-center justify-center gap-2 h-[52px] px-8 rounded-full bg-gradient-to-r from-[#00346C] to-[#0052A3] text-white text-base font-semibold shadow-lg hover:shadow-xl hover:from-[#002752] hover:to-[#00346C] transition-all duration-300 transform hover:scale-105"
                                 >
-                                    <Plus className="w-4 h-4 transition-transform group-hover:rotate-90 duration-300" />
-                                    <span>Add Property</span>
+                                    <Plus className="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" />
+                                    <span>Add a Property</span>
                                 </Link>
                                 <Link
                                     href="/manage-properties"

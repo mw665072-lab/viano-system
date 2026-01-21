@@ -1,8 +1,8 @@
 // lib/api.ts - API Service Layer for VianoSystems
 // Updated to match exact backend OpenAPI schemas
 
-// Base API URL - Update this in .env.local
-const API_BASE_URL = "https://api.viano.io"
+// Base API URL - Uses environment variable or defaults to localhost
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:80"
 
 // Generic fetch wrapper with error handling
 async function apiRequest<T>(
@@ -63,15 +63,6 @@ export const authAPI = {
      */
     getUser: (userId: string) =>
         apiRequest<UserResponse>(`/api/auth/user/${userId}`),
-
-    /**
-     * Update user profile data
-     */
-    updateUser: (userId: string, data: UpdateUserRequest) =>
-        apiRequest<UserResponse>(`/api/auth/user/${userId}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        }),
 };
 
 // ============ PROPERTY APIs ============
@@ -99,15 +90,6 @@ export const propertyAPI = {
         apiRequest<PropertyResponse>(`/api/property/user/${userId}/property/${propertyId}`),
 
     /**
-     * Update a property for a user
-     */
-    update: (userId: string, propertyId: string, data: UpdatePropertyRequest) =>
-        apiRequest<PropertyResponse>(`/api/property/user/${userId}/property/${propertyId}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        }),
-
-    /**
      * Delete a property for a user
      * Only the owner can delete their property
      * Cascades deletion to related documents, processes, and messages
@@ -131,7 +113,7 @@ export const propertyAPI = {
             files?: File[];
             docTypes?: ('4point' | 'home_inspection')[];
         }
-    ) => {
+    ): Promise<string> => {
         const formData = new FormData();
 
         // Add files if provided
@@ -212,7 +194,7 @@ export const documentAPI = {
      * Get all documents for a property (secured by user_id)
      */
     getPropertyDocuments: (userId: string, propertyId: string) =>
-        apiRequest<string>(`/api/documents/property/${userId}/${propertyId}`),
+        apiRequest<DocumentResponse[]>(`/api/documents/property/${userId}/${propertyId}`),
 
     /**
      * Delete a document from S3 and RDS
@@ -375,18 +357,14 @@ export interface PropertyResponse {
     user_id: string;
 }
 
-export interface UpdateUserRequest {
-    first_name?: string;
-    last_name?: string;
-    mobile_number?: string;
-}
-
-export interface UpdatePropertyRequest {
-    property_name?: string;
-    location?: string;
-    address?: string;
-    client_name?: string;
-    property_closing_date?: string | null;
+// Document Types
+export interface DocumentResponse {
+    doc_id: string;
+    user_id: string;
+    property_id: string;
+    doc_type: string;
+    doc_url: string;
+    created_at: string | null;
 }
 
 // Process Types

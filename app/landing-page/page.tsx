@@ -780,7 +780,7 @@ export default function LandingPage() {
 
           <div className="border-t border-white/10 pt-8 text-center">
             <p className="text-gray-500 text-sm">
-              © 2024 Viano Systems®. All Rights Reserved.
+              © 2026 Viano Systems®. All Rights Reserved.
             </p>
           </div>
         </div>

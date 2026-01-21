@@ -44,7 +44,7 @@ export default function DashboardStatsCard() {
         // Fetch properties with timeout
         const properties = await Promise.race([
           propertyAPI.getUserProperties(userId),
-          new Promise<PropertyResponse[]>((_, reject) => 
+          new Promise<PropertyResponse[]>((_, reject) =>
             setTimeout(() => reject(new Error('Properties fetch timeout')), 8000)
           )
         ]).catch(() => [] as PropertyResponse[])
@@ -68,15 +68,12 @@ export default function DashboardStatsCard() {
         try {
           const processes = await Promise.race([
             processAPI.getUserProcesses(userId),
-            new Promise<any[]>((_, reject) => 
+            new Promise<any[]>((_, reject) =>
               setTimeout(() => reject(new Error('Processes fetch timeout')), 5000)
             )
           ]).catch(() => [])
 
           if (!isMounted) return
-
-          // Count pending processes (not completed)
-          pendingMessages = processes.filter(p => p.status !== 'completed').length
 
           // Fetch actual messages from all completed processes (limit to first 10 to optimize)
           const completedProcesses = processes.filter(p => p.status === 'completed').slice(0, 10)
@@ -86,18 +83,25 @@ export default function DashboardStatsCard() {
             try {
               const messages = await Promise.race([
                 processAPI.getMessages(process.process_id),
-                new Promise<any[]>((_, reject) => 
+                new Promise<any[]>((_, reject) =>
                   setTimeout(() => reject(new Error('Messages fetch timeout')), 3000)
                 )
               ])
-              return messages.length
+              // Count pending/scheduled messages (messages not yet sent)
+              const pendingMsgs = messages.filter((msg: any) =>
+                msg.status === 'pending' || msg.status === 'scheduled'
+              ).length
+              return { pending: pendingMsgs, total: messages.length }
             } catch {
-              return 0
+              return { pending: 0, total: 0 }
             }
           })
 
           const messageCounts = await Promise.all(messagePromises)
-          issuesIdentified = messageCounts.reduce((total, count) => total + count, 0)
+          // Sum up pending messages (SMS to be sent in future)
+          pendingMessages = messageCounts.reduce((total, count) => total + count.pending, 0)
+          // Sum up total issues identified
+          issuesIdentified = messageCounts.reduce((total, count) => total + count.total, 0)
         } catch (err) {
           console.log('Process API not available, using defaults')
         }
@@ -135,7 +139,7 @@ export default function DashboardStatsCard() {
     {
       title: "Total Properties",
       value: isLoading ? "..." : stats.totalProperties.toString(),
-      icon: <span className="text-2xl">📦</span>,
+      icon: <span className="text-2xl">🏠</span>,
       trend: stats.propertyTrend ? {
         value: stats.propertyTrend.value,
         direction: stats.propertyTrend.direction,
@@ -143,7 +147,7 @@ export default function DashboardStatsCard() {
       } : undefined,
     },
     {
-      title: "Pending Evaluations",
+      title: "Pending SMS (180 days)",
       value: isLoading ? "..." : stats.pendingMessages.toString(),
       icon: <span className="text-2xl">🔍</span>,
       trend: stats.pendingMessages > 0 ? { value: stats.pendingMessages, direction: "down" as const, color: "red" as const } : undefined,

@@ -1,9 +1,10 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useState, useEffect } from "react";
 import Navbar from "../navbar";
 import Sidebar from "../sidebar";
 import { PageHeader } from "../header";
+import { getStoredUserInfo } from "@/lib/api";
 
 
 interface LayoutProps {
@@ -12,8 +13,19 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [userName, setUserName] = useState<string | null>(null);
     const pathname = usePathname();
     const router = useRouter();
+
+    // Get user name for welcome message
+    useEffect(() => {
+        const userInfo = getStoredUserInfo();
+        if (userInfo.name) {
+            // Extract first name from full name
+            const firstName = userInfo.name.split(' ')[0];
+            setUserName(firstName);
+        }
+    }, []);
 
     // Auth and landing pages should bypass the sidebar/navbar layout
     const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/" || pathname === "/landing-page";
@@ -54,10 +66,10 @@ const Layout = ({ children }: LayoutProps) => {
                 )}
 
                 <div className="flex-1 flex flex-col overflow-hidden">
-                    {/* Dashboard - no back button, just title */}
+                    {/* Dashboard - Welcome message, no back button */}
                     {pathname === "/dashboard" ? (
                         <PageHeader
-                            title="Dashboard"
+                            title={userName ? `Welcome Back, ${userName}` : "Welcome Back"}
                             showBack={false}
                         />
                     ) : pathname === "/" ? (

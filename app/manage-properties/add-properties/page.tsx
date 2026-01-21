@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Upload, Loader2, X, AlertCircle, CheckCircle, FileText } from 'lucide-react';
+import { Upload, Loader2, X, AlertCircle, CheckCircle, FileText, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -26,6 +26,11 @@ const AddPropertyPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<string>('');
+
+    // Error modal state
+    const [showErrorModal, setShowErrorModal] = useState(false);
+    const [errorModalTitle, setErrorModalTitle] = useState('');
+    const [errorModalMessage, setErrorModalMessage] = useState('');
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -130,8 +135,22 @@ const AddPropertyPage = () => {
                     setUploadProgress('Documents uploaded successfully!');
                 } catch (uploadError) {
                     console.error('Failed to upload documents:', uploadError);
-                    // Continue even if upload fails - property is already created
-                    setUploadProgress('Documents upload failed, but property was created.');
+                    const errorMessage = uploadError instanceof Error ? uploadError.message : 'Upload failed';
+
+                    // Check for upload limit error
+                    if (errorMessage.includes('Upload limit') || errorMessage.includes('limit exceeded')) {
+                        setErrorModalTitle('Document Upload Limit Reached');
+                        setErrorModalMessage('You have reached the maximum document storage limit (12 documents). Please delete some existing documents before uploading new ones.\n\nThe property was created successfully, but no documents were uploaded.');
+                        setShowErrorModal(true);
+                    } else {
+                        setErrorModalTitle('Document Upload Failed');
+                        setErrorModalMessage(errorMessage + '\n\nThe property was created successfully, but documents could not be uploaded.');
+                        setShowErrorModal(true);
+                    }
+
+                    // Continue to redirect after showing error
+                    setIsSubmitting(false);
+                    return;
                 }
 
                 // Step 3: Start the processing pipeline
@@ -222,16 +241,16 @@ const AddPropertyPage = () => {
                                 columnGap: '16px',
                             }}
                         >
-                            {/* Row 1: Name of the Property and Address */}
+                            {/* Row 1: Client Name and Address */}
                             <div>
                                 <label className="block text-sm font-medium text-[#374151] mb-2">
-                                    Property Name <span className="text-red-500">*</span>
+                                    Client Name <span className="text-red-500">*</span>
                                 </label>
                                 <Input
                                     type="text"
-                                    name="propertyName"
-                                    placeholder="Enter property name"
-                                    value={formData.propertyName}
+                                    name="clientName"
+                                    placeholder="Enter client name"
+                                    value={formData.clientName}
                                     onChange={handleInputChange}
                                     disabled={isSubmitting}
                                     className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50"
@@ -282,16 +301,16 @@ const AddPropertyPage = () => {
                                 />
                             </div>
 
-                            {/* Row 3: Client Name and Closing Date */}
+                            {/* Row 3: Property Name and Closing Date */}
                             <div>
                                 <label className="block text-sm font-medium text-[#374151] mb-2">
-                                    Client Name
+                                    Property Name <span className="text-red-500">*</span>
                                 </label>
                                 <Input
                                     type="text"
-                                    name="clientName"
-                                    placeholder="Enter client name"
-                                    value={formData.clientName}
+                                    name="propertyName"
+                                    placeholder="Enter property name"
+                                    value={formData.propertyName}
                                     onChange={handleInputChange}
                                     disabled={isSubmitting}
                                     className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50"
@@ -430,6 +449,50 @@ const AddPropertyPage = () => {
                     </form>
                 </div>
             </div>
+
+            {/* Error Modal */}
+            {showErrorModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-6">
+                            {/* Icon */}
+                            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <AlertTriangle className="w-8 h-8 text-amber-600" />
+                            </div>
+
+                            {/* Title */}
+                            <h3 className="text-xl font-semibold text-gray-900 text-center mb-3">
+                                {errorModalTitle}
+                            </h3>
+
+                            {/* Message */}
+                            <p className="text-gray-600 text-center whitespace-pre-line mb-6">
+                                {errorModalMessage}
+                            </p>
+
+                            {/* Actions */}
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setShowErrorModal(false);
+                                        router.push('/manage-properties');
+                                    }}
+                                    className="flex-1"
+                                >
+                                    Go to Properties
+                                </Button>
+                                <Button
+                                    onClick={() => setShowErrorModal(false)}
+                                    className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                                >
+                                    Stay Here
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

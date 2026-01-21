@@ -49,48 +49,13 @@ interface PropertyDetail {
 
 // Status configuration with colors and messages
 const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: string; message: string; progress: number }> = {
-    pending: {
-        displayStatus: "Pending",
-        color: "bg-gray-100 text-gray-700",
-        message: "Preparing to start...",
-        progress: 0
-    },
-    started: {
-        displayStatus: "Processing",
-        color: "bg-blue-100 text-blue-700",
-        message: "Process started",
-        progress: 5
-    },
-    downloading: {
-        displayStatus: "Processing",
-        color: "bg-blue-100 text-blue-700",
-        message: "Downloading documents...",
-        progress: 10
-    },
-    generating_messages: {
-        displayStatus: "Processing",
-        color: "bg-purple-100 text-purple-700",
-        message: "Analyzing documents...",
-        progress: 50
-    },
-    storing_messages: {
-        displayStatus: "Processing",
-        color: "bg-blue-100 text-blue-700",
-        message: "Saving messages...",
-        progress: 90
-    },
-    completed: {
-        displayStatus: "Completed",
-        color: "bg-emerald-100 text-emerald-700",
-        message: "Process completed!",
-        progress: 100
-    },
-    failed: {
-        displayStatus: "Failed",
-        color: "bg-red-100 text-red-700",
-        message: "Process failed",
-        progress: 0
-    }
+    pending: { displayStatus: "Pending", color: "bg-gray-100 text-gray-700", message: "Preparing to start...", progress: 0 },
+    started: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Process started", progress: 5 },
+    downloading: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Downloading documents...", progress: 10 },
+    generating_messages: { displayStatus: "Processing", color: "bg-purple-100 text-purple-700", message: "Analyzing documents...", progress: 50 },
+    storing_messages: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Saving messages...", progress: 90 },
+    completed: { displayStatus: "Completed", color: "bg-emerald-100 text-emerald-700", message: "Process completed!", progress: 100 },
+    failed: { displayStatus: "Failed", color: "bg-red-100 text-red-700", message: "Process failed", progress: 0 }
 };
 
 // Helper function to get status config
@@ -105,15 +70,11 @@ function getStatusConfig(processStatus: string | undefined) {
 // Helper function to map to display status for backward compatibility with PropertyList
 function mapToListStatus(displayStatus: DisplayStatus): "Pending" | "Completed" | "In Progress" {
     switch (displayStatus) {
-        case "Completed":
-            return "Completed";
-        case "Processing":
-            return "In Progress";
-        case "Failed":
-            return "Pending"; // Show as pending in the list for failed
+        case "Completed": return "Completed";
+        case "Processing": return "In Progress";
+        case "Failed": return "Pending"; // Show as pending in the list for failed
         case "Pending":
-        default:
-            return "Pending";
+        default: return "Pending";
     }
 }
 
@@ -148,7 +109,7 @@ const Page = () => {
         setTimeout(() => setToast(null), 3000);
     };
 
-    const itemsPerPage = 6;
+    const itemsPerPage = 25;
 
     // Fetch properties and their process statuses from API
     const fetchPropertiesWithStatus = useCallback(async () => {
@@ -172,11 +133,10 @@ const Page = () => {
             }
 
             // Create a map of property_id to process info (most recent process)
-            const processMap = new Map<string, ProcessSummaryResponse>();
+            const processMap = new Map();
             processes.forEach(proc => {
                 const existing = processMap.get(proc.property_id);
-                if (!existing || (proc.process_start && existing.process_start &&
-                    new Date(proc.process_start) > new Date(existing.process_start))) {
+                if (!existing || (proc.process_start && existing.process_start && new Date(proc.process_start) > new Date(existing.process_start))) {
                     processMap.set(proc.property_id, proc);
                 }
             });
@@ -226,7 +186,6 @@ const Page = () => {
                 })
             );
 
-
             setProperties(transformedProperties);
         } catch (err) {
             console.error('Error fetching properties:', err);
@@ -254,8 +213,7 @@ const Page = () => {
     // Update the ref whenever properties change
     useEffect(() => {
         const hasActive = properties.some(p =>
-            p.detailedStatus &&
-            ACTIVE_STATUSES.includes(p.detailedStatus)
+            p.detailedStatus && ACTIVE_STATUSES.includes(p.detailedStatus)
         );
         hasActiveProcessRef.current = hasActive;
         console.log('Active process check:', hasActive, 'statuses:', properties.map(p => p.detailedStatus));
@@ -284,7 +242,6 @@ const Page = () => {
             }
         }
     }, [properties, selectedProperty]);
-
 
     // Download AI-generated report for a property
     const handleDownload = useCallback(async (propertyId: string, processId?: string) => {
@@ -383,7 +340,6 @@ const Page = () => {
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-
         } catch (err) {
             console.error('Error downloading report:', err);
             setDownloadError(err instanceof Error ? err.message : 'Failed to download report');
@@ -411,6 +367,7 @@ const Page = () => {
         }
 
         setIsDeleting(true);
+
         try {
             // Delete from backend API
             await propertyAPI.delete(userId, propertyToDelete);
@@ -419,7 +376,6 @@ const Page = () => {
             setProperties(prev => prev.filter(p => p.id !== propertyToDelete));
             setSelectedProperty(null);
             showToast('Property deleted successfully!', 'success');
-
         } catch (err) {
             console.error('Error deleting property:', err);
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -466,6 +422,7 @@ const Page = () => {
         }
 
         setIsSavingEdit(true);
+
         try {
             // 1. Upload new documents
             await documentAPI.upload(userId, selectedProperty.id, filesToUpload, docTypes);
@@ -478,11 +435,11 @@ const Page = () => {
 
             // Refresh properties list
             await fetchPropertiesWithStatus();
+
             setIsEditModalOpen(false);
             setEditFourPointFile(null);
             setEditHomeInspectionFile(null);
             showToast('Property edited successfully!', 'success');
-
         } catch (err) {
             console.error('Error restarting process:', err);
             showToast(err instanceof Error ? err.message : 'Failed to restart process. Please try again.', 'error');
@@ -537,7 +494,9 @@ const Page = () => {
         address: selectedProperty.location,
         type: selectedProperty.type || "Property",
         client: selectedProperty.clientName || "N/A",
-        closingDays: selectedProperty.closingDate ? Math.max(0, Math.ceil((new Date(selectedProperty.closingDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0,
+        closingDays: selectedProperty.closingDate
+            ? Math.max(0, Math.ceil((new Date(selectedProperty.closingDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+            : 0,
         status: selectedProperty.status === "Completed" ? "Completed" : "Pending",
         documentsSubmitted: selectedProperty.documentsSubmitted,
         documentsTotal: 2,
@@ -572,71 +531,71 @@ const Page = () => {
     };
 
     return (
-        <div className="flex flex-col h-full">
-            <PropertyListHeader
-                searchQuery={searchQuery}
-                onSearchChange={handleSearchChange}
-                statusFilter={statusFilter}
-                onStatusFilterChange={handleStatusFilterChange}
-            />
-
+        <div className="min-h-screen bg-gray-50">
             {/* Error Message */}
             {error && (
-                <div className="mx-4 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <p className="text-red-700 text-sm">{error}</p>
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                    <div className="flex items-center">
+                        <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+                        <p className="text-red-700">{error}</p>
+                    </div>
                 </div>
             )}
 
             {/* Download Error Message */}
             {downloadError && (
-                <div className="mx-4 mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                    <p className="text-amber-700 text-sm">{downloadError}</p>
-                    <button
-                        onClick={() => setDownloadError(null)}
-                        className="ml-auto text-amber-600 hover:text-amber-800"
-                    >
-                        ×
-                    </button>
+                <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-4">
+                    <div className="flex items-center">
+                        <AlertCircle className="h-5 w-5 text-amber-500 mr-2" />
+                        <p className="text-amber-700">{downloadError}</p>
+                        <button
+                            onClick={() => setDownloadError(null)}
+                            className="ml-auto text-amber-600 hover:text-amber-800"
+                        >
+                            ×
+                        </button>
+                    </div>
                 </div>
             )}
 
-
-
             {/* Split View Layout */}
-            <div className="flex-1 mt-2 flex gap-4 lg:gap-0 min-h-0">
+            <div className="flex h-screen overflow-hidden">
                 {/* Left Panel - Property List */}
-                <div className={`bg-white rounded-[24px] p-3 lg:p-4 flex flex-col transition-all duration-300 overflow-hidden ${selectedProperty
-                    ? "hidden lg:flex lg:flex-1 lg:rounded-r-none"
-                    : "flex-1"
+                <div className={`flex flex-col bg-white transition-all duration-300 ${selectedProperty
+                    ? 'hidden lg:flex lg:w-1/2 border-r border-gray-200'
+                    : 'w-full'
                     }`}>
-                    <h2 className="text-lg font-semibold text-[#0C1D38] mb-2 flex-shrink-0">
-                        Property List
-                        {filteredProperties.length > 0 && (
-                            <span className="text-xs font-normal text-gray-500 ml-2">
-                                ({filteredProperties.length})
-                            </span>
-                        )}
-                    </h2>
-                    <div className="flex-1 min-h-0 overflow-hidden">
-                        <PropertyList
-                            properties={listProperties}
-                            selectedPropertyId={selectedProperty?.id}
-                            onSelectProperty={handleSelectProperty}
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={handlePageChange}
-                            isLoading={isLoading}
-                        />
+                    <div className="p-6 border-b border-gray-200">
+                        <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                            Property List
+                            {filteredProperties.length > 0 && (
+                                <span className="text-base font-normal text-gray-500 ml-2">
+                                    ({filteredProperties.length})
+                                </span>
+                            )}
+                        </h1>
                     </div>
+                    <PropertyListHeader
+                        searchQuery={searchQuery}
+                        onSearchChange={handleSearchChange}
+                        statusFilter={statusFilter}
+                        onStatusFilterChange={handleStatusFilterChange}
+                    />
+                    <PropertyList
+                        properties={listProperties}
+                        isLoading={isLoading}
+                        onSelectProperty={handleSelectProperty}
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
                 </div>
 
                 {/* Right Panel - Property Detail */}
                 {selectedProperty && selectedDetail && (
                     <>
-                        {/* Desktop Detail Panel */}
-                        <div className="hidden lg:block w-[609px] flex-shrink-0">
+                        {/* Desktop Detail Panel - FIXED: Added overflow-y-auto */}
+                        <div className="hidden lg:flex lg:flex-col w-1/2 bg-gray-50 overflow-y-auto">
                             <PropertyDetailPanel
                                 property={selectedDetail}
                                 onClose={handleCloseDetail}
@@ -646,27 +605,25 @@ const Page = () => {
                             />
                             {isDownloading && (
                                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                                 </div>
                             )}
                         </div>
 
-                        {/* Mobile Full-Screen Overlay */}
-                        <div className="lg:hidden fixed inset-0 z-50 bg-white">
-                            <div className="h-full">
-                                <PropertyDetailPanel
-                                    property={selectedDetail}
-                                    onClose={handleCloseDetail}
-                                    onEdit={() => handleOpenEditModal(selectedProperty)}
-                                    onDownload={() => handleDownload(selectedProperty.id)}
-                                    onDelete={() => openDeleteModal(selectedProperty.id)}
-                                />
-                                {isDownloading && (
-                                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                                    </div>
-                                )}
-                            </div>
+                        {/* Mobile Full-Screen Overlay - FIXED: Added overflow-y-auto */}
+                        <div className="lg:hidden fixed inset-0 z-50 bg-gray-50 overflow-y-auto">
+                            <PropertyDetailPanel
+                                property={selectedDetail}
+                                onClose={handleCloseDetail}
+                                onEdit={() => handleOpenEditModal(selectedProperty)}
+                                onDownload={() => handleDownload(selectedProperty.id)}
+                                onDelete={() => openDeleteModal(selectedProperty.id)}
+                            />
+                            {isDownloading && (
+                                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                </div>
+                            )}
                         </div>
                     </>
                 )}
@@ -675,110 +632,109 @@ const Page = () => {
             {/* Edit Property Modal */}
             {isEditModalOpen && selectedProperty && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl max-w-2xl w-full shadow-xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-900">Edit Property</h3>
-                                <p className="text-sm text-gray-500">Upload new documents to update the property</p>
-                            </div>
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white">
+                            <h2 className="text-xl font-bold text-gray-900">Edit Property</h2>
+                            <p className="text-sm text-gray-500">Upload new documents to update the property</p>
                             <button
                                 onClick={() => setIsEditModalOpen(false)}
                                 className="text-gray-400 hover:text-gray-600 transition-colors"
                             >
-                                <X className="w-5 h-5" />
+                                <X className="h-6 w-6" />
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 space-y-6">
                             {/* Property Info Display */}
-                            <div className="p-4 bg-gray-50 rounded-lg">
-                                <h4 className="font-medium text-gray-900 mb-2">{selectedProperty.name}</h4>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <h3 className="font-semibold text-gray-900 mb-2">{selectedProperty.name}</h3>
                                 <p className="text-sm text-gray-600">{selectedProperty.location}</p>
                                 {selectedProperty.clientName && (
-                                    <p className="text-sm text-gray-500 mt-1">Client: {selectedProperty.clientName}</p>
+                                    <p className="text-sm text-gray-600 mt-1">Client: {selectedProperty.clientName}</p>
                                 )}
                             </div>
 
                             {/* Document Upload Section */}
-                            <div className="pt-4">
-                                <div className="flex items-center justify-between mb-1">
-                                    <p className="text-sm font-medium text-gray-700">Upload Documents</p>
-                                    <span className="text-sm font-medium text-blue-600">
-                                        {(editFourPointFile ? 1 : 0) + (editHomeInspectionFile ? 1 : 0)} document(s) selected
-                                    </span>
-                                </div>
-                                <p className="text-xs text-gray-500 mb-4">Upload at least one document to update the property</p>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {/* 4-Point File Upload */}
-                                    <div>
-                                        <input
-                                            id="edit-fourpoint-upload"
-                                            type="file"
-                                            accept=".pdf"
-                                            onChange={(e) => e.target.files && setEditFourPointFile(e.target.files[0])}
-                                            className="hidden"
-                                        />
-                                        {!editFourPointFile ? (
-                                            <button
-                                                type="button"
-                                                onClick={() => document.getElementById('edit-fourpoint-upload')?.click()}
-                                                className="w-full h-[100px] rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors flex flex-col items-center justify-center gap-2"
-                                            >
-                                                <Upload className="w-5 h-5 text-gray-400" />
-                                                <span className="text-sm text-gray-500">4-Point File</span>
-                                            </button>
-                                        ) : (
-                                            <div className="w-full h-[100px] rounded-lg border-2 border-green-500 bg-green-50 flex flex-col items-center justify-center gap-2 relative">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setEditFourPointFile(null)}
-                                                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                                <FileText className="w-5 h-5 text-green-600" />
-                                                <span className="text-xs text-gray-600 truncate max-w-[90%] px-2">{editFourPointFile.name}</span>
-                                            </div>
-                                        )}
-                                    </div>
+                            <div>
+                                <h3 className="font-semibold text-gray-900 mb-2">Upload Documents</h3>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    {(editFourPointFile ? 1 : 0) + (editHomeInspectionFile ? 1 : 0)} document(s) selected
+                                </p>
+                                <p className="text-xs text-amber-600 mb-4">
+                                    Upload at least one document to update the property
+                                </p>
 
-                                    {/* Home Inspection File Upload */}
-                                    <div>
-                                        <input
-                                            id="edit-homeinspection-upload"
-                                            type="file"
-                                            accept=".pdf"
-                                            onChange={(e) => e.target.files && setEditHomeInspectionFile(e.target.files[0])}
-                                            className="hidden"
-                                        />
-                                        {!editHomeInspectionFile ? (
+                                {/* 4-Point File Upload */}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        4-Point Inspection Report
+                                    </label>
+                                    <input
+                                        type="file"
+                                        id="edit-fourpoint-upload"
+                                        accept=".pdf"
+                                        onChange={(e) => e.target.files && setEditFourPointFile(e.target.files[0])}
+                                        className="hidden"
+                                    />
+                                    {!editFourPointFile ? (
+                                        <button
+                                            onClick={() => document.getElementById('edit-fourpoint-upload')?.click()}
+                                            className="w-full h-[100px] rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors flex flex-col items-center justify-center gap-2"
+                                        >
+                                            <Upload className="h-8 w-8 text-gray-400" />
+                                            <span className="text-sm text-gray-600">4-Point File</span>
+                                        </button>
+                                    ) : (
+                                        <div className="relative p-4 bg-blue-50 rounded-lg border border-blue-200">
                                             <button
-                                                type="button"
-                                                onClick={() => document.getElementById('edit-homeinspection-upload')?.click()}
-                                                className="w-full h-[100px] rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors flex flex-col items-center justify-center gap-2"
+                                                onClick={() => setEditFourPointFile(null)}
+                                                className="absolute top-2 right-2 text-red-500 hover:text-red-700"
                                             >
-                                                <Upload className="w-5 h-5 text-gray-400" />
-                                                <span className="text-sm text-gray-500">Home Inspection</span>
+                                                <X className="h-5 w-5" />
                                             </button>
-                                        ) : (
-                                            <div className="w-full h-[100px] rounded-lg border-2 border-green-500 bg-green-50 flex flex-col items-center justify-center gap-2 relative">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setEditHomeInspectionFile(null)}
-                                                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                                <FileText className="w-5 h-5 text-green-600" />
-                                                <span className="text-xs text-gray-600 truncate max-w-[90%] px-2">{editHomeInspectionFile.name}</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                            <FileText className="h-6 w-6 text-blue-600 mb-2" />
+                                            <p className="text-sm font-medium text-gray-900">{editFourPointFile.name}</p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Home Inspection File Upload */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Home Inspection Report
+                                    </label>
+                                    <input
+                                        type="file"
+                                        id="edit-homeinspection-upload"
+                                        accept=".pdf"
+                                        onChange={(e) => e.target.files && setEditHomeInspectionFile(e.target.files[0])}
+                                        className="hidden"
+                                    />
+                                    {!editHomeInspectionFile ? (
+                                        <button
+                                            onClick={() => document.getElementById('edit-homeinspection-upload')?.click()}
+                                            className="w-full h-[100px] rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors flex flex-col items-center justify-center gap-2"
+                                        >
+                                            <Upload className="h-8 w-8 text-gray-400" />
+                                            <span className="text-sm text-gray-600">Home Inspection</span>
+                                        </button>
+                                    ) : (
+                                        <div className="relative p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                            <button
+                                                onClick={() => setEditHomeInspectionFile(null)}
+                                                className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                                            >
+                                                <X className="h-5 w-5" />
+                                            </button>
+                                            <FileText className="h-6 w-6 text-blue-600 mb-2" />
+                                            <p className="text-sm font-medium text-gray-900">{editHomeInspectionFile.name}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex gap-3 p-6 border-t sticky bottom-0 bg-white">
+                        <div className="p-6 border-t border-gray-200 flex gap-3 sticky bottom-0 bg-white">
                             <Button
                                 variant="outline"
                                 onClick={() => setIsEditModalOpen(false)}

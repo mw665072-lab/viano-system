@@ -53,13 +53,13 @@ export function PageHeader({
     const actionButton = actionLabel && (
         <>
             {actionHref ? (
-                <Link href={actionHref}>
+                <Link href={actionHref} className="group">
                     <Button
                         variant={actionVariant}
-                        className="gap-2.5 w-[180px] h-[40px] rounded-full py-2 px-4 border border-[#D9D9D9]"
+                        className="gap-2.5 w-[200px] h-[48px] rounded-full py-2 px-5 border-0 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                         style={{ background: '#00346C' }}
                     >
-                        {actionIcon}
+                        <span className="transition-transform group-hover:rotate-90 duration-300">{actionIcon}</span>
                         {actionLabel}
                     </Button>
                 </Link>
@@ -67,8 +67,8 @@ export function PageHeader({
                 <Button
                     onClick={onAction}
                     variant={actionVariant}
-                    className="gap-2.5 w-[180px] h-[40px] rounded-full py-2 px-4 border border-[#D9D9D9]"
-                    style={{ background: '#00346C',color:'#FFFFFF' }}
+                    className="gap-2.5 w-[200px] h-[48px] rounded-full py-2 px-5 border-0 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    style={{ background: '#00346C' }}
                 >
                     {actionIcon}
                     {actionLabel}

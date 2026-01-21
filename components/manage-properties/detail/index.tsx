@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info } from "lucide-react"
+import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info, FileText, Loader2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { processAPI, MessageResponse } from "@/lib/api"
+import { processAPI, documentAPI, DocumentResponse, MessageResponse, getCurrentUserId } from "@/lib/api"
 
 interface PropertyDetailData {
     id: string
@@ -56,6 +56,13 @@ export function PropertyDetailPanel({
     const [messageCount, setMessageCount] = useState<number>(property.totalIssues)
     const [isLoadingMessages, setIsLoadingMessages] = useState(false)
 
+    // Document state
+    const [documents, setDocuments] = useState<DocumentResponse[]>([])
+    const [isLoadingDocs, setIsLoadingDocs] = useState(false)
+    const [deletingDocId, setDeletingDocId] = useState<string | null>(null)
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+    const [docToDelete, setDocToDelete] = useState<DocumentResponse | null>(null)
+
     // Fetch messages when property or processId changes
     useEffect(() => {
         const fetchMessages = async () => {
@@ -82,6 +89,47 @@ export function PropertyDetailPanel({
         fetchMessages()
     }, [property.processId, property.totalIssues])
 
+    // Fetch documents for this property
+    useEffect(() => {
+        const fetchDocuments = async () => {
+            const userId = getCurrentUserId()
+            if (!userId) return
+
+            setIsLoadingDocs(true)
+            try {
+                const docs = await documentAPI.getPropertyDocuments(userId, property.id)
+                setDocuments(docs)
+            } catch (err) {
+                console.error('Error fetching documents:', err)
+                setDocuments([])
+            } finally {
+                setIsLoadingDocs(false)
+            }
+        }
+
+        fetchDocuments()
+    }, [property.id])
+
+    // Handle document deletion
+    const handleDeleteDocument = async () => {
+        if (!docToDelete) return
+        const userId = getCurrentUserId()
+        if (!userId) return
+
+        setDeletingDocId(docToDelete.doc_id)
+        try {
+            await documentAPI.delete(userId, property.id, docToDelete.doc_id)
+            setDocuments(prev => prev.filter(d => d.doc_id !== docToDelete.doc_id))
+            setShowDeleteConfirm(false)
+            setDocToDelete(null)
+        } catch (err) {
+            console.error('Error deleting document:', err)
+            alert('Failed to delete document. Please try again.')
+        } finally {
+            setDeletingDocId(null)
+        }
+    }
+
     // Calculate tier breakdown
     const tierBreakdown = {
         critical: messages.filter(m => m.priority_level === 1).length,
@@ -94,7 +142,36 @@ export function PropertyDetailPanel({
 
 
     return (
-        <div className="h-full flex flex-col bg-white rounded-tl-[32px] lg:rounded-none shadow-[0px_2px_6px_0px_rgba(0,0,0,0.15)]">
+        <div className="flex flex-col bg-white rounded-tl-[32px] lg:rounded-none shadow-[0px_2px_6px_0px_rgba(0,0,0,0.15)]">
+            {/* Property Header Image */}
+            <div className="relative w-full h-[180px] bg-gradient-to-br from-sky-100 via-blue-50 to-emerald-50 overflow-hidden rounded-t-[32px] lg:rounded-none">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 50%)' }} />
+
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <img
+                        src="/property-default.png"
+                        alt="Property"
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+
+                {/* Status Badge */}
+                <div className="absolute top-4 right-4">
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-md ${property.status === "Completed"
+                        ? "bg-emerald-500 text-white"
+                        : "bg-amber-500 text-white"
+                        }`}>
+                        {property.status === "Completed" ? "✓ Complete" : "⏳ Pending"}
+                    </span>
+                </div>
+
+                {/* Property Name Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white/90 to-transparent pt-8 pb-3 px-4">
+                    <h2 className="text-lg font-bold text-[#0C1D38] truncate">{property.name}</h2>
+                </div>
+            </div>
+
             {/* Header */}
             <div className="p-4 lg:p-6 border-b border-gray-100">
                 <div className="flex items-start justify-between gap-4">
@@ -220,7 +297,7 @@ export function PropertyDetailPanel({
                             <span className="text-sm font-medium text-[#0C1D38]">{property.client}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-[#64748B]">CLOSING:</span>
+                            <span className="text-sm text-[#64748B]">INSPECTION DATE:</span>
                             <span className={`text-sm font-medium ${property.closingDays <= 14 ? "text-emerald-600" : "text-[#0C1D38]"}`}>
                                 {property.closingDays} days
                             </span>
@@ -295,35 +372,127 @@ export function PropertyDetailPanel({
                         <div className="space-y-2 pt-3 border-t border-gray-100">
                             <p className="text-xs font-medium text-[#64748B] uppercase tracking-wide mb-2">By Priority</p>
                             <div className="grid grid-cols-2 gap-2">
-                                {tierBreakdown.critical > 0 && (
-                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 border border-red-200">
-                                        <AlertTriangle className="w-4 h-4 text-red-600" />
-                                        <span className="text-sm font-medium text-red-700">Critical: {tierBreakdown.critical}</span>
-                                    </div>
-                                )}
-                                {tierBreakdown.high > 0 && (
-                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-orange-50 border border-orange-200">
-                                        <AlertCircle className="w-4 h-4 text-orange-600" />
-                                        <span className="text-sm font-medium text-orange-700">High: {tierBreakdown.high}</span>
-                                    </div>
-                                )}
-                                {tierBreakdown.medium > 0 && (
-                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 border border-amber-200">
-                                        <Info className="w-4 h-4 text-amber-600" />
-                                        <span className="text-sm font-medium text-amber-700">Medium: {tierBreakdown.medium}</span>
-                                    </div>
-                                )}
-                                {tierBreakdown.low > 0 && (
-                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-50 border border-blue-200">
-                                        <Info className="w-4 h-4 text-blue-600" />
-                                        <span className="text-sm font-medium text-blue-700">Low: {tierBreakdown.low}</span>
-                                    </div>
-                                )}
+                                {[
+                                    { key: 'critical', count: tierBreakdown.critical, label: 'Critical', bgColor: 'bg-red-50', borderColor: 'border-red-200', textColor: 'text-red-700', iconColor: 'text-red-600', Icon: AlertTriangle },
+                                    { key: 'high', count: tierBreakdown.high, label: 'High', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', textColor: 'text-orange-700', iconColor: 'text-orange-600', Icon: AlertCircle },
+                                    { key: 'medium', count: tierBreakdown.medium, label: 'Medium', bgColor: 'bg-amber-50', borderColor: 'border-amber-200', textColor: 'text-amber-700', iconColor: 'text-amber-600', Icon: Info },
+                                    { key: 'low', count: tierBreakdown.low, label: 'Low', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', textColor: 'text-blue-700', iconColor: 'text-blue-600', Icon: Info },
+                                ]
+                                    .filter(item => item.count > 0)
+                                    .map(({ key, count, label, bgColor, borderColor, textColor, iconColor, Icon }) => (
+                                        <div key={key} className={`flex items-center gap-2 p-2 rounded-lg ${bgColor} border ${borderColor}`}>
+                                            <Icon className={`w-4 h-4 ${iconColor}`} />
+                                            <span className={`text-sm font-medium ${textColor}`}>{label}: {count}</span>
+                                        </div>
+                                    ))}
                             </div>
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Documents Management Section */}
+            <div className="p-4 lg:p-6 border-t border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-[#64748B] uppercase tracking-wide">
+                        Documents ({documents.length})
+                    </h3>
+                    <FileText className="w-5 h-5 text-blue-500" />
+                </div>
+
+                {isLoadingDocs ? (
+                    <div className="flex items-center justify-center py-4">
+                        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                        <span className="ml-2 text-sm text-gray-500">Loading documents...</span>
+                    </div>
+                ) : documents.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-4">No documents uploaded yet.</p>
+                ) : (
+                    <div className="space-y-2">
+                        {documents.map((doc) => (
+                            <div
+                                key={doc.doc_id}
+                                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <FileText className="w-4 h-4 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {doc.doc_type === '4point' ? '4-Point Inspection' : 'Home Inspection'}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'N/A'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setDocToDelete(doc)
+                                        setShowDeleteConfirm(true)
+                                    }}
+                                    disabled={deletingDocId === doc.doc_id}
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                >
+                                    {deletingDocId === doc.doc_id ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Trash2 className="w-4 h-4" />
+                                    )}
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Delete Document Confirmation Modal */}
+            {showDeleteConfirm && docToDelete && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-sm w-full shadow-xl overflow-hidden">
+                        <div className="p-6 text-center">
+                            <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Trash2 className="w-7 h-7 text-red-600" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Document?</h3>
+                            <p className="text-gray-600 text-sm mb-4">
+                                This will permanently delete the{' '}
+                                <strong>{docToDelete.doc_type === '4point' ? '4-Point Inspection' : 'Home Inspection'}</strong>{' '}
+                                document. This action cannot be undone.
+                            </p>
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setShowDeleteConfirm(false)
+                                        setDocToDelete(null)
+                                    }}
+                                    className="flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleDeleteDocument}
+                                    disabled={!!deletingDocId}
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                    {deletingDocId ? (
+                                        <span className="flex items-center gap-2">
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Deleting...
+                                        </span>
+                                    ) : (
+                                        'Delete'
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
