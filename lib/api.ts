@@ -1,8 +1,27 @@
 // lib/api.ts - API Service Layer for VianoSystems
 // Updated to match exact backend OpenAPI schemas
 
-// Base API URL - Uses environment variable or defaults to localhost
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+// Base API URL - Uses environment variable
+// Note: NEXT_PUBLIC_ variables are bundled at build time in Next.js
+function getApiBaseUrl(): string {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    
+    if (!apiUrl) {
+        const errorMsg = 
+            'NEXT_PUBLIC_API_URL environment variable is not set. ' +
+            'Please configure it in your Vercel environment variables and redeploy.';
+        
+        if (typeof window !== 'undefined') {
+            console.error('❌', errorMsg);
+        }
+        throw new Error(errorMsg);
+    }
+    
+    // Ensure the URL doesn't end with a slash
+    return apiUrl.replace(/\/$/, '');
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Generic fetch wrapper with error handling
 async function apiRequest<T>(
