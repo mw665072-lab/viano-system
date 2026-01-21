@@ -137,16 +137,10 @@ const AddPropertyPage = () => {
                     console.error('Failed to upload documents:', uploadError);
                     const errorMessage = uploadError instanceof Error ? uploadError.message : 'Upload failed';
 
-                    // Check for upload limit error
-                    if (errorMessage.includes('Upload limit') || errorMessage.includes('limit exceeded')) {
-                        setErrorModalTitle('Document Upload Limit Reached');
-                        setErrorModalMessage('You have reached the maximum document storage limit (12 documents). Please delete some existing documents before uploading new ones.\n\nThe property was created successfully, but no documents were uploaded.');
-                        setShowErrorModal(true);
-                    } else {
-                        setErrorModalTitle('Document Upload Failed');
-                        setErrorModalMessage(errorMessage + '\n\nThe property was created successfully, but documents could not be uploaded.');
-                        setShowErrorModal(true);
-                    }
+                    // Show error modal with the error message
+                    setErrorModalTitle('Document Upload Failed');
+                    setErrorModalMessage(errorMessage + '\n\nThe property was created successfully, but documents could not be uploaded.');
+                    setShowErrorModal(true);
 
                     // Continue to redirect after showing error
                     setIsSubmitting(false);
