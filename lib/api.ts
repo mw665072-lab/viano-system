@@ -171,7 +171,6 @@ export const documentAPI = {
     /**
      * Upload one or more PDF documents
      * - Validate file types and doc_types
-     * - Check storage limits (max 12 files per user)
      * - Verify property exists and belongs to user
      * - Upload to S3 with structure: {user_id}/{property_id}/{filename}
      * - Store metadata in RDS
