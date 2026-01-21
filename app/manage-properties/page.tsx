@@ -411,39 +411,11 @@ const Page = () => {
         setIsSavingEdit(true);
 
         try {
-            // 1. Try to fetch existing documents to remove them
-            let existingDocIds: string[] = [];
-            try {
-                const existingDocs = await documentAPI.getPropertyDocuments(userId, selectedProperty.id);
-                if (Array.isArray(existingDocs) && existingDocs.length > 0) {
-                    // Filter out any undefined or invalid doc_ids
-                    existingDocIds = existingDocs
-                        .map(doc => doc.doc_id)
-                        .filter((id): id is string => !!id && id !== 'undefined');
-                }
-            } catch (err) {
-                // Ignore errors - may be no existing documents
-                console.log('No existing documents to remove');
-            }
-
-            // 2. Upload new documents and optionally remove old ones
-            if (existingDocIds.length > 0) {
-                // Use editDocuments API to remove old docs and upload new ones
-                await propertyAPI.editDocuments(userId, selectedProperty.id, {
-                    documentsToRemove: existingDocIds,
-                    files: filesToUpload,
-                    docTypes: docTypes,
-                });
-            } else {
-                // No existing docs to remove, just upload new ones
-                await documentAPI.upload(userId, selectedProperty.id, filesToUpload, docTypes);
-            }
-
-            // 3. Restart processing pipeline with new documents
-            await processAPI.start({
-                user_id: userId,
-                property_id: selectedProperty.id,
-            });
+            // Use the new resetAndReprocess API which handles everything in one call:
+            // - Deletes all existing documents
+            // - Uploads new documents
+            // - Starts processing pipeline
+            await propertyAPI.resetAndReprocess(userId, selectedProperty.id, filesToUpload, docTypes);
 
             // Refresh properties list
             await fetchPropertiesWithStatus();
@@ -500,6 +472,7 @@ const Page = () => {
     }, [searchQuery, statusFilter]);
 
     // Generate property details for selected property
+    // Note: documentsTotal is set to actual submitted count so 1/1 or 2/2 both show as complete
     const selectedDetail: PropertyDetail | null = selectedProperty ? {
         id: selectedProperty.id,
         name: selectedProperty.name,
@@ -511,7 +484,7 @@ const Page = () => {
             : 0,
         status: selectedProperty.status === "Completed" ? "Completed" : "Pending",
         documentsSubmitted: selectedProperty.documentsSubmitted,
-        documentsTotal: 2,
+        documentsTotal: Math.max(selectedProperty.documentsSubmitted, 1), // Dynamic: matches actual uploaded count
         aiAnalysisProgress: selectedProperty.progress,
         totalIssues: 0,
         criticalIssues: 0,
