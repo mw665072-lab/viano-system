@@ -89,9 +89,11 @@ export function PropertyList({
               {property.image ? (
                 <Image src={property.image} alt={property.name} fill className="object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Home className="w-5 h-5 text-gray-400" />
-                </div>
+                <img
+                  src="/property-default.png"
+                  alt={property.name}
+                  className="w-full h-full object-cover"
+                />
               )}
             </div>
 

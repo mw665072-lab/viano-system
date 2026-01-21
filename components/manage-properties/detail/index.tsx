@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info, FileText, Loader2, X } from "lucide-react"
+import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { processAPI, documentAPI, DocumentResponse, MessageResponse, getCurrentUserId } from "@/lib/api"
+import { processAPI, MessageResponse } from "@/lib/api"
 
 interface PropertyDetailData {
     id: string
@@ -56,13 +56,6 @@ export function PropertyDetailPanel({
     const [messageCount, setMessageCount] = useState<number>(property.totalIssues)
     const [isLoadingMessages, setIsLoadingMessages] = useState(false)
 
-    // Document state
-    const [documents, setDocuments] = useState<DocumentResponse[]>([])
-    const [isLoadingDocs, setIsLoadingDocs] = useState(false)
-    const [deletingDocId, setDeletingDocId] = useState<string | null>(null)
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-    const [docToDelete, setDocToDelete] = useState<DocumentResponse | null>(null)
-
     // Fetch messages when property or processId changes
     useEffect(() => {
         const fetchMessages = async () => {
@@ -88,47 +81,6 @@ export function PropertyDetailPanel({
 
         fetchMessages()
     }, [property.processId, property.totalIssues])
-
-    // Fetch documents for this property
-    useEffect(() => {
-        const fetchDocuments = async () => {
-            const userId = getCurrentUserId()
-            if (!userId) return
-
-            setIsLoadingDocs(true)
-            try {
-                const docs = await documentAPI.getPropertyDocuments(userId, property.id)
-                setDocuments(docs)
-            } catch (err) {
-                console.error('Error fetching documents:', err)
-                setDocuments([])
-            } finally {
-                setIsLoadingDocs(false)
-            }
-        }
-
-        fetchDocuments()
-    }, [property.id])
-
-    // Handle document deletion
-    const handleDeleteDocument = async () => {
-        if (!docToDelete) return
-        const userId = getCurrentUserId()
-        if (!userId) return
-
-        setDeletingDocId(docToDelete.doc_id)
-        try {
-            await documentAPI.delete(userId, property.id, docToDelete.doc_id)
-            setDocuments(prev => prev.filter(d => d.doc_id !== docToDelete.doc_id))
-            setShowDeleteConfirm(false)
-            setDocToDelete(null)
-        } catch (err) {
-            console.error('Error deleting document:', err)
-            alert('Failed to delete document. Please try again.')
-        } finally {
-            setDeletingDocId(null)
-        }
-    }
 
     // Calculate tier breakdown
     const tierBreakdown = {
@@ -390,109 +342,6 @@ export function PropertyDetailPanel({
                     )}
                 </div>
             </div>
-
-            {/* Documents Management Section */}
-            <div className="p-4 lg:p-6 border-t border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold text-[#64748B] uppercase tracking-wide">
-                        Documents ({documents.length})
-                    </h3>
-                    <FileText className="w-5 h-5 text-blue-500" />
-                </div>
-
-                {isLoadingDocs ? (
-                    <div className="flex items-center justify-center py-4">
-                        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-                        <span className="ml-2 text-sm text-gray-500">Loading documents...</span>
-                    </div>
-                ) : documents.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-4">No documents uploaded yet.</p>
-                ) : (
-                    <div className="space-y-2">
-                        {documents.map((doc) => (
-                            <div
-                                key={doc.doc_id}
-                                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                        <FileText className="w-4 h-4 text-blue-600" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">
-                                            {doc.doc_type === '4point' ? '4-Point Inspection' : 'Home Inspection'}
-                                        </p>
-                                        <p className="text-xs text-gray-500">
-                                            {doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'N/A'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        setDocToDelete(doc)
-                                        setShowDeleteConfirm(true)
-                                    }}
-                                    disabled={deletingDocId === doc.doc_id}
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                >
-                                    {deletingDocId === doc.doc_id ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <Trash2 className="w-4 h-4" />
-                                    )}
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Delete Document Confirmation Modal */}
-            {showDeleteConfirm && docToDelete && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl max-w-sm w-full shadow-xl overflow-hidden">
-                        <div className="p-6 text-center">
-                            <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Trash2 className="w-7 h-7 text-red-600" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Document?</h3>
-                            <p className="text-gray-600 text-sm mb-4">
-                                This will permanently delete the{' '}
-                                <strong>{docToDelete.doc_type === '4point' ? '4-Point Inspection' : 'Home Inspection'}</strong>{' '}
-                                document. This action cannot be undone.
-                            </p>
-                            <div className="flex gap-3">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                        setShowDeleteConfirm(false)
-                                        setDocToDelete(null)
-                                    }}
-                                    className="flex-1"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    onClick={handleDeleteDocument}
-                                    disabled={!!deletingDocId}
-                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                                >
-                                    {deletingDocId ? (
-                                        <span className="flex items-center gap-2">
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                            Deleting...
-                                        </span>
-                                    ) : (
-                                        'Delete'
-                                    )}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }

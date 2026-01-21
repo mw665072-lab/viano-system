@@ -2,7 +2,7 @@
 // Updated to match exact backend OpenAPI schemas
 
 // Base API URL - Uses environment variable or defaults to localhost
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:80"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 // Generic fetch wrapper with error handling
 async function apiRequest<T>(

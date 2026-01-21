@@ -6,7 +6,7 @@ import { PropertyDetailPanel } from '@/components/manage-properties/detail';
 import { AlertCircle, Loader2, X, Upload, FileText, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, EngineResultResponse, MessageResponse, UpdatePropertyRequest, getCurrentUserId } from '@/lib/api';
+import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, EngineResultResponse, MessageResponse, getCurrentUserId } from '@/lib/api';
 
 // All possible process statuses from the workflow
 type ProcessStatus = "pending" | "started" | "downloading" | "generating_messages" | "storing_messages" | "completed" | "failed";
@@ -142,49 +142,36 @@ const Page = () => {
             });
 
             // Transform API response to component format with dynamic status
-            // Also fetch document counts for each property
-            const transformedProperties: Property[] = await Promise.all(
-                apiProperties.map(async (prop: PropertyResponse) => {
-                    const process = processMap.get(prop.property_id);
-                    const statusConfig = getStatusConfig(process?.status);
-                    const progress = process?.progress ?? statusConfig.progress;
+            // Document count is inferred from process status to avoid N+1 API calls
+            const transformedProperties: Property[] = apiProperties.map((prop: PropertyResponse) => {
+                const process = processMap.get(prop.property_id);
+                const statusConfig = getStatusConfig(process?.status);
+                const progress = process?.progress ?? statusConfig.progress;
 
-                    // Fetch document count for this property
-                    let documentsSubmitted = 0;
-                    try {
-                        const docs = await documentAPI.getPropertyDocuments(userId, prop.property_id);
-                        // docs could be an array or object with documents
-                        if (Array.isArray(docs)) {
-                            documentsSubmitted = docs.length;
-                        } else if (docs && typeof docs === 'object') {
-                            // If it's an object with a documents array
-                            documentsSubmitted = (docs as any).documents?.length || (docs as any).length || 0;
-                        }
-                    } catch (err) {
-                        // If documents can't be fetched, check if process started (means docs were uploaded)
-                        if (process && process.status !== 'pending') {
-                            documentsSubmitted = 2; // Assume both docs uploaded if process started
-                        }
-                    }
+                // Infer document count from process status
+                // If process started (not pending), documents were uploaded (typically 2)
+                let documentsSubmitted = 0;
+                if (process && process.status && process.status !== 'pending') {
+                    documentsSubmitted = 2; // Both docs uploaded if process started
+                }
 
-                    return {
-                        id: prop.property_id,
-                        name: prop.property_name,
-                        location: prop.location,
-                        image: undefined,
-                        type: undefined,
-                        closingDate: prop.property_closing_date ? new Date(prop.property_closing_date).toLocaleDateString() : undefined,
-                        status: statusConfig.displayStatus,
-                        detailedStatus: process?.status || "pending",
-                        statusColor: statusConfig.color,
-                        statusMessage: statusConfig.message,
-                        clientName: prop.client_name,
-                        processId: process?.process_id,
-                        progress: progress,
-                        documentsSubmitted: documentsSubmitted,
-                    };
-                })
-            );
+                return {
+                    id: prop.property_id,
+                    name: prop.property_name,
+                    location: prop.location,
+                    image: undefined,
+                    type: undefined,
+                    closingDate: prop.property_closing_date ? new Date(prop.property_closing_date).toLocaleDateString() : undefined,
+                    status: statusConfig.displayStatus,
+                    detailedStatus: process?.status || "pending",
+                    statusColor: statusConfig.color,
+                    statusMessage: statusConfig.message,
+                    clientName: prop.client_name,
+                    processId: process?.process_id,
+                    progress: progress,
+                    documentsSubmitted: documentsSubmitted,
+                };
+            });
 
             setProperties(transformedProperties);
         } catch (err) {
@@ -424,10 +411,35 @@ const Page = () => {
         setIsSavingEdit(true);
 
         try {
-            // 1. Upload new documents
-            await documentAPI.upload(userId, selectedProperty.id, filesToUpload, docTypes);
+            // 1. Try to fetch existing documents to remove them
+            let existingDocIds: string[] = [];
+            try {
+                const existingDocs = await documentAPI.getPropertyDocuments(userId, selectedProperty.id);
+                if (Array.isArray(existingDocs) && existingDocs.length > 0) {
+                    // Filter out any undefined or invalid doc_ids
+                    existingDocIds = existingDocs
+                        .map(doc => doc.doc_id)
+                        .filter((id): id is string => !!id && id !== 'undefined');
+                }
+            } catch (err) {
+                // Ignore errors - may be no existing documents
+                console.log('No existing documents to remove');
+            }
 
-            // 2. Restart processing pipeline
+            // 2. Upload new documents and optionally remove old ones
+            if (existingDocIds.length > 0) {
+                // Use editDocuments API to remove old docs and upload new ones
+                await propertyAPI.editDocuments(userId, selectedProperty.id, {
+                    documentsToRemove: existingDocIds,
+                    files: filesToUpload,
+                    docTypes: docTypes,
+                });
+            } else {
+                // No existing docs to remove, just upload new ones
+                await documentAPI.upload(userId, selectedProperty.id, filesToUpload, docTypes);
+            }
+
+            // 3. Restart processing pipeline with new documents
             await processAPI.start({
                 user_id: userId,
                 property_id: selectedProperty.id,
@@ -439,10 +451,10 @@ const Page = () => {
             setIsEditModalOpen(false);
             setEditFourPointFile(null);
             setEditHomeInspectionFile(null);
-            showToast('Property edited successfully!', 'success');
+            showToast('Property updated and processing restarted!', 'success');
         } catch (err) {
-            console.error('Error restarting process:', err);
-            showToast(err instanceof Error ? err.message : 'Failed to restart process. Please try again.', 'error');
+            console.error('Error updating property:', err);
+            showToast(err instanceof Error ? err.message : 'Failed to update property. Please try again.', 'error');
         } finally {
             setIsSavingEdit(false);
         }
