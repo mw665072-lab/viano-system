@@ -48,14 +48,14 @@ export function PropertyList({ properties, selectedProperty, onSelectProperty, i
       {properties.map((property) => (
         <Card
           key={property.id}
-          className={`cursor-pointer transition-all h-[100px] rounded-[16px] ${selectedProperty?.id === property.id
-            ? "bg-[#007AFF0D] border border-[#F3F4F4] py-3 px-4"
+          className={`cursor-pointer transition-all min-h-[90px] md:h-[100px] rounded-[16px] ${selectedProperty?.id === property.id
+            ? "bg-[#007AFF0D] border border-[#F3F4F4] py-3 px-3 md:px-4"
             : "bg-white hover:bg-slate-50 p-3"
             }`}
           onClick={() => onSelectProperty(property)}
         >
           <div className="flex items-center justify-between gap-3 w-full">
-            <div className="relative w-[76px] h-[76px] flex-shrink-0 rounded-[12px] overflow-hidden bg-[#D9D9D9]">
+            <div className="relative w-14 h-14 md:w-[76px] md:h-[76px] flex-shrink-0 rounded-[12px] overflow-hidden bg-[#D9D9D9]">
               {property.image ? (
                 <Image src={property.image} alt={property.name} fill className="object-cover" />
               ) : (
@@ -75,7 +75,7 @@ export function PropertyList({ properties, selectedProperty, onSelectProperty, i
               </p>
             </div>
             <Badge
-              className={`flex-shrink-0 ${property.statusColor} w-[97px] h-[33px] rounded-full gap-[10px] px-3 py-2 flex items-center justify-center`}
+              className={`flex-shrink-0 ${property.statusColor} min-w-[70px] md:w-[97px] h-7 md:h-[33px] rounded-full gap-1 md:gap-[10px] px-2 md:px-3 py-1 md:py-2 flex items-center justify-center border-0 font-medium text-[10px] md:text-sm`}
             >
               {property.status}
             </Badge>

@@ -199,17 +199,16 @@ const AddPropertyPage = () => {
         <div className="min-h-screen bg-[#EBF0F7]">
             {/* Background Container with rounded top-left corner */}
             <div
-                className="bg-white min-h-[924px]"
+                className="bg-white min-h-[calc(100vh-64px)] rounded-t-[24px] md:rounded-tl-[32px] md:rounded-tr-none"
                 style={{
-                    borderTopLeftRadius: '32px',
                     marginTop: '0',
                 }}
             >
                 {/* Content Container */}
-                <div className="pt-[41px] pl-[56px] pr-[56px]">
+                <div className="p-4 md:pt-[41px] md:px-[56px]">
                     {/* Page Title */}
                     <h2
-                        className="text-[20px] font-semibold leading-[30px] text-[#1E1E1E] mb-[24px]"
+                        className="text-lg md:text-[20px] font-semibold leading-tight md:leading-[30px] text-[#1E1E1E] mb-4 md:mb-[24px]"
                         style={{ fontFamily: 'Manrope' }}
                     >
                         Add New Property
@@ -227,13 +226,9 @@ const AddPropertyPage = () => {
                     )}
 
                     {/* Form Container */}
-                    <form onSubmit={handleSubmit} className="w-full max-w-[838px]">
+                    <form onSubmit={handleSubmit} className="w-full max-w-[838px] pb-10">
                         <div
-                            className="grid grid-cols-2"
-                            style={{
-                                rowGap: '24px',
-                                columnGap: '16px',
-                            }}
+                            className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-4 md:gap-y-6"
                         >
                             {/* Row 1: Client Name and Address */}
                             <div>
@@ -328,9 +323,9 @@ const AddPropertyPage = () => {
                             </div>
 
                             {/* Row 4: Upload Buttons - Two separate buttons */}
-                            <div className="col-span-2">
+                            <div className="col-span-1 md:col-span-2">
                                 <p className="text-sm text-[#6B7280] mb-3">Upload Documents (PDF only)</p>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {/* 4-Point File Upload */}
                                     <div>
                                         <input
@@ -418,7 +413,7 @@ const AddPropertyPage = () => {
                             </div>
 
                             {/* Row 5: Submit Button - Spans 2 columns */}
-                            <div className="col-span-2">
+                            <div className="col-span-1 md:col-span-2">
                                 <Button
                                     type="submit"
                                     className="w-full h-[48px] rounded-full text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"

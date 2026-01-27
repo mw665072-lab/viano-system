@@ -105,28 +105,37 @@ export default function LandingPage() {
 
                     {/* Frame 127 - Navigation Links */}
                     <nav className="nav-links-frame">
-                        {/* Frame 67 - Solutions */}
+                        {/* Product */}
                         <div className="nav-item-frame">
-                            <Link href="#solutions" className="nav-link">
-                                Solutions
+                            <button
+                                className="nav-link"
+                                onClick={() => document.getElementById('product')?.scrollIntoView({ behavior: 'smooth' })}
+                            >
+                                Product
                                 <ChevronDown className="dropdown-arrow" size={16} />
-                            </Link>
+                            </button>
                         </div>
 
-                        {/* Frame 68 - Resources */}
+                        {/* Pricing */}
                         <div className="nav-item-frame">
-                            <Link href="#resources" className="nav-link">
-                                Resources
-                                <ChevronDown className="dropdown-arrow" size={16} />
-                            </Link>
-                        </div>
-
-                        {/* Frame 69 - Pricing */}
-                        <div className="nav-item-frame">
-                            <Link href="#pricing" className="nav-link">
+                            <button
+                                className="nav-link"
+                                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                            >
                                 Pricing
                                 <ChevronDown className="dropdown-arrow" size={16} />
-                            </Link>
+                            </button>
+                        </div>
+
+                        {/* Company */}
+                        <div className="nav-item-frame">
+                            <button
+                                className="nav-link"
+                                onClick={() => document.getElementById('company')?.scrollIntoView({ behavior: 'smooth' })}
+                            >
+                                Company
+                                <ChevronDown className="dropdown-arrow" size={16} />
+                            </button>
                         </div>
                     </nav>
                 </div>
@@ -224,7 +233,7 @@ export default function LandingPage() {
                 {/* ============================================
                     FEATURE CARDS SECTION
                     ============================================ */}
-                <section className="features-section reveal-hidden">
+                <section id="product" className="features-section reveal-hidden">
                     {/* Section Header with Arrows */}
                     <div className="features-header">
                         <div className="features-header-spacer"></div>
@@ -362,7 +371,7 @@ export default function LandingPage() {
                 {/* ============================================
                     PRICING SECTION (Frame 33)
                     ============================================ */}
-                <section className="pricing-section reveal-hidden">
+                <section id="pricing" className="pricing-section reveal-hidden">
                     <div className="pricing-header reveal-hidden">
                         <div className="no-hidden-badge">NO HIDDEN CHARGES</div>
                         <h2 className="pricing-title">Simple, Usage-Based Pricing</h2>
@@ -437,7 +446,7 @@ export default function LandingPage() {
                 {/* ============================================
                     TEAMS SECTION (Frame 81)
                     ============================================ */}
-                <section className="teams-section reveal-hidden">
+                <section id="company" className="teams-section reveal-hidden">
                     <div className="teams-content reveal-hidden slide-left delay-100">
                         <div className="teams-badge">Teams & Brokers</div>
                         <h2 className="teams-title">Get Your Team Started with Viano</h2>
