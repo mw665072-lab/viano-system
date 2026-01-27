@@ -1,813 +1,592 @@
 "use client";
-
-import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, Menu, X } from "lucide-react";
-
-// Custom Star Icon Component matching Figma
-const StarIcon = ({ className = "", size = 24 }: { className?: string; size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className={className}
-  >
-    <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-  </svg>
-);
-
-// Animated Counter Component with intersection observer
-const AnimatedCounter = ({ end, suffix = "", duration = 2000 }: { end: number; suffix?: string; duration?: number }) => {
-  const [count, setCount] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !isVisible) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => observer.disconnect();
-  }, [isVisible]);
-
-  useEffect(() => {
-    if (!isVisible) return;
-
-    let startTime: number;
-    const animate = (currentTime: number) => {
-      if (!startTime) startTime = currentTime;
-      const progress = Math.min((currentTime - startTime) / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(easeOut * end));
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    requestAnimationFrame(animate);
-  }, [isVisible, end, duration]);
-
-  return <span ref={ref}>{count}{suffix}</span>;
-};
-
-// Fade in on scroll component
-const FadeInOnScroll = ({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => setIsVisible(true), delay);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => observer.disconnect();
-  }, [delay]);
-
-  return (
-    <div
-      ref={ref}
-      className={`transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'} ${className}`}
-    >
-      {children}
-    </div>
-  );
-};
+import { ChevronDown, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import "./landing.css";
 
 export default function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
+    const carouselRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(true);
+    const [pricingDropdownOpen, setPricingDropdownOpen] = useState(false);
+    const [selectedClients, setSelectedClients] = useState("Select Clients");
+    const [teamSizeDropdownOpen, setTeamSizeDropdownOpen] = useState(false);
+    const [selectedTeamSize, setSelectedTeamSize] = useState("Team Size");
 
-  // Auto-rotate testimonials
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % 2);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
+    const pricingDropdownRef = useRef<HTMLDivElement>(null);
+    const teamDropdownRef = useRef<HTMLDivElement>(null);
 
-  return (
-    <div className="min-h-screen bg-white font-[var(--font-inter)] overflow-x-hidden scroll-smooth">
-      {/* Navigation - Matching Figma */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0B1A2F]/95 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/" className="text-white font-bold text-lg tracking-tight">
-              viano systems<sup className="text-[10px] ml-0.5">®</sup>
-            </Link>
+    // Click outside to close dropdowns
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (pricingDropdownRef.current && !pricingDropdownRef.current.contains(event.target as Node)) {
+                setPricingDropdownOpen(false);
+            }
+            if (teamDropdownRef.current && !teamDropdownRef.current.contains(event.target as Node)) {
+                setTeamSizeDropdownOpen(false);
+            }
+        };
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-8">
-              <Link href="#products" className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
-                Products
-              </Link>
-              <Link href="#pricing" className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
-                Pricing
-              </Link>
-              <Link href="#company" className="text-gray-300 hover:text-white transition-colors text-sm font-medium">
-                Company
-              </Link>
-              <Link
-                href="/signup"
-                className="bg-[#7C5CFC] hover:bg-[#6B4FE0] text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-[#7C5CFC]/25 active:scale-95"
-              >
-                Get Started
-              </Link>
-            </div>
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-        </div>
+    const checkScrollPosition = () => {
+        if (carouselRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+            setCanScrollLeft(scrollLeft > 10);
+            setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+        }
+    };
 
-        {/* Mobile Menu */}
-        <div className={`md:hidden bg-[#0B1A2F] border-t border-white/10 overflow-hidden transition-all duration-300 ${mobileMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="px-4 py-4 space-y-3">
-            <Link href="#products" className="block text-gray-300 hover:text-white py-2 transition-colors">Products</Link>
-            <Link href="#pricing" className="block text-gray-300 hover:text-white py-2 transition-colors">Pricing</Link>
-            <Link href="#company" className="block text-gray-300 hover:text-white py-2 transition-colors">Company</Link>
-            <Link
-              href="/signup"
-              className="block bg-[#7C5CFC] text-white text-center px-5 py-3 rounded-full font-medium mt-4 hover:bg-[#6B4FE0] transition-colors"
-            >
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </nav>
+    useEffect(() => {
+        checkScrollPosition();
+        const carousel = carouselRef.current;
+        if (carousel) {
+            carousel.addEventListener('scroll', checkScrollPosition);
+            return () => carousel.removeEventListener('scroll', checkScrollPosition);
+        }
+    }, []);
 
-      {/* Hero Section - Professional Split-Screen Design */}
-      <section className="relative min-h-[90vh] flex items-center pt-16 overflow-hidden">
-        {/* Split Background Container */}
-        <div className="absolute inset-0 z-0 flex">
-          {/* Left Side - Dark Content Area with Curved Edge */}
-          <div className="relative w-full lg:w-[55%] h-full">
-            <div
-              className="absolute inset-0 bg-[#0B1A2F]"
-              style={{
-                clipPath: 'ellipse(100% 100% at 0% 50%)',
-              }}
-            />
-            {/* Enhanced curved overlay for smoother transition */}
-            <div
-              className="absolute inset-0 bg-gradient-to-r from-[#0B1A2F] via-[#0B1A2F] to-transparent hidden lg:block"
-              style={{
-                clipPath: 'ellipse(85% 120% at 0% 50%)',
-              }}
-            />
-          </div>
+    const scrollLeft = () => {
+        if (carouselRef.current) {
+            carouselRef.current.scrollBy({ left: -604, behavior: 'smooth' });
+        }
+    };
 
-          {/* Right Side - Property Image */}
-          <div className="absolute inset-0 lg:left-[35%]">
-            <Image
-              src="/hero-bg.png"
-              alt="Luxury Property"
-              fill
-              className="object-cover object-center"
-              priority
-            />
-            {/* Gradient overlay for smooth blend on mobile */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0B1A2F] via-[#0B1A2F]/80 to-transparent lg:via-transparent" />
-          </div>
-        </div>
+    const scrollRight = () => {
+        if (carouselRef.current) {
+            carouselRef.current.scrollBy({ left: 604, behavior: 'smooth' });
+        }
+    };
 
-        {/* Content Container */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 w-full">
-          <div className="max-w-xl lg:max-w-lg">
-            {/* Animated Star Icon - Top Left */}
-            <div className="mb-6 animate-[floatStar_3s_ease-in-out_infinite]">
-              <div className="relative inline-block">
-                {/* Gradient Star using SVG with defs */}
-                <svg width={48} height={48} viewBox="0 0 24 24" className="relative z-10">
-                  <defs>
-                    <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#7C5CFC" />
-                      <stop offset="50%" stopColor="#A78BFA" />
-                      <stop offset="100%" stopColor="#7C5CFC" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"
-                    fill="url(#starGradient)"
-                  />
-                </svg>
-                {/* Glowing star effect */}
-                <div className="absolute inset-0 blur-md opacity-60">
-                  <StarIcon className="text-[#7C5CFC]" size={48} />
+
+    // Scroll reveal hook
+    useEffect(() => {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal-visible');
+                }
+            });
+        }, observerOptions);
+
+        const revealElements = document.querySelectorAll('.reveal-hidden');
+        revealElements.forEach(el => observer.observe(el));
+
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <div className="landing-page">
+            {/* ============================================
+          STICKY HEADER SECTION
+          ============================================ */}
+            <header className="landing-header reveal-hidden fade-only">
+                {/* Frame 128 - Logo + Nav Container */}
+                <div className="main-nav-frame">
+                    {/* Logo - image 3 */}
+                    <Image
+                        src="/Logo.svg"
+                        alt="Viano"
+                        width={123}
+                        height={41}
+                        className="viano-main-logo"
+                        priority
+                    />
+
+                    {/* Frame 127 - Navigation Links */}
+                    <nav className="nav-links-frame">
+                        {/* Frame 67 - Solutions */}
+                        <div className="nav-item-frame">
+                            <Link href="#solutions" className="nav-link">
+                                Solutions
+                                <ChevronDown className="dropdown-arrow" size={16} />
+                            </Link>
+                        </div>
+
+                        {/* Frame 68 - Resources */}
+                        <div className="nav-item-frame">
+                            <Link href="#resources" className="nav-link">
+                                Resources
+                                <ChevronDown className="dropdown-arrow" size={16} />
+                            </Link>
+                        </div>
+
+                        {/* Frame 69 - Pricing */}
+                        <div className="nav-item-frame">
+                            <Link href="#pricing" className="nav-link">
+                                Pricing
+                                <ChevronDown className="dropdown-arrow" size={16} />
+                            </Link>
+                        </div>
+                    </nav>
                 </div>
-                {/* Small orbiting star */}
-                <div className="absolute -top-1 -right-1 animate-[pulse_2s_ease-in-out_infinite]">
-                  <StarIcon className="text-[#A78BFA]" size={16} />
+
+                {/* Auth Buttons */}
+                <div className="auth-buttons">
+                    <Link href="/login">
+                        <button className="login-btn">Login</button>
+                    </Link>
+                    <Link href="/signup">
+                        <button className="get-started-btn">
+                            Get Started
+                            <ArrowRight className="arrow-icon" size={16} />
+                        </button>
+                    </Link>
                 </div>
-              </div>
-            </div>
+            </header>
 
-            {/* Main Headline */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-bold text-white leading-[1.1] mb-8">
-              <span className="inline-block animate-[fadeInUp_0.6s_ease-out_forwards]">
-                Property Intelligence AI
-              </span>
-              <br />
-              <span className="inline-block animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]" style={{ animationFillMode: 'both' }}>
-                for Elite Realtors
-              </span>
-            </h1>
+            {/* Page Content - Account for fixed header */}
+            <div className="page-content">
+                {/* ============================================
+            HERO SECTION - Using exact Figma SVG
+            ============================================ */}
+                <section className="hero-section">
+                    {/* Hero Image - Full visible picture */}
+                    <div className="hero-image-container reveal-hidden fade-only delay-300">
+                        <Image
+                            src="/Picture In Hero.png"
+                            alt="Team collaboration"
+                            width={1862}
+                            height={1552}
+                            className="hero-image"
+                            priority
+                            quality={100}
+                            unoptimized
+                        />
+                    </div>
 
-            {/* CTA Button - Visible immediately */}
-            <div className="animate-[fadeInUp_0.6s_ease-out_0.3s_forwards]" style={{ animationFillMode: 'both' }}>
-              <Link
-                href="/signup"
-                className="inline-flex items-center gap-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white px-7 py-3.5 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#3B82F6]/40 active:scale-95 group relative overflow-hidden"
-              >
-                {/* Button glow effect */}
-                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                <span className="relative">Get Started</span>
-                <ArrowRight className="relative group-hover:translate-x-1 transition-transform duration-300" size={16} />
-              </Link>
-            </div>
-          </div>
-        </div>
+                    {/* Ellipse 8 - Major background shape creating the curve over the image */}
+                    <div className="hero-bg-ellipse-8 reveal-hidden fade-only" />
 
-        {/* Decorative floating elements */}
-        <div className="absolute bottom-20 right-[15%] hidden lg:block animate-[floatStar_4s_ease-in-out_infinite_0.5s]">
-          <StarIcon className="text-[#A78BFA]/30" size={24} />
-        </div>
-        <div className="absolute top-40 right-[25%] hidden lg:block animate-[floatStar_5s_ease-in-out_infinite_1s]">
-          <StarIcon className="text-[#7C5CFC]/20" size={18} />
-        </div>
-      </section>
+                    {/* Ellipse 7 - Glow effect */}
+                    <div className="hero-bg-ellipse-7 reveal-hidden fade-only delay-200" />
 
-      {/* Testimonials Section - Matching Figma exactly */}
-      <section className="py-16 sm:py-20 bg-[#F8FAFC]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Carousel with navigation */}
-          <div className="relative">
-            {/* Navigation arrows */}
-            <div className="absolute -right-2 sm:right-0 top-0 flex items-center gap-2 z-10">
-              <button
-                onClick={() => setCurrentSlide(0)}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${currentSlide === 0 ? 'bg-[#7C5CFC] text-white' : 'bg-white text-gray-400 border border-gray-200 hover:border-gray-300'}`}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setCurrentSlide(1)}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${currentSlide === 1 ? 'bg-[#7C5CFC] text-white' : 'bg-white text-gray-400 border border-gray-200 hover:border-gray-300'}`}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
-            </div>
+                    {/* Frame 50 - Content Container */}
+                    <div className="hero-content-frame">
+                        {/* Frame 114 - Icon + Headline */}
+                        <div className="hero-text-frame">
+                            {/* StarFour Icon with gradient */}
+                            <div className="star-icon-wrapper reveal-hidden scale-only delay-100">
+                                <svg
+                                    className="star-icon"
+                                    viewBox="0 0 98 98"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        d="M97.6339 48.808C97.6458 50.2391 97.2108 51.637 96.3903 52.8088C95.5698 53.9806 94.4036 54.8687 93.0562 55.3479L65.3966 65.4069L55.3419 93.0622C54.847 94.3971 53.9549 95.5485 52.7857 96.3615C51.6165 97.1746 50.226 97.6104 48.8017 97.6104C47.3775 97.6104 45.987 97.1746 44.8178 96.3615C43.6486 95.5485 42.7565 94.3971 42.2616 93.0622L32.2076 65.402L4.5479 55.3479C3.21295 54.8529 2.06158 53.9608 1.24848 52.7916C0.435386 51.6224 -0.000427246 50.232 -0.000427246 48.8078C-0.000427246 47.3835 0.435386 45.9931 1.24848 44.8239C2.06158 43.6547 3.21295 42.7625 4.5479 42.2676L32.2076 32.2135L42.2616 4.55337C42.7565 3.21843 43.6486 2.06705 44.8178 1.25395C45.987 0.440858 47.3775 0.00500488 48.8017 0.00500488C50.226 0.00500488 51.6165 0.440858 52.7857 1.25395C53.9549 2.06705 54.847 3.21843 55.3419 4.55337L65.4015 32.2135L93.0562 42.2676C94.4036 42.7469 95.5698 43.6349 96.3903 44.8067C97.2108 45.9785 97.6458 47.3764 97.6339 48.808Z"
+                                        fill="url(#star-gradient)"
+                                    />
+                                    <defs>
+                                        <linearGradient
+                                            id="star-gradient"
+                                            x1="0"
+                                            y1="48.808"
+                                            x2="97.634"
+                                            y2="48.808"
+                                            gradientUnits="userSpaceOnUse"
+                                        >
+                                            <stop stopColor="#A23BF6" />
+                                            <stop offset="1" stopColor="#96BEFF" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
 
-            <div className="grid md:grid-cols-2 gap-5 mb-8 pt-12 sm:pt-0">
-              {/* Card 1 - "Focus on what you do best" - Dark card */}
-              <FadeInOnScroll>
-                <div className="bg-[#0B1A2F] rounded-2xl p-5 sm:p-6 h-full transition-all duration-500 hover:shadow-xl">
-                  <span className="text-gray-400 text-[11px] uppercase tracking-wider mb-3 block">Our Pitch</span>
-                  <h3 className="text-white text-lg sm:text-xl font-semibold mb-5">
-                    Focus on what you do best.
-                  </h3>
-                  <div className="relative h-52 sm:h-64 rounded-xl overflow-hidden bg-gradient-to-br from-[#1A2744] via-[#0F1B2E] to-[#0B1A2F] flex items-center justify-center">
-                    {/* Ambient glow effect */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#7C5CFC]/10 via-transparent to-transparent" />
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-[#7C5CFC]/20 rounded-full blur-3xl" />
+                            {/* Headline */}
+                            <h1 className="hero-headline reveal-hidden delay-200">
+                                Property Intelligence AI
+                                <br />
+                                for Elite Realtors
+                            </h1>
+                        </div>
 
-                    {/* iPhone mockup with 3D perspective */}
-                    <div className="relative transform hover:scale-105 transition-transform duration-500" style={{ perspective: '1000px' }}>
-                      <div
-                        className="relative w-[130px] sm:w-[150px] bg-gradient-to-b from-[#2A2A2C] to-[#1C1C1E] rounded-[28px] p-[3px] shadow-2xl"
-                        style={{
-                          transform: 'rotateY(-5deg) rotateX(2deg)',
-                          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 30px rgba(124, 92, 252, 0.15), inset 0 1px 1px rgba(255,255,255,0.1)'
-                        }}
-                      >
-                        <div className="bg-[#000000] rounded-[25px] overflow-hidden">
-                          {/* Dynamic Island */}
-                          <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[60px] h-[18px] bg-black rounded-full z-20 flex items-center justify-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-[#1C1C1E] ring-1 ring-[#2C2C2E]" />
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#0D47A1]" />
-                          </div>
+                        {/* Frame 17 - Get Started Button */}
+                        <Link href="/signup" className="reveal-hidden delay-300">
+                            <button className="hero-cta-button">
+                                <span className="hero-cta-text">Get Started</span>
+                                <ArrowRight className="hero-cta-arrow" size={24} />
+                            </button>
+                        </Link>
+                    </div>
+                </section>
 
-                          {/* Status bar */}
-                          <div className="flex justify-between items-center px-4 pt-1 pb-2 text-white text-[9px] font-semibold">
-                            <span>9:41</span>
-                            <div className="flex items-center gap-0.5">
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M2 17h2v4H2v-4zm4-5h2v9H6v-9zm4-4h2v13h-2V8zm4-3h2v16h-2V5zm4-2h2v18h-2V3z" />
-                              </svg>
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z" />
-                              </svg>
-                              <div className="flex items-center ml-0.5">
-                                <div className="w-5 h-2.5 border border-white/60 rounded-sm flex items-center p-px">
-                                  <div className="w-3/4 h-full bg-white rounded-sm" />
+                {/* ============================================
+                    FEATURE CARDS SECTION
+                    ============================================ */}
+                <section className="features-section reveal-hidden">
+                    {/* Section Header with Arrows */}
+                    <div className="features-header">
+                        <div className="features-header-spacer"></div>
+                        <div className="carousel-arrows">
+                            <button
+                                className={`carousel-arrow ${!canScrollLeft ? 'carousel-arrow-disabled' : ''}`}
+                                onClick={scrollLeft}
+                                disabled={!canScrollLeft}
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            <button
+                                className={`carousel-arrow ${!canScrollRight ? 'carousel-arrow-disabled' : ''}`}
+                                onClick={scrollRight}
+                                disabled={!canScrollRight}
+                            >
+                                <ChevronRight size={20} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Feature Cards Carousel */}
+                    <div className="features-carousel" ref={carouselRef}>
+                        {/* Frame 21 - Property Intelligence */}
+                        <div className="feature-card feature-card-dark reveal-hidden delay-100">
+                            <div className="feature-badge">Property Intelligence</div>
+                            <h2 className="feature-headline">
+                                You close new deals.<br />
+                                Viano protects the ones<br />
+                                you've already won.
+                            </h2>
+                            <div className="feature-image-container">
+                                <Image
+                                    src="/Dots in Frame 21.svg"
+                                    alt="Dots pattern"
+                                    width={400}
+                                    height={200}
+                                    className="feature-dots"
+                                />
+                                <Image
+                                    src="/Mobile in Frame 21.svg"
+                                    alt="Mobile notification"
+                                    width={350}
+                                    height={400}
+                                    className="feature-mobile"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Frame 22 - Predictive SMS */}
+                        <div className="feature-card feature-card-light reveal-hidden delay-300">
+                            <div className="feature-badge feature-badge-outline">Predictive SMS</div>
+                            <h2 className="feature-headline feature-headline-dark">
+                                We text YOU. You forward<br />
+                                it. You look like a hero.
+                            </h2>
+                            <div className="feature-image-container">
+                                <Image
+                                    src="/Chat in Frame 23.png"
+                                    alt="Chat bubble"
+                                    width={400}
+                                    height={300}
+                                    className="feature-chat"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Frame 120 - Local Contractors */}
+                        <div className="feature-card feature-card-light reveal-hidden delay-500">
+                            <div className="feature-badge feature-badge-outline">Local Contract</div>
+                            <h2 className="feature-headline feature-headline-dark">
+                                Vetted Contractors at your<br />
+                                fingertips. Win-win.
+                            </h2>
+                            <div className="feature-image-container feature-network">
+                                <Image
+                                    src="/Frame 120.svg"
+                                    alt="Network visualization"
+                                    width={500}
+                                    height={350}
+                                    className="feature-network-img"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* ============================================
+                    STATISTICS SECTION
+                    ============================================ */}
+                <section className="stats-section reveal-hidden">
+                    {/* Main Statistic Text */}
+                    <p className="stats-main-text reveal-hidden delay-100">
+                        <span className="stats-highlight">88%</span> of your past clients will<br />
+                        use a different realtor. Viano<br />
+                        keeps you top of mind for the<br />
+                        next 5 years.
+                    </p>
+
+                    {/* Chat Conversation - Frame 74 */}
+                    <div className="stats-chat reveal-hidden delay-200">
+                        <Image
+                            src="/Frame 74.png"
+                            alt="Chat conversation"
+                            width={400}
+                            height={150}
+                            className="stats-chat-img"
+                        />
+                    </div>
+
+                    {/* Reality Text */}
+                    <p className="stats-reality-text reveal-hidden delay-300">
+                        Reality? Only <span className="stats-highlight-blue">12%</span> come back<br />
+                        again.
+                    </p>
+
+                    {/* Star Icon - Frame 75 */}
+                    <div className="stats-star reveal-hidden scale-only delay-400">
+                        <Image
+                            src="/Frame 75.png"
+                            alt="Star icon"
+                            width={80}
+                            height={80}
+                            className="stats-star-img"
+                        />
+                    </div>
+
+                    {/* Viano Text */}
+                    <p className="stats-viano-text reveal-hidden delay-500">
+                        Viano keeps you top of mind<br />
+                        for years to come.
+                    </p>
+                </section>
+
+                {/* ============================================
+                    PRICING SECTION (Frame 33)
+                    ============================================ */}
+                <section className="pricing-section reveal-hidden">
+                    <div className="pricing-header reveal-hidden">
+                        <div className="no-hidden-badge">NO HIDDEN CHARGES</div>
+                        <h2 className="pricing-title">Simple, Usage-Based Pricing</h2>
+                        <p className="pricing-description">
+                            Viano tracks your clients' homes with proprietary AI and tells you exactly when to reach out. You stay remembered, trusted, and referred. Automatically.
+                        </p>
+                    </div>
+
+                    <div className="pricing-card-outer reveal-hidden scale-only delay-200">
+                        <div className="pricing-card">
+                            <div className="trending-badge">Trending</div>
+                            <h3 className="card-product-title">Property Intelligence</h3>
+                            <div className="card-price">
+                                <span className="price-amount">$8/mo</span>
+                                <span className="price-unit">Per Client</span>
+                            </div>
+                            <p className="card-subtitle">Only pay for the clients you choose to manage.</p>
+
+                            <hr className="card-divider" />
+
+                            <div className="card-features">
+                                <div className="card-feature">
+                                    <span className="check-icon">✓</span>
+                                    Five-year personalized client timeline
                                 </div>
-                              </div>
+                                <div className="card-feature">
+                                    <span className="check-icon">✓</span>
+                                    Property-aware follow-ups & system insights
+                                </div>
+                                <div className="card-feature">
+                                    <span className="check-icon">✓</span>
+                                    Client reactivation & referral momentum
+                                </div>
+                                <div className="card-feature">
+                                    <span className="check-icon">✓</span>
+                                    SMS alerts sent directly to you.
+                                </div>
                             </div>
-                          </div>
 
-                          {/* Notification header */}
-                          <div className="text-center pt-1 pb-2 border-b border-white/5">
-                            <div className="w-6 h-6 mx-auto mb-1 rounded-lg bg-gradient-to-br from-[#7C5CFC] to-[#5B3FD9] flex items-center justify-center text-white text-[8px] font-bold shadow-lg">
-                              V
+                            <div className="pricing-actions">
+                                <div className="custom-dropdown" ref={pricingDropdownRef}>
+                                    <button
+                                        className="dropdown-toggle"
+                                        onClick={() => setPricingDropdownOpen(!pricingDropdownOpen)}
+                                    >
+                                        {selectedClients}
+                                        <ChevronDown size={18} />
+                                    </button>
+                                    {pricingDropdownOpen && (
+                                        <div className="dropdown-menu">
+                                            <div className="dropdown-item" onClick={() => { setSelectedClients("1 Client - Free For 60 Days"); setPricingDropdownOpen(false); }}>
+                                                1 Client - Free For 60 Days
+                                            </div>
+                                            <div className="dropdown-item" onClick={() => { setSelectedClients("3 Clients — $24 / Month"); setPricingDropdownOpen(false); }}>
+                                                3 Clients — $24 / Month
+                                            </div>
+                                            <div className="dropdown-item" onClick={() => { setSelectedClients("6 Clients — $48 / Month"); setPricingDropdownOpen(false); }}>
+                                                6 Clients — $48 / Month
+                                            </div>
+                                            <div className="dropdown-item" onClick={() => { setSelectedClients("12 Clients — $96 / Month"); setPricingDropdownOpen(false); }}>
+                                                12 Clients — $96 / Month (MVP Limit)
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <button className="start-trial-btn">Start Your Free Trial</button>
                             </div>
-                            <span className="text-gray-300 text-[8px] font-medium">Viano Alert</span>
-                            <p className="text-gray-500 text-[6px]">iMessage • Today 1:25 AM</p>
-                          </div>
+                        </div>
+                    </div>
+                </section>
 
-                          {/* Message bubble */}
-                          <div className="p-2">
-                            <div className="bg-gradient-to-br from-[#2C2C2E] to-[#1F1F21] rounded-2xl p-2.5 text-[6.5px] text-white leading-[1.4] space-y-0.5 shadow-inner border border-white/5">
-                              <p className="font-semibold text-[7px]">🏠 David Citro - 123 41st Avenue</p>
-                              <p className="text-gray-300 font-medium">HVAC Approaching Replacement</p>
-                              <p className="text-gray-400">📅 Installed: 2015 (9 years old)</p>
-                              <p className="text-gray-400">⏰ Lifespan: 10-15 years</p>
-                              <p className="text-gray-300 mt-0.5 font-medium">🔧 Contractors:</p>
-                              <p className="text-gray-400 pl-1.5 text-[6px]">• ABC HVAC ⭐4.8</p>
-                              <p className="text-gray-400 pl-1.5 text-[6px]">• Cool Air Pros ⭐4.9</p>
-                              <p className="text-[#7C5CFC] mt-1 font-semibold text-[7px]">→ Forward this to David</p>
+                {/* ============================================
+                    TEAMS SECTION (Frame 81)
+                    ============================================ */}
+                <section className="teams-section reveal-hidden">
+                    <div className="teams-content reveal-hidden slide-left delay-100">
+                        <div className="teams-badge">Teams & Brokers</div>
+                        <h2 className="teams-title">Get Your Team Started with Viano</h2>
+                        <p className="teams-description">
+                            Brokers and Team leaders are eligible for discount pricing for their teams. Setup a 15 minute demo to review options with our team.
+                        </p>
+
+                        <form className="teams-form" onSubmit={(e) => e.preventDefault()}>
+                            <div className="form-row">
+                                <input type="text" placeholder="First Name" className="form-input" />
+                                <input type="text" placeholder="Last Name" className="form-input" />
                             </div>
-                          </div>
-
-                          {/* Home indicator */}
-                          <div className="pb-2 flex justify-center">
-                            <div className="w-20 h-1 bg-white/30 rounded-full" />
-                          </div>
-                        </div>
-                      </div>
+                            <input type="email" placeholder="Email" className="form-input" />
+                            <div className="form-row">
+                                <div className="custom-dropdown team-dropdown" ref={teamDropdownRef}>
+                                    <button
+                                        type="button"
+                                        className="dropdown-toggle"
+                                        onClick={() => setTeamSizeDropdownOpen(!teamSizeDropdownOpen)}
+                                    >
+                                        {selectedTeamSize}
+                                        <ChevronDown size={18} />
+                                    </button>
+                                    {teamSizeDropdownOpen && (
+                                        <div className="dropdown-menu">
+                                            <div className="dropdown-item" onClick={() => { setSelectedTeamSize("1-5 Members"); setTeamSizeDropdownOpen(false); }}>1-5 Members</div>
+                                            <div className="dropdown-item" onClick={() => { setSelectedTeamSize("6-20 Members"); setTeamSizeDropdownOpen(false); }}>6-20 Members</div>
+                                            <div className="dropdown-item" onClick={() => { setSelectedTeamSize("20+ Members"); setTeamSizeDropdownOpen(false); }}>20+ Members</div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="phone-input-container">
+                                    <span className="phone-prefix">+1</span>
+                                    <input type="tel" placeholder="Phone Number" className="form-input phone-input" />
+                                </div>
+                            </div>
+                            <button className="request-demo-btn">Request A Demo</button>
+                        </form>
                     </div>
-                  </div>
-                </div>
-              </FadeInOnScroll>
-
-              {/* Card 2 - "We text YOU" - Light card */}
-              <FadeInOnScroll delay={150}>
-                <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-lg border border-gray-100 h-full transition-all duration-500 hover:shadow-xl">
-                  <span className="text-gray-400 text-[11px] uppercase tracking-wider mb-3 block">Our Promise</span>
-                  <h3 className="text-gray-900 text-lg sm:text-xl font-semibold mb-5">
-                    We text YOU. You forward it. You look like a hero.
-                  </h3>
-                  <div className="bg-[#F1F5F9] rounded-xl p-4">
-                    <div className="space-y-3">
-                      {/* Viano message bubble */}
-                      <div className="flex gap-3 items-start">
-                        <div className="w-7 h-7 rounded-full bg-[#7C5CFC] flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">V</div>
-                        <div className="bg-[#7C5CFC] text-white px-3.5 py-2.5 rounded-2xl rounded-tl-none text-[13px] leading-relaxed max-w-[85%]">
-                          Hi! The Johnson property at 123 Oak St might need roof attention based on the inspection. Perfect time to reach out! 🏠
-                        </div>
-                      </div>
-                      {/* Reply indicator */}
-                      <div className="flex justify-end">
-                        <div className="bg-white text-gray-500 px-3 py-1.5 rounded-full text-[11px] border border-gray-200 shadow-sm">
-                          Forwarded ✓
-                        </div>
-                      </div>
+                    <div className="teams-image reveal-hidden slide-right delay-200">
+                        <Image
+                            src="/Picture in Frame 81.png"
+                            alt="Team member using Viano"
+                            width={540}
+                            height={400}
+                            className="team-pic"
+                        />
                     </div>
-                  </div>
-                </div>
-              </FadeInOnScroll>
-            </div>
+                </section>
 
-            {/* Carousel Dots */}
-            <div className="flex justify-center gap-2">
-              {[0, 1].map((index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${currentSlide === index ? 'bg-[#7C5CFC] w-6' : 'bg-gray-300 w-2 hover:bg-gray-400'}`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+                {/* ============================================
+                    BUSINESS IMPACT SECTION (Phase 2)
+                    ============================================ */}
+                <section className="business-impact-section reveal-hidden">
+                    <h2 className="impact-title reveal-hidden delay-100">
+                        Here's what changes in your<br />
+                        business : <span className="nothing-text">Nothing</span>
+                    </h2>
 
-      {/* Statistics Section - Figma exact text */}
-      <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <FadeInOnScroll>
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-snug mb-16">
-              <span className="text-[#7C5CFC]">88%</span> of your past clients will use a different realtor. Viano keeps you top of mind for the{" "}
-              <span className="text-[#7C5CFC]">next 5 years</span>.
-            </p>
-          </FadeInOnScroll>
-
-          {/* Chat Bubbles - Figma style */}
-          <div className="flex flex-col items-center gap-4 mb-16 max-w-md mx-auto">
-            <FadeInOnScroll delay={200}>
-              <div className="bg-[#7C5CFC] text-white px-6 py-3 rounded-2xl rounded-bl-none text-sm font-medium shadow-lg">
-                Would you use our services again?
-              </div>
-            </FadeInOnScroll>
-            <FadeInOnScroll delay={400}>
-              <div className="bg-white text-gray-700 px-6 py-3 rounded-2xl rounded-br-none text-sm border border-gray-200 shadow-sm self-end">
-                Oh, I definitely would
-              </div>
-            </FadeInOnScroll>
-          </div>
-
-          <FadeInOnScroll delay={600}>
-            <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-8">
-              Reality? Only <span className="text-red-500">12%</span> come back again
-            </p>
-          </FadeInOnScroll>
-
-          <FadeInOnScroll delay={700}>
-            <div className="flex justify-center py-6">
-              <div className="relative">
-                <StarIcon className="text-[#7C5CFC] animate-[spin_8s_linear_infinite]" size={48} />
-                <StarIcon className="text-[#A78BFA] absolute -top-2 -right-2 animate-[ping_2s_ease-in-out_infinite]" size={16} />
-              </div>
-            </div>
-          </FadeInOnScroll>
-
-          <FadeInOnScroll delay={800}>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Viano keeps you <span className="text-[#7C5CFC]">top of mind</span>
-              <br />for years to come.
-            </p>
-          </FadeInOnScroll>
-        </div>
-      </section>
-
-      {/* Business Changes Section - Figma exact text */}
-      <section className="py-20 bg-[#F8FAFC]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <FadeInOnScroll>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-              Here&apos;s what changes in your{" "}
-              <span className="text-[#7C5CFC]">business</span>
-            </h2>
-          </FadeInOnScroll>
-
-          <FadeInOnScroll delay={150}>
-            <p className="text-gray-500 mb-12 max-w-xl mx-auto text-base">
-              You don&apos;t log into another platform. You don&apos;t remember to follow up. You don&apos;t write messages 📝.
-            </p>
-          </FadeInOnScroll>
-
-          <FadeInOnScroll delay={300}>
-            <div className="bg-white rounded-2xl shadow-lg p-8 mb-16 hover:shadow-xl transition-shadow duration-500 border border-gray-100">
-              <p className="text-lg sm:text-xl text-gray-700 font-medium">
-                We text YOU. You forward it. You look like a hero <span className="text-xl">👋</span>.
-              </p>
-            </div>
-          </FadeInOnScroll>
-
-          <FadeInOnScroll delay={450}>
-            <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 leading-relaxed max-w-2xl mx-auto">
-              Everyone tells you to buy more leads. Spend more on ads. Cold call more prospects.
-            </p>
-          </FadeInOnScroll>
-        </div>
-      </section>
-
-      {/* Data Section - Figma exact text */}
-      <section className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeInOnScroll>
-            <div className="text-center mb-12">
-              <span className="text-gray-400 text-sm uppercase tracking-wider">The Viano Fact File</span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
-                The Data tells something <span className="text-[#7C5CFC]">different</span>..
-              </h2>
-            </div>
-          </FadeInOnScroll>
-
-          <div className="grid sm:grid-cols-2 gap-6">
-            {/* Market Reality Card - Figma exact */}
-            <FadeInOnScroll delay={100}>
-              <div className="bg-gradient-to-br from-[#1E3A5F] to-[#0B1A2F] rounded-2xl p-6 text-white group hover:scale-[1.02] transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-[#7C5CFC]/30 flex items-center justify-center">
-                    <StarIcon className="text-[#A78BFA]" size={10} />
-                  </div>
-                  <span className="text-[#7C5CFC] text-sm font-medium">Market Reality</span>
-                </div>
-                <h3 className="text-5xl font-bold mb-2">
-                  <AnimatedCounter end={85} suffix="%" />
-                </h3>
-                <p className="text-gray-300 text-sm mb-4">
-                  of the market comes from repeat + referrals
-                </p>
-                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#7C5CFC] rounded-full w-0 group-hover:w-[85%] transition-all duration-1000 ease-out" />
-                </div>
-                <p className="text-gray-400 text-xs mt-4">Source: NAR Profile of Buyers</p>
-              </div>
-            </FadeInOnScroll>
-
-            {/* The Gap Card - Figma exact */}
-            <FadeInOnScroll delay={200}>
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 group hover:scale-[1.02] transition-all duration-500 hover:shadow-xl">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
-                    <StarIcon className="text-red-500" size={10} />
-                  </div>
-                  <span className="text-red-500 text-sm font-medium">The Gap</span>
-                </div>
-                <h3 className="text-5xl font-bold text-gray-900 mb-2">
-                  <AnimatedCounter end={12} suffix="%" />
-                </h3>
-                <span className="inline-block bg-red-100 text-red-600 text-xs px-3 py-1 rounded-full mb-4 font-medium">Low</span>
-                <p className="text-gray-600 text-sm">
-                  is what most agents actually capture without follow-up
-                </p>
-                <p className="text-gray-400 text-xs mt-4">QRC research 2022</p>
-              </div>
-            </FadeInOnScroll>
-
-            {/* Critical Window Card - Figma exact */}
-            <FadeInOnScroll delay={300}>
-              <div className="bg-gradient-to-br from-[#1E3A5F] to-[#0B1A2F] rounded-2xl p-6 text-white group hover:scale-[1.02] transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-[#7C5CFC]/30 flex items-center justify-center">
-                    <StarIcon className="text-[#A78BFA]" size={10} />
-                  </div>
-                  <span className="text-[#7C5CFC] text-sm font-medium">Critical Window</span>
-                </div>
-                <h3 className="text-5xl font-bold mb-2">
-                  <AnimatedCounter end={81} suffix="%" />
-                </h3>
-                <p className="text-gray-300 text-sm mb-4">
-                  of sellers said they&apos;d &ldquo;definitely&rdquo; use the same agent
-                </p>
-                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#7C5CFC] rounded-full w-0 group-hover:w-[81%] transition-all duration-1000 ease-out" />
-                </div>
-                <p className="text-gray-400 text-xs mt-4">But attention fades. Fast.</p>
-              </div>
-            </FadeInOnScroll>
-
-            {/* Opportunity Card - Figma exact */}
-            <FadeInOnScroll delay={400}>
-              <div className="bg-gradient-to-br from-[#FCD34D] to-[#F59E0B] rounded-2xl p-6 text-gray-900 group hover:scale-[1.02] transition-all duration-500 hover:shadow-2xl hover:shadow-yellow-500/20">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-6 h-6 rounded-full bg-white/40 flex items-center justify-center">
-                    <StarIcon className="text-gray-900" size={10} />
-                  </div>
-                  <span className="text-gray-800 text-sm font-medium">Your Opportunity</span>
-                </div>
-                <h3 className="text-4xl font-bold mb-2">$15K-130K</h3>
-                <p className="text-gray-800 text-sm font-medium">
-                  additional annual revenue per agent with Viano
-                </p>
-              </div>
-            </FadeInOnScroll>
-          </div>
-        </div>
-      </section>
-
-      {/* Value Proposition Section - Figma exact */}
-      <section className="py-20 bg-[#F8FAFC]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeInOnScroll>
-            <div className="bg-gradient-to-br from-[#0B1A2F] to-[#1A2744] rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden group hover:shadow-2xl transition-all duration-500">
-              {/* Animated Stars */}
-              <div className="absolute top-8 right-8">
-                <StarIcon className="text-[#A78BFA] animate-bounce" size={32} />
-              </div>
-              <div className="absolute bottom-16 right-20 animate-bounce" style={{ animationDelay: '0.3s' }}>
-                <StarIcon className="text-[#7C5CFC]" size={24} />
-              </div>
-              <div className="absolute bottom-8 right-8 animate-bounce" style={{ animationDelay: '0.6s' }}>
-                <StarIcon className="text-[#A78BFA]" size={16} />
-              </div>
-
-              <p className="text-xl sm:text-2xl text-white font-medium leading-relaxed mb-8 max-w-2xl mx-auto">
-                Viano keeps you top-of-mind with automated, valuable follow-up using inspection data only <span className="text-[#A78BFA] font-bold">YOU</span> have.
-              </p>
-
-              <Link
-                href="/signup"
-                className="inline-flex items-center gap-2 bg-[#7C5CFC] hover:bg-[#6B4FE0] text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#7C5CFC]/30 active:scale-95 group/btn"
-              >
-                See How It Works
-                <ArrowRight className="group-hover/btn:translate-x-1 transition-transform duration-300" size={18} />
-              </Link>
-            </div>
-          </FadeInOnScroll>
-        </div>
-      </section>
-
-      {/* Pricing Section - Figma exact */}
-      <section id="pricing" className="py-20 bg-[#0B1A2F]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeInOnScroll>
-            <div className="text-center mb-12">
-              <span className="text-[#7C5CFC] text-sm font-medium uppercase tracking-wider">No Hidden Charges</span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-white mt-2">
-                Pay According To Your Usage
-              </h2>
-              <p className="text-gray-400 mt-4 max-w-lg mx-auto text-sm">
-                Streamlined real estate solutions with automated document analysis, customizable insights, and 2-year property timeline to engage clients at key moments.
-              </p>
-            </div>
-          </FadeInOnScroll>
-
-          <FadeInOnScroll delay={200}>
-            <div className="bg-[#1A2744] rounded-2xl p-8 max-w-md mx-auto hover:shadow-2xl hover:shadow-[#7C5CFC]/10 transition-all duration-500 border border-white/5">
-              <div className="flex items-center gap-2 mb-4">
-                <StarIcon className="text-[#7C5CFC]" size={20} />
-                <span className="text-white font-semibold">Property Intelligence</span>
-              </div>
-
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-bold text-white">$7</span>
-                <span className="text-gray-400">/mo/property</span>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                {[
-                  "Automated document analysis",
-                  "2-year property timeline",
-                  "Smart follow-up reminders",
-                  "Client engagement insights",
-                  "Email & SMS notifications"
-                ].map((feature, index) => (
-                  <li key={index} className="flex items-center gap-3 text-gray-300 text-sm">
-                    <div className="w-5 h-5 rounded-full bg-[#7C5CFC]/20 flex items-center justify-center flex-shrink-0">
-                      <Check className="text-[#7C5CFC]" size={12} />
+                    <div className="impact-details reveal-hidden delay-200">
+                        <p className="impact-description">
+                            You don't log into another platform. You don't<br />
+                            remember to follow up. You don't write messages 💬.<br />
+                            You don't research or vet local contractors.
+                        </p>
                     </div>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
 
-              <Link
-                href="/signup"
-                className="block w-full bg-[#7C5CFC] hover:bg-[#6B4FE0] text-white text-center py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg hover:shadow-[#7C5CFC]/25"
-              >
-                Start for Free
-              </Link>
+                    <div className="frame-45-container reveal-hidden scale-only delay-300">
+                        <div className="frame-45-content">
+                            Viano protects the ones<br />
+                            you've already won.
+                        </div>
+                    </div>
+
+                    <div className="ad-spend-text reveal-hidden delay-400">
+                        <p>
+                            Everyone tells you to buy more leads. Spend more on ads.<br />
+                            Cold call more prospects.
+                        </p>
+                    </div>
+                </section>
+
+                {/* ============================================
+                    DATA SECTION (Frame 115)
+                    ============================================ */}
+                <section className="data-section reveal-hidden">
+                    <div className="data-infographic reveal-hidden scale-only delay-200">
+                        <Image
+                            src="/Frame 115.svg"
+                            alt="Market Data Infographic"
+                            width={1100}
+                            height={800}
+                            className="frame-115-svg"
+                        />
+                    </div>
+                </section>
+
+                {/* ============================================
+                    FINAL CTA BANNER (Frame 72)
+                    ============================================ */}
+                <section className="final-cta-section reveal-hidden">
+                    <div className="final-cta-container reveal-hidden scale-only">
+                        <h2 className="cta-banner-text">
+                            Property Intelligence AI<br />
+                            for Elite Realtors
+                        </h2>
+                        <Link href="/signup">
+                            <button className="cta-overlay-btn">Get Started with Viano</button>
+                        </Link>
+                    </div>
+                </section>
+
+                {/* ============================================
+                    FOOTER
+                    ============================================ */}
+                <footer className="landing-footer reveal-hidden fade-only">
+                    <div className="footer-content">
+                        <div className="footer-brand">
+                            <h2 className="footer-logo">viano systems®</h2>
+                            <p className="footer-tagline">Property Intelligence AI for Elite Realtors</p>
+                        </div>
+
+                        <div className="footer-nav">
+                            <div className="footer-column">
+                                <h4 className="footer-col-title">Product</h4>
+                                <Link href="#" className="footer-link">How It Works</Link>
+                                <Link href="#" className="footer-link">Pricing</Link>
+                                <Link href="#" className="footer-link">Team Pricing</Link>
+                            </div>
+                            <div className="footer-column">
+                                <h4 className="footer-col-title">Company</h4>
+                                <Link href="#" className="footer-link">Contact</Link>
+                            </div>
+                            <div className="footer-column">
+                                <h4 className="footer-col-title">Legal</h4>
+                                <Link href="#" className="footer-link">Privacy Policy</Link>
+                                <Link href="#" className="footer-link">Terms of Service</Link>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr className="footer-divider" />
+
+                    <div className="footer-bottom">
+                        <p className="copyright">© 2025 Viano. All rights reserved.</p>
+                    </div>
+                </footer>
             </div>
-          </FadeInOnScroll>
-        </div>
-      </section>
-
-      {/* Contact Section - Figma exact */}
-      <section className="py-20 bg-[#F8FAFC]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <FadeInOnScroll>
-              <div>
-                <span className="text-[#7C5CFC] text-sm font-medium">Viano Demo</span>
-                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 mb-4">
-                  Get Your Team Started with Viano
-                </h2>
-                <p className="text-gray-600 mb-8">
-                  Discover how Viano can transform your client relationships with intelligent, automated follow-ups that keep you top of mind.
-                </p>
-
-                <form className="space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="First Name"
-                      className="w-full px-4 py-3.5 rounded-lg border border-gray-200 focus:border-[#7C5CFC] focus:ring-2 focus:ring-[#7C5CFC]/20 outline-none transition-all duration-300 text-sm"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Last Name"
-                      className="w-full px-4 py-3.5 rounded-lg border border-gray-200 focus:border-[#7C5CFC] focus:ring-2 focus:ring-[#7C5CFC]/20 outline-none transition-all duration-300 text-sm"
-                    />
-                  </div>
-                  <input
-                    type="tel"
-                    placeholder="Phone Number"
-                    className="w-full px-4 py-3.5 rounded-lg border border-gray-200 focus:border-[#7C5CFC] focus:ring-2 focus:ring-[#7C5CFC]/20 outline-none transition-all duration-300 text-sm"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Company"
-                    className="w-full px-4 py-3.5 rounded-lg border border-gray-200 focus:border-[#7C5CFC] focus:ring-2 focus:ring-[#7C5CFC]/20 outline-none transition-all duration-300 text-sm"
-                  />
-                  <button
-                    type="submit"
-                    className="w-full bg-[#EF4444] hover:bg-[#DC2626] text-white py-4 rounded-lg font-semibold transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] hover:shadow-lg hover:shadow-red-500/25"
-                  >
-                    Request A Demo
-                  </button>
-                </form>
-              </div>
-            </FadeInOnScroll>
-
-            <FadeInOnScroll delay={200}>
-              <div className="relative hidden lg:block">
-                <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl">
-                  <Image
-                    src="/contact-woman.png"
-                    alt="Professional Realtor"
-                    fill
-                    className="object-cover object-center"
-                  />
-                </div>
-              </div>
-            </FadeInOnScroll>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer - Figma exact */}
-      <footer className="bg-[#0B1A2F] py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
-            {/* Logo */}
-            <div className="lg:col-span-2">
-              <Link href="/" className="text-white font-bold text-xl">
-                viano systems<sup className="text-[10px] ml-0.5">®</sup>
-              </Link>
-              <p className="text-gray-400 text-sm mt-4 max-w-xs">
-                AI-powered property intelligence for elite realtors.
-              </p>
-            </div>
-
-            {/* Product */}
-            <div>
-              <h4 className="text-white font-semibold mb-4 text-sm">Product</h4>
-              <ul className="space-y-3">
-                <li><Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-300">How It Works</Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-300">Pricing</Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-300">Integrations</Link></li>
-              </ul>
-            </div>
-
-            {/* Company */}
-            <div>
-              <h4 className="text-white font-semibold mb-4 text-sm">Company</h4>
-              <ul className="space-y-3">
-                <li><Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-300">About</Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-300">Careers</Link></li>
-              </ul>
-            </div>
-
-            {/* Legal */}
-            <div>
-              <h4 className="text-white font-semibold mb-4 text-sm">Legal</h4>
-              <ul className="space-y-3">
-                <li><Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-300">Privacy Policy</Link></li>
-                <li><Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors duration-300">Terms of Service</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-white/10 pt-8 text-center">
-            <p className="text-gray-500 text-sm">
-              © 2026 Viano Systems®. All Rights Reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
-
-      {/* Global Keyframe Animations */}
-      <style jsx global>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        @keyframes floatStar {
-          0%, 100% {
-            transform: translateY(0) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-8px) rotate(5deg);
-          }
-        }
-      `}</style>
-    </div>
-  );
+        </div >
+    );
 }
+
