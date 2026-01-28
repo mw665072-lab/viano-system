@@ -265,22 +265,20 @@ export default function LandingPage() {
                                 Viano protects the ones<br />
                                 you've already won.
                             </h2>
-                            <div className="feature-image-container">
-                                <Image
-                                    src="/Dots in Frame 21.svg"
-                                    alt="Dots pattern"
-                                    width={400}
-                                    height={200}
-                                    className="feature-dots"
-                                />
-                                <Image
-                                    src="/Mobile in Frame 21.svg"
-                                    alt="Mobile notification"
-                                    width={350}
-                                    height={400}
-                                    className="feature-mobile"
-                                />
-                            </div>
+                            <Image
+                                src="/Dots in Frame 21.svg"
+                                alt="Dots pattern"
+                                width={400}
+                                height={400}
+                                className="feature-dots"
+                            />
+                            <Image
+                                src="/Mobile in Frame 21.svg"
+                                alt="Mobile notification"
+                                width={360}
+                                height={380}
+                                className="feature-mobile"
+                            />
                         </div>
 
                         {/* Frame 22 - Predictive SMS */}
@@ -294,8 +292,8 @@ export default function LandingPage() {
                                 <Image
                                     src="/Chat in Frame 23.png"
                                     alt="Chat bubble"
-                                    width={400}
-                                    height={300}
+                                    width={380}
+                                    height={280}
                                     className="feature-chat"
                                 />
                             </div>
@@ -310,10 +308,10 @@ export default function LandingPage() {
                             </h2>
                             <div className="feature-image-container feature-network">
                                 <Image
-                                    src="/Frame 120.svg"
+                                    src="/Picture in 120.svg"
                                     alt="Network visualization"
-                                    width={500}
-                                    height={350}
+                                    width={420}
+                                    height={320}
                                     className="feature-network-img"
                                 />
                             </div>
@@ -327,10 +325,7 @@ export default function LandingPage() {
                 <section className="stats-section reveal-hidden">
                     {/* Main Statistic Text */}
                     <p className="stats-main-text reveal-hidden delay-100">
-                        <span className="stats-highlight">88%</span> of your past clients will<br />
-                        use a different realtor. Viano<br />
-                        keeps you top of mind for the<br />
-                        next 5 years.
+                        <span className="stats-highlight">88% of your past clients will use a different realtor. Viano keeps you top of mind for the next 5 years.</span>
                     </p>
 
                     {/* Chat Conversation - Frame 74 */}
@@ -346,8 +341,7 @@ export default function LandingPage() {
 
                     {/* Reality Text */}
                     <p className="stats-reality-text reveal-hidden delay-300">
-                        Reality? Only <span className="stats-highlight-blue">12%</span> come back<br />
-                        again.
+                        Reality? Only <span className="stats-highlight-blue">12%</span> come back again.
                     </p>
 
                     {/* Star Icon - Frame 75 */}
@@ -490,8 +484,8 @@ export default function LandingPage() {
                         <Image
                             src="/Picture in Frame 81.png"
                             alt="Team member using Viano"
-                            width={540}
-                            height={400}
+                            width={480}
+                            height={360}
                             className="team-pic"
                         />
                     </div>
@@ -516,15 +510,13 @@ export default function LandingPage() {
 
                     <div className="frame-45-container reveal-hidden scale-only delay-300">
                         <div className="frame-45-content">
-                            Viano protects the ones<br />
-                            you've already won.
+                            Viano tracks your client's homes to keep you relevant, remembered, and referred.
                         </div>
                     </div>
 
                     <div className="ad-spend-text reveal-hidden delay-400">
                         <p>
-                            Everyone tells you to buy more leads. Spend more on ads.<br />
-                            Cold call more prospects.
+                            Everyone tells you to buy more leads. Spend more on ads. Cold call more prospects.
                         </p>
                     </div>
                 </section>
@@ -533,14 +525,75 @@ export default function LandingPage() {
                     DATA SECTION (Frame 115)
                     ============================================ */}
                 <section className="data-section reveal-hidden">
-                    <div className="data-infographic reveal-hidden scale-only delay-200">
-                        <Image
-                            src="/Frame 115.svg"
-                            alt="Market Data Infographic"
-                            width={1100}
-                            height={800}
-                            className="frame-115-svg"
-                        />
+                    <div className="data-badge highlight-pill">The Numbers Don't Lie</div>
+                    <h2 className="data-title">
+                        The data tells something <span className="data-different">different..</span>
+                    </h2>
+
+                    <div className="data-grid-container">
+                        {/* Card 1: Market Reality */}
+                        <div className="data-card dark-card">
+                            <div className="card-header">
+                                <div className="card-icon blue-star">✦</div>
+                                <span className="card-label">Market Reality</span>
+                            </div>
+                            <div className="card-value">85<span className="unit">%</span></div>
+                            <div className="progress-container">
+                                <div className="progress-bar blue-bar" style={{ width: '85%' }}></div>
+                            </div>
+                            <p className="card-desc">
+                                of the market comes from repeat business and referrals
+                            </p>
+                            <span className="card-source">Source: National Association of Realtors</span>
+                        </div>
+
+                        {/* Card 2: The Gap */}
+                        <div className="data-card dark-card">
+                            <div className="card-header">
+                                <div className="card-icon red-star">✦</div>
+                                <span className="card-label">The Gap</span>
+                            </div>
+                            <div className="card-value">12<span className="unit">%</span></div>
+                            <div className="progress-container">
+                                <div className="progress-bar red-bar" style={{ width: '12%' }}></div>
+                            </div>
+                            <p className="card-desc">
+                                is what most agents actually capture without follow-up
+                            </p>
+                            <span className="card-sub-info">73% opportunity loss</span>
+                        </div>
+
+                        {/* Card 3: Critical Window */}
+                        <div className="data-card dark-card">
+                            <div className="card-header">
+                                <div className="card-icon violet-star">✦</div>
+                                <span className="card-label">Critical Window</span>
+                            </div>
+                            <div className="card-value">81<span className="unit">%</span></div>
+                            <div className="progress-container">
+                                <div className="progress-bar violet-bar" style={{ width: '81%' }}></div>
+                            </div>
+                            <p className="card-desc">
+                                of sellers call only ONE agent when ready to list
+                            </p>
+                            <span className="card-sub-info">You need to be that one agent</span>
+                        </div>
+
+                        {/* Card 4: Your Opportunity */}
+                        <div className="data-card opportunity-card">
+                            <div className="card-header">
+                                <div className="card-icon white-star">✦</div>
+                                <span className="card-label">Your Opportunity</span>
+                            </div>
+                            <div className="card-value">$15K-130K</div>
+                            <div className="progress-container white-vessel">
+                                <div className="progress-bar green-bar" style={{ width: '100%' }}></div>
+                            </div>
+                            <p className="card-desc">
+                                additional annual revenue per agent with Viano
+                            </p>
+                            <span className="card-sub-info">Based on average client lifetime value</span>
+                        </div>
                     </div>
                 </section>
 
@@ -549,9 +602,30 @@ export default function LandingPage() {
                     ============================================ */}
                 <section className="final-cta-section reveal-hidden">
                     <div className="final-cta-container reveal-hidden scale-only">
+                        <div className="cta-star star-big">
+                            <svg viewBox="0 0 159 159" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M159.206 79.5761C159.216 81.9081 158.506 84.1891 157.176 86.1001C155.836 88.0111 153.936 89.4581 151.736 90.2401L106.636 106.641L90.2361 151.736C89.4361 153.913 87.9761 155.79 86.0761 157.116C84.1661 158.442 81.8961 159.152 79.5761 159.152C77.2561 159.152 74.9861 158.442 73.0861 157.116C71.1761 155.79 69.7161 153.913 68.9161 151.736L52.5161 106.634L7.41612 90.2401C5.24012 89.4321 3.36212 87.9771 2.03612 86.0701C0.710121 84.1641 0.00012207 81.8981 0.00012207 79.5761C0.00012207 77.2541 0.710121 74.9871 2.03612 73.0811C3.36212 71.1751 5.24012 69.7201 7.41612 68.9121L52.5161 52.5171L68.9161 7.41512C69.7161 5.23912 71.1761 3.36112 73.0861 2.03512C74.9861 0.709121 77.2561 -0.000878906 79.5761 -0.000878906C81.8961 -0.000878906 84.1661 0.709121 86.0761 2.03512C87.9761 3.36112 89.4361 5.23912 90.2361 7.41512L106.646 52.5171L151.736 68.9121C153.936 69.6931 155.836 71.1401 157.176 73.0511C158.506 74.9621 159.216 77.2431 159.206 79.5761Z" fill="url(#blue_grad_cta)" />
+                                <defs>
+                                    <linearGradient id="blue_grad_cta" x1="51.576" y1="20.076" x2="180.076" y2="186.576" gradientUnits="userSpaceOnUse">
+                                        <stop stopColor="#A23BF6" />
+                                        <stop offset="1" stopColor="#DBAFFF" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div className="cta-star star-small">
+                            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M80 40C80.01 41.173 79.65 42.319 78.98 43.28C78.31 44.24 77.35 44.968 76.25 45.36L53.58 53.605L45.35 76.272C44.94 77.366 44.21 78.31 43.25 78.976C42.29 79.643 41.15 80 39.99 80C38.82 80 37.68 79.643 36.72 78.976C35.77 78.31 35.04 77.366 34.63 76.272L26.39 53.601L3.73 45.36C2.63 44.954 1.69 44.223 1.02 43.265C0.36 42.306 0 41.167 0 40C0 38.833 0.36 37.694 1.02 36.735C1.69 35.777 2.63 35.046 3.73 34.64L26.39 26.399L34.63 3.728C35.04 2.634 35.77 1.69 36.72 1.024C37.68 0.357 38.82 0 39.99 0C41.15 0 42.29 0.357 43.25 1.024C44.21 1.69 44.94 2.634 45.35 3.728L53.59 26.399L76.25 34.64C77.35 35.032 78.31 35.76 78.98 36.72C79.65 37.681 80.01 38.827 80 40Z" fill="url(#violet_grad_cta)" />
+                                <defs>
+                                    <linearGradient id="violet_grad_cta" x1="25.92" y1="10.092" x2="90.51" y2="93.765" gradientUnits="userSpaceOnUse">
+                                        <stop stopColor="#A23BF6" />
+                                        <stop offset="1" stopColor="#DBAFFF" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
                         <h2 className="cta-banner-text">
-                            Property Intelligence AI<br />
-                            for Elite Realtors
+                            Viano keeps you top-of-mind with automated, valuable follow-up using inspection data only YOU have.
                         </h2>
                         <Link href="/signup">
                             <button className="cta-overlay-btn">Get Started with Viano</button>
@@ -598,4 +672,3 @@ export default function LandingPage() {
         </div >
     );
 }
-
