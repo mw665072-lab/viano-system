@@ -2,6 +2,7 @@
 import { Home, Building2, User, LogOut } from "lucide-react";
 import { useRouter, usePathname } from 'next/navigation';
 import { clearAuth } from '@/lib/api';
+import Image from 'next/image';
 
 export default function Sidebar() {
   const router = useRouter();
@@ -35,10 +36,15 @@ export default function Sidebar() {
 
   return (
     <div className="w-[250px] h-screen bg-white flex flex-col transition-width duration-200">
-      <div className="p-6" >
-        <div className="font-montserrat font-bold py-2 text-[24px] leading-[21px] tracking-[0%] text-center text-[#0C1D38]">
-          {"viano systems®"}
-        </div>
+      <div className="py-5 px-4 flex items-center justify-center border-b border-gray-100">
+        <Image
+          src="/Logo Web.svg"
+          alt="Viano Systems"
+          width={140}
+          height={45}
+          priority
+          className="h-10 w-auto"
+        />
       </div>
 
       <div className="flex-1 pl-6 pr-4 py-4 flex flex-col justify-between rotate-0 opacity-100">

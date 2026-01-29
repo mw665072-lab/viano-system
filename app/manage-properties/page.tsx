@@ -550,8 +550,8 @@ const Page = () => {
                     ? 'hidden lg:flex lg:w-1/2 border-r border-gray-200'
                     : 'w-full'
                     }`}>
-                    <div className="p-6 border-b border-gray-200">
-                        <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                    <div className="p-4 md:p-6 border-b border-gray-200">
+                        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
                             Property List
                             {filteredProperties.length > 0 && (
                                 <span className="text-base font-normal text-gray-500 ml-2">

@@ -65,6 +65,8 @@ export default function ProfilePage() {
     { label: "IN PROGRESS", value: "0", trend: null, trendColor: null, indicator: "bg-blue-500" },
   ]);
 
+  const [imageError, setImageError] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -312,16 +314,19 @@ export default function ProfilePage() {
       <div className="relative">
         {/* Background Container */}
         <div
-          className="absolute top-0 left-0 right-0 bottom-0 bg-white rounded-tl-[32px]"
+          className="absolute top-0 left-0 right-0 bottom-0 bg-white rounded-t-[24px] md:rounded-tl-[32px] md:rounded-tr-none"
           style={{ marginLeft: '0px' }}
         />
 
         {/* Content */}
         <div className="relative z-10">
           {/* Header */}
-          <header className="flex items-center justify-between px-4 sm:px-6 lg:px-10 py-4 lg:py-6">
+          <header className="flex items-center justify-between px-4 md:px-6 lg:px-10 py-4 lg:py-6">
             <div className="flex items-center gap-3">
-              <button className="text-blue-600 hover:text-blue-700 transition-colors">
+              <button
+                onClick={() => window.history.back()}
+                className="text-blue-600 hover:text-blue-700 transition-colors"
+              >
                 <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
               <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Profile</h1>
@@ -335,29 +340,26 @@ export default function ProfilePage() {
               <div className="flex-1 flex flex-col gap-6 lg:max-w-[753px]">
                 {/* Profile Info Container */}
                 <Card
-                  className="bg-white shadow-sm border-0"
-                  style={{
-                    borderRadius: '32px',
-                    padding: '31px 32px',
-                  }}
+                  className="bg-white shadow-sm border-0 rounded-[24px] md:rounded-[32px] p-5 md:p-8"
                 >
                   <div className="flex flex-col sm:flex-row gap-6">
                     {/* Profile Image */}
                     <div className="relative flex-shrink-0 mx-auto sm:mx-0">
                       <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden bg-gray-200">
-                        <Image
-                          src="/profile-placeholder.jpg"
-                          alt="Profile"
-                          width={128}
-                          height={128}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const initials = profile.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
-                            target.parentElement!.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-amber-200 to-amber-400 flex items-center justify-center text-3xl font-bold text-white">${initials}</div>`;
-                          }}
-                        />
+                        {imageError ? (
+                          <div className="w-full h-full bg-gradient-to-br from-amber-200 to-amber-400 flex items-center justify-center text-3xl font-bold text-white">
+                            {profile.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                          </div>
+                        ) : (
+                          <Image
+                            src="/profile-placeholder.jpg"
+                            alt="Profile"
+                            width={128}
+                            height={128}
+                            className="w-full h-full object-cover"
+                            onError={() => setImageError(true)}
+                          />
+                        )}
                       </div>
                       <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors">
                         <Pencil className="w-4 h-4 text-white" />
@@ -394,11 +396,7 @@ export default function ProfilePage() {
 
                 {/* Audit History Container */}
                 <Card
-                  className="bg-white shadow-sm border-0"
-                  style={{
-                    borderRadius: '32px',
-                    padding: '32px',
-                  }}
+                  className="bg-white shadow-sm border-0 rounded-[24px] md:rounded-[32px] p-5 md:p-8"
                 >
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-gray-900">Audit History</h2>
@@ -446,11 +444,7 @@ export default function ProfilePage() {
               <div className="w-full lg:w-[326px] flex flex-col gap-6">
                 {/* Quick Stats Container */}
                 <Card
-                  className="bg-white shadow-sm border-0"
-                  style={{
-                    borderRadius: '32px',
-                    padding: '24px',
-                  }}
+                  className="bg-white shadow-sm border-0 rounded-[24px] md:rounded-[32px] p-6"
                 >
                   <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Stats</h2>
 
@@ -478,11 +472,7 @@ export default function ProfilePage() {
 
                 {/* Preferences Container */}
                 <Card
-                  className="bg-white shadow-sm border-0"
-                  style={{
-                    borderRadius: '32px',
-                    padding: '24px',
-                  }}
+                  className="bg-white shadow-sm border-0 rounded-[24px] md:rounded-[32px] p-6"
                 >
                   <h2 className="text-xl font-bold text-gray-900 mb-6">Preferences</h2>
 

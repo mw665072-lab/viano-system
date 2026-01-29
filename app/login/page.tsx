@@ -87,12 +87,18 @@ export default function LoginPage() {
   return (
     <div className="fixed inset-0 z-50 flex h-screen w-screen items-center justify-center bg-gray-50 p-4">
       {/* Brand Logo - Top Left */}
-      <div className="absolute top-8 left-8 text-xl font-bold text-slate-900">
-        viano systems®
+      <div className="absolute top-6 left-6 md:top-8 md:left-8">
+        <Image
+          src="/Logo Web.svg"
+          alt="Viano Systems"
+          width={123}
+          height={41}
+          priority
+        />
       </div>
 
       {/* Main Card Container */}
-      <div className="flex w-full max-w-[900px] overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="flex w-full md:max-w-[900px] h-full md:h-auto overflow-hidden md:rounded-2xl bg-white shadow-2xl">
 
         {/* LEFT SIDE: Image */}
         <div className="relative hidden w-1/2 md:block">

@@ -1,0 +1,278 @@
+/* ============================================
+   GLOBAL RESPONSIVE STYLES FOR ALL PAGES
+   Viano Frontend - Mobile, Tablet, Desktop
+   ============================================ */
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* ============================================
+   TABLET RESPONSIVE (max-width: 1024px)
+   ============================================ */
+@media (max-width: 1024px) {
+
+    /* Dashboard adjustments */
+    .flex.gap-\[21px\] {
+        gap: 16px;
+    }
+
+    /* Form inputs - larger touch targets */
+    input,
+    select,
+    textarea,
+    button {
+        min-height: 44px;
+    }
+
+    /* Cards and panels - adjust corners */
+    .rounded-\[32px\] {
+        border-radius: 20px;
+    }
+}
+
+/* ============================================
+   MOBILE RESPONSIVE (max-width: 768px)
+   ============================================ */
+@media (max-width: 768px) {
+
+    /* Typography scaling */
+    h1 {
+        font-size: 1.75rem !important;
+        line-height: 2rem !important;
+    }
+
+    h2 {
+        font-size: 1.5rem !important;
+        line-height: 1.875rem !important;
+    }
+
+    h3 {
+        font-size: 1.25rem !important;
+        line-height: 1.625rem !important;
+    }
+
+    /* Dashboard page layout */
+    .flex.flex-col.gap-\[21px\] {
+        gap: 12px;
+        padding: 12px;
+    }
+
+    /* Property list/detail panels - stack vertically */
+    .flex.gap-6 {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    /* Cards full width on mobile */
+    .w-\[350px\],
+    .w-\[400px\],
+    .w-\[450px\],
+    .w-\[500px\] {
+        width: 100% !important;
+    }
+
+    /* Sidebar hidden on mobile - show content full width */
+    .lg\:grid-cols-\[350px_1fr\],
+    .lg\:grid-cols-\[400px_1fr\] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Forms - stack inputs vertically */
+    .grid-cols-2,
+    .grid-cols-3 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Action buttons - full width */
+    .flex.flex-wrap.gap-3 button {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    /* Dashboard stats cards - 2 columns on mobile */
+    .grid.grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    /* Modal dialogs - full width with padding */
+    [role="dialog"] {
+        width: calc(100% - 32px) !important;
+        max-width: 100% !important;
+        margin: 16px !important;
+    }
+
+    /* Table responsiveness */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    /* Property card compact on mobile */
+    .h-\[100px\] {
+        height: auto !important;
+        min-height: 80px;
+    }
+
+    /* Manage properties layout */
+    .grid.lg\:grid-cols-\[400px_1fr\] {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* Property image containers */
+    .w-\[76px\] {
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    /* Add property form */
+    .space-y-8 {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    /* File upload areas */
+    .border-dashed {
+        padding: 24px 16px !important;
+    }
+
+    /* Badges - compact sizing */
+    .rounded-full.px-3 {
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+    }
+
+    /* Property header - reduce height */
+    .h-\[180px\],
+    .h-\[200px\] {
+        height: 140px !important;
+    }
+
+    /* Auth pages (login/signup) */
+    .min-h-screen.flex.items-center.justify-center {
+        padding: 16px;
+    }
+
+    /* Auth form container */
+    .max-w-md,
+    .max-w-lg {
+        max-width: 100% !important;
+    }
+
+    /* Profile page */
+    .max-w-4xl {
+        max-width: 100% !important;
+        padding: 16px !important;
+    }
+
+    /* Avatar sizing */
+    .w-24.h-24,
+    .w-20.h-20 {
+        width: 64px !important;
+        height: 64px !important;
+    }
+
+    /* Notification panel */
+    .w-80,
+    .w-96 {
+        width: 100% !important;
+        max-width: calc(100vw - 32px) !important;
+    }
+}
+
+/* ============================================
+   SMALL MOBILE (max-width: 480px)
+   ============================================ */
+@media (max-width: 480px) {
+
+    /* Even smaller typography */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+
+    h2 {
+        font-size: 1.25rem !important;
+    }
+
+    /* Stats cards - single column */
+    .grid.grid-cols-4 {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Buttons - full width */
+    button:not(.inline-flex) {
+        width: 100%;
+    }
+
+    /* Input fields - larger for iOS */
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Property image smaller */
+    .w-\[76px\] {
+        width: 48px !important;
+        height: 48px !important;
+    }
+
+    /* Tighter spacing */
+    .p-6,
+    .p-8 {
+        padding: 16px !important;
+    }
+
+    .gap-6,
+    .gap-8 {
+        gap: 12px !important;
+    }
+
+    /* Card corners */
+    .rounded-\[32px\],
+    .rounded-\[24px\] {
+        border-radius: 16px !important;
+    }
+}
+
+/* ============================================
+   TOUCH-FRIENDLY IMPROVEMENTS
+   ============================================ */
+@media (hover: none) and (pointer: coarse) {
+
+    /* Larger touch targets */
+    button,
+    a,
+    [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Better spacing for touch */
+    .space-y-2>*+* {
+        margin-top: 12px !important;
+    }
+}
+
+/* ============================================
+   LANDSCAPE MOBILE
+   ============================================ */
+@media (max-height: 500px) and (orientation: landscape) {
+
+    /* Reduce vertical padding */
+    .py-8,
+    .py-6 {
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+    }
+
+    /* Fixed headers smaller */
+    header,
+    nav {
+        height: auto !important;
+        min-height: 48px;
+    }
+}

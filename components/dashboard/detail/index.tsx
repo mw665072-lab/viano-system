@@ -51,7 +51,7 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
 
     if (!property) {
         return (
-            <Card className="bg-white overflow-hidden py-0 border-0 shadow-none rounded-[32px] h-full flex items-center justify-center">
+            <Card className="bg-white overflow-hidden py-0 border-0 shadow-none rounded-[24px] md:rounded-[32px] h-full flex items-center justify-center min-h-[200px]">
                 <div className="text-center p-8">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Home className="w-8 h-8 text-gray-400" />
@@ -93,9 +93,9 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
         : "Not set";
 
     return (
-        <Card className="bg-white overflow-hidden py-0 border-0 shadow-none rounded-[32px]">
+        <Card className="bg-white overflow-hidden py-0 border-0 shadow-none rounded-[24px] md:rounded-[32px]">
             {/* Property Header Image */}
-            <div className="relative w-full h-[200px] bg-gradient-to-br from-sky-100 via-blue-50 to-emerald-50 overflow-hidden rounded-tl-[32px] rounded-tr-[32px]">
+            <div className="relative w-full h-[150px] md:h-[200px] bg-gradient-to-br from-sky-100 via-blue-50 to-emerald-50 overflow-hidden rounded-t-[24px] md:rounded-t-[32px]">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 50%)' }} />
 
@@ -134,7 +134,7 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                 </div>
             </div>
 
-            <div className="p-[20px]">
+            <div className="p-4 md:p-[20px]">
                 <div className="flex items-center justify-between rounded-[12px] pt-[16px] pb-[16px]">
                     <div>
                         <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>CLIENT</p>
