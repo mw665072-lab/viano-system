@@ -112,7 +112,7 @@ export default function LandingPage() {
                                 className="nav-link"
                                 onClick={() => document.getElementById('product')?.scrollIntoView({ behavior: 'smooth' })}
                             >
-                                Product
+                                Usman Ghani
                                 <ChevronDown className="dropdown-arrow" size={16} />
                             </button>
                         </div>
