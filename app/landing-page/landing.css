@@ -12,25 +12,19 @@ html {
     display: none;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
     color: #FFFFFF;
     cursor: pointer;
     transition: all 0.3s ease;
     margin-left: auto;
-    flex-shrink: 0;
 }
 
 .mobile-menu-btn:hover {
     background: rgba(255, 255, 255, 0.1);
-}
-
-.mobile-menu-btn svg {
-    width: 18px;
-    height: 18px;
 }
 
 .mobile-menu-overlay {
@@ -137,8 +131,8 @@ html {
     background: #0093D1;
 }
 
-/* Show hamburger on tablets and below (1024px and smaller) */
-@media (max-width: 100px) {
+/* Show hamburger on mobile/tablet */
+@media (max-width: 768px) {
     .mobile-menu-btn {
         display: flex;
     }
@@ -258,9 +252,6 @@ html {
 .landing-page {
     min-height: 100vh;
     background: #FAFAFA;
-    overflow-x: hidden;
-    width: 100%;
-    max-width: 100vw;
 }
 
 /* ============================================
@@ -288,8 +279,8 @@ html {
     align-items: center;
     padding: 0px;
     gap: 30px;
+    width: 500px;
     height: 36px;
-    flex-shrink: 0;
 }
 
 /* Logo - image 3 */
@@ -309,6 +300,7 @@ html {
     align-items: center;
     padding: 0px;
     gap: 39px;
+    width: 406px;
     height: 42px;
     flex: none;
     order: 1;
@@ -382,8 +374,9 @@ html {
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    padding: 12px 20px;
+    padding: 12px 16px;
     gap: 10px;
+    width: 132px;
     height: 48px;
     background: transparent;
     border: 1px solid #09A8F3;
@@ -410,8 +403,9 @@ html {
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    padding: 12px 20px;
+    padding: 12px 16px;
     gap: 10px;
+    width: 166px;
     height: 48px;
     background: #09A8F3;
     border-radius: 8px;
@@ -454,9 +448,8 @@ html {
 .hero-section {
     position: relative;
     width: 100%;
-    min-height: 600px;
-    height: 600px;
-    max-height: 700px;
+    min-height: 550px;
+    height: calc(100vh - 70px);
     margin: 0 auto;
     overflow: hidden;
     background: #0A1628;
@@ -1759,36 +1752,355 @@ html {
 
 
 
-/* Large screens - consistent with base desktop styles */
+/* Large screens (1440px+) */
 @media (min-width: 1440px) {
-    /* No changes needed - keep same as base desktop */
+    .hero-section {
+        height: 697px;
+    }
+
+    .hero-bg-ellipse-8 {
+        width: 1616px;
+        height: 1516px;
+        left: -674px;
+        top: -671px;
+    }
+
+    .hero-image-container {
+        width: 931px;
+        height: 776px;
+        right: -70px;
+        top: -40px;
+    }
+
+    .hero-content-frame {
+        padding-left: 63px;
+        max-width: 845px;
+    }
+}
+
+/* Laptop screens (1280px - 1440px) */
+@media (min-width: 1280px) and (max-width: 1439px) {
+    .landing-header {
+        padding: 0 48px;
+    }
+
+    .main-nav-frame {
+        gap: 24px;
+        width: auto;
+    }
+
+    .nav-links-frame {
+        gap: 28px;
+        width: auto;
+    }
+
+    .nav-link {
+        font-size: 16px;
+    }
+
+    .login-btn {
+        width: auto;
+        padding: 10px 20px;
+        font-size: 15px;
+    }
+
+    .get-started-btn {
+        width: auto;
+        padding: 10px 20px;
+        font-size: 15px;
+    }
+
+    .hero-section {
+        min-height: 580px;
+        height: calc(100vh - 70px);
+    }
+
+    .hero-bg-ellipse-8 {
+        width: 1500px;
+        height: 1400px;
+        left: -700px;
+        top: -600px;
+    }
+
+    .hero-image-container {
+        width: 750px;
+        height: 620px;
+        right: -30px;
+        top: 0;
+    }
+
+    .hero-content-frame {
+        padding: 80px 48px;
+        max-width: 650px;
+    }
+
+    .hero-headline {
+        font-size: 42px;
+        line-height: 52px;
+    }
+
+    .star-icon-wrapper {
+        width: 75px;
+        height: 75px;
+    }
+
+    /* Feature Cards - Laptop */
+    .features-section {
+        padding: 70px 48px;
+    }
+
+    .features-carousel {
+        padding: 0 48px;
+        gap: 24px;
+    }
+
+    .feature-card {
+        width: 400px;
+        height: 480px;
+        padding: 32px;
+    }
+
+    .feature-headline {
+        font-size: 30px;
+    }
+
+    /* Stats Section - Laptop */
+    .stats-section {
+        padding: 70px 48px;
+    }
+
+    /* Pricing Section - Laptop */
+    .pricing-section {
+        padding: 70px 48px;
+    }
+
+    .pricing-card-outer {
+        max-width: 600px;
+    }
+
+    /* Teams Section - Laptop */
+    .teams-section {
+        padding: 70px 48px;
+    }
+
+    .teams-image {
+        max-width: 500px;
+    }
+
+    /* Business Impact - Laptop */
+    .business-impact-section {
+        padding: 70px 48px;
+    }
+
+    /* Data Section - Laptop */
+    .data-section {
+        padding: 70px 48px;
+    }
+
+    /* Final CTA - Laptop */
+    .final-cta-section {
+        padding: 80px 48px;
+    }
+
+    .final-cta-container {
+        padding: 50px 60px;
+    }
+
+    /* Footer - Laptop */
+    .landing-footer {
+        padding: 50px 48px;
+    }
+}
+
+/* Small laptops (1024px - 1280px) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    .landing-header {
+        padding: 0 32px;
+    }
+
+    .main-nav-frame {
+        gap: 20px;
+        width: auto;
+    }
+
+    .nav-links-frame {
+        gap: 20px;
+        width: auto;
+    }
+
+    .nav-link {
+        font-size: 15px;
+    }
+
+    .login-btn {
+        width: auto;
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .get-started-btn {
+        width: auto;
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .hero-section {
+        min-height: 550px;
+        height: calc(100vh - 70px);
+    }
+
+    .hero-bg-ellipse-8 {
+        width: 1300px;
+        height: 1200px;
+        left: -600px;
+        top: -500px;
+    }
+
+    .hero-image-container {
+        width: 600px;
+        height: 500px;
+        right: 0;
+        top: 20px;
+    }
+
+    .hero-content-frame {
+        padding: 60px 32px;
+        max-width: 550px;
+    }
+
+    .hero-headline {
+        font-size: 36px;
+        line-height: 46px;
+    }
+
+    .star-icon-wrapper {
+        width: 65px;
+        height: 65px;
+    }
+
+    .hero-cta-button {
+        width: 200px;
+        height: 52px;
+        font-size: 15px;
+    }
+
+    /* Feature Cards - Small Laptop */
+    .features-section {
+        padding: 60px 32px;
+    }
+
+    .features-carousel {
+        padding: 0 32px;
+        gap: 20px;
+    }
+
+    .feature-card {
+        width: 360px;
+        height: 450px;
+        padding: 28px;
+    }
+
+    .feature-headline {
+        font-size: 28px;
+    }
+
+    /* Stats Section - Small Laptop */
+    .stats-section {
+        padding: 60px 32px;
+    }
+
+    .stats-main-text,
+    .stats-reality-text,
+    .stats-viano-text {
+        font-size: 24px;
+    }
+
+    /* Pricing Section - Small Laptop */
+    .pricing-section {
+        padding: 60px 32px;
+    }
+
+    .pricing-title {
+        font-size: 36px;
+    }
+
+    .pricing-card-outer {
+        max-width: 550px;
+    }
+
+    /* Teams Section - Small Laptop */
+    .teams-section {
+        padding: 60px 32px;
+        gap: 40px;
+    }
+
+    .teams-title {
+        font-size: 36px;
+    }
+
+    .teams-image {
+        max-width: 450px;
+    }
+
+    /* Business Impact - Small Laptop */
+    .business-impact-section {
+        padding: 60px 32px;
+    }
+
+    .impact-title {
+        font-size: 36px;
+    }
+
+    /* Data Section - Small Laptop */
+    .data-section {
+        padding: 60px 32px;
+    }
+
+    .data-title {
+        font-size: 36px;
+    }
+
+    /* Final CTA - Small Laptop */
+    .final-cta-section {
+        padding: 70px 32px;
+    }
+
+    .final-cta-container {
+        padding: 45px 50px;
+    }
+
+    .cta-banner-text {
+        font-size: 30px;
+    }
+
+    /* Footer - Small Laptop */
+    .landing-footer {
+        padding: 45px 32px;
+    }
 }
 
 /* Tablets and medium screens */
 @media (max-width: 1024px) {
     .landing-header {
-        padding: 0 24px;
+        padding: 0 40px;
     }
 
     .main-nav-frame {
-        gap: 16px;
-        width: 100%;
-        justify-content: space-between;
+        gap: 24px;
     }
 
-    /* Hide desktop nav on tablets */
     .nav-links-frame {
-        display: none;
+        gap: 24px;
     }
 
-    /* Hide auth buttons on tablets - use hamburger menu */
-    .auth-buttons {
-        display: none;
+    .nav-link {
+        font-size: 16px;
     }
 
-    /* Show hamburger on tablets */
-    .mobile-menu-btn {
-        display: flex;
+    .login-btn,
+    .get-started-btn {
+        padding: 8px 16px;
+        font-size: 13px;
     }
 
     .hero-section {
@@ -1980,8 +2292,13 @@ html {
         display: none;
     }
 
-    .auth-buttons {
+    .login-btn {
         display: none;
+    }
+
+    .get-started-btn {
+        padding: 10px 16px;
+        font-size: 13px;
     }
 
     .page-content {
@@ -2324,535 +2641,5 @@ html {
 
     .cta-banner-text {
         font-size: 18px;
-    }
-}
-
-/* ============================================
-   COMPREHENSIVE RESPONSIVE OVERRIDES
-   Ensures proper display on ALL screen sizes
-   ============================================ */
-
-/* Global box-sizing reset */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-}
-
-/* Prevent horizontal overflow globally */
-html,
-body {
-    overflow-x: hidden;
-    max-width: 100vw;
-}
-
-/* ===== TABLETS (769px - 1024px) ===== */
-@media (max-width: 1024px) and (min-width: 769px) {
-
-    /* Header */
-    .landing-header {
-        padding: 0 20px;
-        height: 65px;
-        justify-content: space-between;
-    }
-
-    /* Hero */
-    .hero-section {
-        min-height: 500px;
-        height: auto;
-        padding-bottom: 40px;
-    }
-
-    .hero-image-container {
-        position: relative;
-        width: 100%;
-        height: 350px;
-        right: auto;
-        top: auto;
-        margin-top: 30px;
-        order: 2;
-    }
-
-    .hero-content-frame {
-        padding: 30px 24px;
-        max-width: 100%;
-        position: relative;
-        order: 1;
-    }
-
-    .hero-headline {
-        font-size: 32px;
-        line-height: 40px;
-    }
-
-    .hero-bg-ellipse-8,
-    .hero-bg-ellipse-7 {
-        display: none;
-    }
-
-    /* Features */
-    .features-section {
-        padding: 50px 20px;
-    }
-
-    .features-carousel {
-        width: 100%;
-        max-width: 100%;
-        padding: 10px 0;
-    }
-
-    .feature-card {
-        width: 320px;
-        height: 380px;
-        padding: 24px;
-    }
-
-    .feature-headline {
-        font-size: 22px;
-    }
-
-    .feature-mobile {
-        width: 200px;
-    }
-
-    .feature-dots {
-        width: 250px;
-        height: 250px;
-    }
-}
-
-/* ===== MOBILE (up to 768px) ===== */
-@media (max-width: 768px) {
-
-    /* Header - Mobile */
-    .landing-header {
-        padding: 0 16px !important;
-        height: 60px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-    }
-
-    .main-nav-frame {
-        width: auto !important;
-        flex: 1;
-    }
-
-    .viano-main-logo {
-        width: 80px !important;
-        height: 28px !important;
-    }
-
-    .nav-links-frame,
-    .auth-buttons {
-        display: none !important;
-    }
-
-    .mobile-menu-btn {
-        display: flex !important;
-        order: 3;
-        width: 50px !important;
-        height: 32px !important;
-        min-width: 50px !important;
-        max-width: 50px !important;
-        flex-shrink: 0 !important;
-    }
-
-    /* Hero - Mobile */
-    .hero-section {
-        min-height: auto !important;
-        height: auto !important;
-        padding: 30px 0 40px !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    .hero-bg-ellipse-8,
-    .hero-bg-ellipse-7 {
-        display: none !important;
-    }
-
-    .hero-image-container {
-        position: relative !important;
-        width: 100% !important;
-        height: auto !important;
-        min-height: 200px !important;
-        max-height: 350px !important;
-        right: auto !important;
-        top: auto !important;
-        margin-top: 20px !important;
-        order: 2 !important;
-        display: flex !important;
-        justify-content: center !important;
-    }
-
-    .hero-image {
-        object-fit: contain !important;
-        width: 100% !important;
-        height: auto !important;
-        max-height: 350px !important;
-    }
-
-    .hero-content-frame {
-        padding: 20px 16px !important;
-        gap: 16px !important;
-        min-height: auto !important;
-        max-width: 100% !important;
-        position: relative !important;
-        order: 1 !important;
-    }
-
-    .hero-text-frame {
-        gap: 12px !important;
-    }
-
-    .hero-headline {
-        font-size: 28px !important;
-        line-height: 36px !important;
-    }
-
-    .star-icon-wrapper {
-        width: 50px !important;
-        height: 50px !important;
-    }
-
-    .hero-cta-button {
-        width: 100% !important;
-        max-width: 100% !important;
-        height: 48px !important;
-        justify-content: center !important;
-    }
-
-    /* Features - Mobile */
-    .features-section {
-        padding: 40px 16px !important;
-    }
-
-    .features-header {
-        padding: 0 !important;
-        margin-bottom: 16px !important;
-    }
-
-    .features-carousel {
-        width: 100% !important;
-        max-width: 100% !important;
-        padding: 0 !important;
-        gap: 16px !important;
-    }
-
-    .feature-card {
-        width: 280px !important;
-        min-width: 280px !important;
-        height: 360px !important;
-        padding: 20px !important;
-    }
-
-    .feature-headline {
-        font-size: 20px !important;
-        line-height: 26px !important;
-    }
-
-    .feature-badge {
-        font-size: 12px !important;
-        padding: 6px 14px !important;
-    }
-
-    .feature-mobile {
-        width: 160px !important;
-        right: -10px !important;
-    }
-
-    .feature-dots {
-        width: 200px !important;
-        height: 200px !important;
-    }
-
-    .carousel-arrows {
-        gap: 8px !important;
-    }
-
-    .carousel-arrow {
-        width: 36px !important;
-        height: 36px !important;
-    }
-
-    /* Stats - Mobile */
-    .stats-section {
-        padding: 40px 16px !important;
-        gap: 24px !important;
-    }
-
-    .stats-main-text {
-        font-size: 16px !important;
-        line-height: 1.5 !important;
-        text-align: center !important;
-    }
-
-    .stats-reality-text {
-        font-size: 18px !important;
-    }
-
-    .stats-viano-text {
-        font-size: 16px !important;
-    }
-
-    .stats-chat-img {
-        width: 100% !important;
-        max-width: 300px !important;
-    }
-
-    .stats-star-img {
-        width: 50px !important;
-        height: 50px !important;
-    }
-
-    /* Pricing - Mobile */
-    .pricing-section {
-        padding: 40px 16px !important;
-    }
-
-    .pricing-title {
-        font-size: 24px !important;
-    }
-
-    .pricing-description {
-        font-size: 14px !important;
-        max-width: 100% !important;
-    }
-
-    .pricing-card-outer {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-
-    .pricing-card {
-        padding: 20px !important;
-    }
-
-    .card-product-title {
-        font-size: 20px !important;
-    }
-
-    .price-amount {
-        font-size: 24px !important;
-    }
-
-    /* Teams - Mobile */
-    .teams-section {
-        padding: 40px 16px !important;
-        flex-direction: column !important;
-        gap: 24px !important;
-    }
-
-    .teams-content {
-        max-width: 100% !important;
-    }
-
-    .teams-title {
-        font-size: 22px !important;
-        margin-bottom: 10px !important;
-    }
-
-    .teams-description {
-        font-size: 14px !important;
-    }
-
-    .teams-form {
-        gap: 12px !important;
-    }
-
-    .form-row {
-        flex-direction: column !important;
-        gap: 12px !important;
-    }
-
-    .form-input {
-        padding: 12px 14px !important;
-        width: 100% !important;
-    }
-
-    .request-demo-btn {
-        width: 100% !important;
-        padding: 14px !important;
-    }
-
-    .teams-image {
-        display: none !important;
-    }
-
-    /* Business Impact - Mobile */
-    .business-impact-section {
-        padding: 40px 16px !important;
-    }
-
-    .impact-title {
-        font-size: 22px !important;
-    }
-
-    .nothing-text {
-        font-size: 22px !important;
-    }
-
-    .impact-description {
-        font-size: 14px !important;
-        margin-bottom: 30px !important;
-    }
-
-    .frame-45-container {
-        width: 100% !important;
-        height: auto !important;
-        padding: 20px !important;
-        border-radius: 16px 16px 16px 0px !important;
-        margin-bottom: 30px !important;
-    }
-
-    .frame-45-content {
-        font-size: 14px !important;
-    }
-
-    .ad-spend-text {
-        font-size: 20px !important;
-        margin-top: 30px !important;
-    }
-
-    /* Data Section - Mobile */
-    .data-section {
-        padding: 40px 16px !important;
-    }
-
-    .data-title {
-        font-size: 22px !important;
-        margin-bottom: 20px !important;
-    }
-
-    .data-infographic {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-
-    .data-infographic img {
-        width: 100% !important;
-        height: auto !important;
-    }
-
-    /* Final CTA - Mobile */
-    .final-cta-section {
-        padding: 30px 16px !important;
-    }
-
-    .final-cta-container {
-        width: 100% !important;
-        height: auto !important;
-        padding: 24px 16px !important;
-        gap: 20px !important;
-        border-radius: 16px !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        text-align: center !important;
-    }
-
-    .cta-banner-text {
-        font-size: 18px !important;
-        line-height: 1.4 !important;
-        max-width: 100% !important;
-        text-align: center !important;
-    }
-
-    .cta-overlay-btn {
-        position: static !important;
-        width: 100% !important;
-        max-width: 280px !important;
-        padding: 14px 20px !important;
-        font-size: 14px !important;
-        text-align: center !important;
-    }
-
-    /* Footer - Mobile */
-    .landing-footer {
-        height: auto !important;
-        padding: 40px 16px !important;
-    }
-
-    .footer-content {
-        flex-direction: column !important;
-        gap: 30px !important;
-        text-align: center !important;
-    }
-
-    .footer-branding {
-        align-items: center !important;
-    }
-
-    .footer-branding h3 {
-        font-size: 20px !important;
-    }
-
-    .footer-nav {
-        flex-direction: column !important;
-        gap: 20px !important;
-        align-items: center !important;
-    }
-
-    .footer-nav-column {
-        text-align: center !important;
-    }
-
-    .footer-nav-column h4 {
-        font-size: 13px !important;
-    }
-
-    .footer-nav-column ul li a {
-        font-size: 12px !important;
-    }
-
-    /* Page content padding for fixed header */
-    .page-content {
-        padding-top: 60px !important;
-    }
-}
-
-/* ===== EXTRA SMALL PHONES (up to 375px) ===== */
-@media (max-width: 375px) {
-    .landing-header {
-        padding: 0 12px !important;
-    }
-
-    .viano-main-logo {
-        width: 70px !important;
-        height: 24px !important;
-    }
-
-    .hero-headline {
-        font-size: 24px !important;
-        line-height: 30px !important;
-    }
-
-    .hero-content-frame {
-        padding: 16px 12px !important;
-    }
-
-    .feature-card {
-        width: 250px !important;
-        min-width: 250px !important;
-        height: 320px !important;
-    }
-
-    .feature-headline {
-        font-size: 18px !important;
-    }
-
-    .pricing-title,
-    .teams-title,
-    .impact-title,
-    .data-title {
-        font-size: 20px !important;
-    }
-
-    .cta-banner-text {
-        font-size: 16px !important;
-    }
-
-    .final-cta-container {
-        padding: 20px 12px !important;
     }
 }
