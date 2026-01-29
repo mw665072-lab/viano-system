@@ -65,6 +65,8 @@ export default function ProfilePage() {
     { label: "IN PROGRESS", value: "0", trend: null, trendColor: null, indicator: "bg-blue-500" },
   ]);
 
+  const [imageError, setImageError] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -344,19 +346,20 @@ export default function ProfilePage() {
                     {/* Profile Image */}
                     <div className="relative flex-shrink-0 mx-auto sm:mx-0">
                       <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden bg-gray-200">
-                        <Image
-                          src="/profile-placeholder.jpg"
-                          alt="Profile"
-                          width={128}
-                          height={128}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const initials = profile.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
-                            target.parentElement!.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-amber-200 to-amber-400 flex items-center justify-center text-3xl font-bold text-white">${initials}</div>`;
-                          }}
-                        />
+                        {imageError ? (
+                          <div className="w-full h-full bg-gradient-to-br from-amber-200 to-amber-400 flex items-center justify-center text-3xl font-bold text-white">
+                            {profile.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                          </div>
+                        ) : (
+                          <Image
+                            src="/profile-placeholder.jpg"
+                            alt="Profile"
+                            width={128}
+                            height={128}
+                            className="w-full h-full object-cover"
+                            onError={() => setImageError(true)}
+                          />
+                        )}
                       </div>
                       <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors">
                         <Pencil className="w-4 h-4 text-white" />

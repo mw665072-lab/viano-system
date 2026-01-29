@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Bell, User, Menu } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { getStoredUserInfo, authAPI, getCurrentUserId } from '@/lib/api';
+import { getStoredUserInfo, authAPI } from '@/lib/api';
+import Image from 'next/image';
 
 type NavbarProps = {
   onToggleSidebar?: () => void;
@@ -84,111 +85,103 @@ export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
   const fullDisplayName = isLoading ? '...' : userData.fullName;
 
   return (
-    <div className="w-full bg-white px-4 lg:px-0">
-      <div className="max-w-full lg:w-[95%] py-4">
-        {/* Mobile header with logo and menu */}
-        <div className="flex lg:hidden items-center justify-between mb-4">
-          <div className="font-montserrat font-bold text-[20px] leading-[21px] text-[#0C1D38]">
-            viano systems®
+    <div className="w-full bg-white">
+      {/* Mobile header with logo and menu */}
+      <div className="flex lg:hidden items-center justify-between px-4 py-3 border-b border-gray-100">
+        <Image
+          src="/Logo Web.svg"
+          alt="Viano Systems"
+          width={100}
+          height={32}
+          priority
+          className="h-8 w-auto"
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleSidebar}
+          className="h-9 w-9"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Main Header Content */}
+      <div className="px-4 lg:px-6 py-4">
+        {/* Mobile welcome + profile section */}
+        <div className="lg:hidden">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-semibold text-[#0C1D38]">
+                Welcome Back, {displayName}!
+              </h1>
+              <span className="text-lg">👋</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => router.push('/profile')}
+                variant="ghost"
+                className="flex items-center gap-2 px-2 py-1.5 h-auto rounded-full hover:bg-gray-50"
+              >
+                <Avatar className="h-8 w-8 border border-gray-200">
+                  {userData.profileImage ? (
+                    <AvatarImage src={userData.profileImage} alt={userData.fullName} />
+                  ) : null}
+                  <AvatarFallback className="bg-gray-100 text-gray-600 text-sm">
+                    {userData.initials}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+
+              <Button
+                onClick={() => router.push('/notifications')}
+                variant="ghost"
+                size="icon"
+                className="relative h-9 w-9 rounded-full hover:bg-gray-50"
+              >
+                <Bell className="h-5 w-5 text-gray-500" />
+              </Button>
+            </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggleSidebar}
-            className="h-10 w-10"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
         </div>
 
-        {/* Mobile welcome message + user section */}
-        <div className="lg:hidden">
-          <div className="flex items-center gap-2 mb-4">
-            <h1 className="text-[20px] font-manrope font-semibold leading-[100%] text-[#0C1D38]">
+        {/* Desktop layout */}
+        <div className="hidden lg:flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-semibold text-[#0C1D38]">
               Welcome Back, {displayName}!
             </h1>
             <span className="text-xl">👋</span>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <Button
-              onClick={() => {
-                router.push('/profile')
-              }}
+              onClick={() => router.push('/profile')}
               variant="ghost"
-              className="flex items-center gap-2 px-3 py-2 h-auto rounded-lg"
+              className="flex items-center gap-3 px-3 py-2 h-auto rounded-full hover:bg-gray-50 transition-colors"
             >
-              <Avatar className="h-8 w-8 bg-blue-100">
+              <Avatar className="h-9 w-9 border border-gray-200">
                 {userData.profileImage ? (
                   <AvatarImage src={userData.profileImage} alt={userData.fullName} />
                 ) : null}
-                <AvatarFallback className="bg-blue-100 text-blue-600">
+                <AvatarFallback className="bg-gray-100 text-gray-600 text-sm font-medium">
                   {userData.initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col gap-1 items-start">
-                <span className="text-[14px] font-inter font-semibold leading-[100%] text-[#0C1D38]">{fullDisplayName}</span>
-                <span className="text-[12px] font-inter font-medium leading-[100%] text-[#0C1D38]">View Profile</span>
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-semibold text-[#0C1D38] leading-tight">{fullDisplayName}</span>
+                <span className="text-xs text-[#6B7280] leading-tight">View Profile</span>
               </div>
             </Button>
 
             <Button
-              onClick={() => {
-                router.push('/notifications')
-              }}
+              onClick={() => router.push('/notifications')}
               variant="ghost"
               size="icon"
-              className="relative h-10 w-10 rounded-lg hover:bg-gray-100"
+              className="relative h-10 w-10 rounded-full hover:bg-gray-50 border border-gray-200"
             >
-              <Bell className="h-5 w-5 text-gray-600" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full"></span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Desktop layout - hidden on mobile */}
-        <div className="hidden lg:flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <h1 className="text-[24px] font-manrope font-semibold leading-[100%] text-[#0C1D38]">
-                Welcome Back, {displayName}!
-              </h1>
-              <span className="text-2xl">👋</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              onClick={() => {
-                router.push("/profile")
-              }}
-              variant="ghost"
-              className="flex items-center gap-2 px-3 py-2 h-auto rounded-lg"
-            >
-              <Avatar className="h-8 w-8 bg-blue-100">
-                {userData.profileImage ? (
-                  <AvatarImage src={userData.profileImage} alt={userData.fullName} />
-                ) : null}
-                <AvatarFallback className="bg-blue-100 text-blue-600">
-                  {userData.initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col gap-1 items-start">
-                <span className="text-[14px] font-inter font-semibold leading-[100%] text-[#0C1D38]">{fullDisplayName}</span>
-                <span className="text-[12px] font-inter font-medium leading-[100%] text-[#0C1D38]">View Profile</span>
-              </div>
-            </Button>
-
-            <Button
-              onClick={() => {
-                router.push('/notifications')
-              }}
-              variant="ghost"
-              size="icon"
-              className="relative h-10 w-10 rounded-lg hover:bg-gray-100"
-            >
-              <Bell className="h-5 w-5 text-gray-600" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full"></span>
+              <Bell className="h-5 w-5 text-[#FFC107]" />
             </Button>
           </div>
         </div>

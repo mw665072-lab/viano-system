@@ -69,8 +69,10 @@ const Layout = ({ children }: LayoutProps) => {
                     {/* Dashboard - Welcome message, no back button */}
                     {pathname === "/dashboard" ? (
                         <PageHeader
-                            title={userName ? `Welcome Back, ${userName}` : "Welcome Back"}
+                            title={userName ? `Welcome Back, ${userName}!` : "Welcome Back!"}
                             showBack={false}
+                            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                            showProfileSection={true}
                         />
                     ) : pathname === "/" ? (
                         <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
@@ -79,6 +81,7 @@ const Layout = ({ children }: LayoutProps) => {
                             title="Profile"
                             showBack={true}
                             onBack={() => router.back()}
+                            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
                     ) : pathname === "/notifications" || pathname?.startsWith("/notifications/") ? (
                         <PageHeader
@@ -89,12 +92,14 @@ const Layout = ({ children }: LayoutProps) => {
                             onAction={handleMarkAll}
                             actionIcon={null}
                             actionVariant="secondary"
+                            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
                     ) : pathname === "/manage-properties/add-properties" ? (
                         <PageHeader
                             title="Add Property"
                             showBack={true}
                             backHref="/manage-properties"
+                            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
                     ) : pathname === "/manage-properties" || pathname?.startsWith("/manage-properties") ? (
                         <PageHeader
@@ -102,12 +107,14 @@ const Layout = ({ children }: LayoutProps) => {
                             showBack={false}
                             actionLabel="Add New Property"
                             actionHref="/manage-properties/add-properties"
+                            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
                     ) : (
                         <PageHeader
                             title="Viano Systems"
                             showBack={true}
                             onBack={() => router.back()}
+                            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
                     )}
                     <main className="flex-1 p-4 lg:p-6 overflow-auto rotate-0 opacity-100 rounded-tl-[32px] bg-[#EFF6FF]">

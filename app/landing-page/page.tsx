@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ArrowRight, ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import "./landing.css";
 
@@ -13,6 +13,7 @@ export default function LandingPage() {
     const [selectedClients, setSelectedClients] = useState("Select Clients");
     const [teamSizeDropdownOpen, setTeamSizeDropdownOpen] = useState(false);
     const [selectedTeamSize, setSelectedTeamSize] = useState("Team Size");
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const pricingDropdownRef = useRef<HTMLDivElement>(null);
     const teamDropdownRef = useRef<HTMLDivElement>(null);
@@ -103,7 +104,7 @@ export default function LandingPage() {
                         priority
                     />
 
-                    {/* Frame 127 - Navigation Links */}
+                    {/* Frame 127 - Navigation Links (Desktop) */}
                     <nav className="nav-links-frame">
                         {/* Product */}
                         <div className="nav-item-frame">
@@ -140,7 +141,7 @@ export default function LandingPage() {
                     </nav>
                 </div>
 
-                {/* Auth Buttons */}
+                {/* Auth Buttons (Desktop) */}
                 <div className="auth-buttons">
                     <Link href="/login">
                         <button className="login-btn">Login</button>
@@ -152,7 +153,61 @@ export default function LandingPage() {
                         </button>
                     </Link>
                 </div>
+
+                {/* Hamburger Menu Button (Mobile) */}
+                <button
+                    className="mobile-menu-btn"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    aria-label="Toggle mobile menu"
+                >
+                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
             </header>
+
+            {/* Mobile Navigation Overlay */}
+            {mobileMenuOpen && (
+                <div className="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}>
+                    <nav className="mobile-menu" onClick={(e) => e.stopPropagation()}>
+                        <button
+                            className="mobile-nav-link"
+                            onClick={() => {
+                                document.getElementById('product')?.scrollIntoView({ behavior: 'smooth' });
+                                setMobileMenuOpen(false);
+                            }}
+                        >
+                            Product
+                        </button>
+                        <button
+                            className="mobile-nav-link"
+                            onClick={() => {
+                                document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+                                setMobileMenuOpen(false);
+                            }}
+                        >
+                            Pricing
+                        </button>
+                        <button
+                            className="mobile-nav-link"
+                            onClick={() => {
+                                document.getElementById('company')?.scrollIntoView({ behavior: 'smooth' });
+                                setMobileMenuOpen(false);
+                            }}
+                        >
+                            Company
+                        </button>
+                        <div className="mobile-menu-divider" />
+                        <Link href="/login" className="mobile-auth-link" onClick={() => setMobileMenuOpen(false)}>
+                            Login
+                        </Link>
+                        <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                            <button className="mobile-get-started-btn">
+                                Get Started
+                                <ArrowRight size={16} />
+                            </button>
+                        </Link>
+                    </nav>
+                </div>
+            )}
 
             {/* Page Content - Account for fixed header */}
             <div className="page-content">
