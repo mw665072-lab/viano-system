@@ -458,10 +458,10 @@ html {
 /* Ellipse 8 - Major background shape creating the curve over the image */
 .hero-bg-ellipse-8 {
     position: absolute;
-    width: 1616px;
-    height: 1516px;
-    left: -900px;
-    top: -650px;
+    width: 1800px;
+    height: 1700px;
+    left: -800px;
+    top: -550px;
     background: #0A1628;
     border-radius: 50%;
     z-index: 2;
@@ -1759,10 +1759,10 @@ html {
     }
 
     .hero-bg-ellipse-8 {
-        width: 1616px;
-        height: 1516px;
-        left: -674px;
-        top: -671px;
+        width: 1900px;
+        height: 1800px;
+        left: -700px;
+        top: -550px;
     }
 
     .hero-image-container {
@@ -1816,10 +1816,10 @@ html {
     }
 
     .hero-bg-ellipse-8 {
-        width: 1500px;
-        height: 1400px;
-        left: -700px;
-        top: -600px;
+        width: 1700px;
+        height: 1600px;
+        left: -620px;
+        top: -500px;
     }
 
     .hero-image-container {
@@ -1950,10 +1950,10 @@ html {
     }
 
     .hero-bg-ellipse-8 {
-        width: 1300px;
-        height: 1200px;
-        left: -600px;
-        top: -500px;
+        width: 1500px;
+        height: 1400px;
+        left: -520px;
+        top: -420px;
     }
 
     .hero-image-container {
