@@ -128,25 +128,27 @@ export function PageHeader({
     const actionButton = actionLabel && (
         <>
             {actionHref ? (
-                <Link href={actionHref} className="group">
+                <Link href={actionHref} className="group hidden sm:block">
                     <Button
                         variant={actionVariant}
-                        className="gap-2.5 w-[200px] h-[48px] rounded-full py-2 px-5 border-0 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                        className="gap-2 sm:gap-2.5 w-auto sm:w-[180px] lg:w-[200px] h-[44px] sm:h-[48px] rounded-full py-2 px-4 sm:px-5 border-0 text-white font-semibold text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                         style={{ background: '#00346C' }}
                     >
                         <span className="transition-transform group-hover:rotate-90 duration-300">{actionIcon}</span>
-                        {actionLabel}
+                        <span className="hidden sm:inline">{actionLabel}</span>
+                        <span className="sm:hidden">Add</span>
                     </Button>
                 </Link>
             ) : (
                 <Button
                     onClick={onAction}
                     variant={actionVariant}
-                    className="gap-2.5 w-[200px] h-[48px] rounded-full py-2 px-5 border-0 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className="gap-2 sm:gap-2.5 w-auto sm:w-[180px] lg:w-[200px] h-[44px] sm:h-[48px] rounded-full py-2 px-4 sm:px-5 border-0 text-white font-semibold text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hidden sm:flex"
                     style={{ background: '#00346C' }}
                 >
                     {actionIcon}
-                    {actionLabel}
+                    <span className="hidden sm:inline">{actionLabel}</span>
+                    <span className="sm:hidden">Add</span>
                 </Button>
             )}
         </>
