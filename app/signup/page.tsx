@@ -138,7 +138,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex h-screen w-screen items-center justify-center bg-gray-50 p-4">
+    <div className="relative min-h-screen w-screen flex items-center justify-center bg-gray-50 p-4 overflow-x-hidden">
       {/* Brand Logo - Top Left */}
       <div className="absolute top-6 left-6 md:top-8 md:left-8">
         <Image
@@ -151,7 +151,7 @@ export default function SignupPage() {
       </div>
 
       {/* Main Card Container */}
-      <div className="flex w-full md:max-w-[900px] h-full md:h-auto md:max-h-[90vh] overflow-hidden md:rounded-2xl bg-white shadow-2xl">
+      <div className="flex w-full md:max-w-[1000px] min-h-[600px] md:h-auto md:max-h-[min(90vh,900px)] overflow-hidden md:rounded-2xl bg-white shadow-2xl">
 
         {/* LEFT SIDE: Image */}
         <div className="relative hidden w-1/2 md:block">
@@ -191,6 +191,8 @@ export default function SignupPage() {
               <div className="flex gap-2.5">
                 <div className="flex-1">
                   <input
+                    id="first_name"
+                    name="first_name"
                     type="text"
                     placeholder="First Name *"
                     value={firstName}
@@ -200,11 +202,14 @@ export default function SignupPage() {
                     }}
                     disabled={isLoading || success}
                     autoComplete="given-name"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    required
+                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div className="flex-1">
                   <input
+                    id="last_name"
+                    name="last_name"
                     type="text"
                     placeholder="Last Name *"
                     value={lastName}
@@ -214,7 +219,8 @@ export default function SignupPage() {
                     }}
                     disabled={isLoading || success}
                     autoComplete="family-name"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    required
+                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -222,6 +228,8 @@ export default function SignupPage() {
               {/* Email Input */}
               <div>
                 <input
+                  id="email"
+                  name="email"
                   type="email"
                   placeholder="Email *"
                   value={email}
@@ -231,13 +239,16 @@ export default function SignupPage() {
                   }}
                   disabled={isLoading || success}
                   autoComplete="email"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* Username Input */}
               <div>
                 <input
+                  id="username"
+                  name="username"
                   type="text"
                   placeholder="Username *"
                   value={username}
@@ -247,13 +258,16 @@ export default function SignupPage() {
                   }}
                   disabled={isLoading || success}
                   autoComplete="username"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* Mobile Number Input */}
               <div>
                 <input
+                  id="mobile_number"
+                  name="mobile_number"
                   type="tel"
                   placeholder="Mobile Number *"
                   value={mobileNumber}
@@ -263,13 +277,16 @@ export default function SignupPage() {
                   }}
                   disabled={isLoading || success}
                   autoComplete="tel"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* Password Input */}
               <div className="relative">
                 <input
+                  id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Password * (min. 6 characters)"
                   value={password}
@@ -279,12 +296,13 @@ export default function SignupPage() {
                   }}
                   disabled={isLoading || success}
                   autoComplete="new-password"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pr-12 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pr-12 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-1 text-gray-400 hover:text-gray-600 transition-colors"
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -295,6 +313,8 @@ export default function SignupPage() {
               {/* Confirm Password Input */}
               <div className="relative">
                 <input
+                  id="confirm_password"
+                  name="confirm_password"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm Password *"
                   value={confirmPassword}
@@ -304,12 +324,13 @@ export default function SignupPage() {
                   }}
                   disabled={isLoading || success}
                   autoComplete="new-password"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pr-12 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pr-12 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-1 text-gray-400 hover:text-gray-600 transition-colors"
                   tabIndex={-1}
                   aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >

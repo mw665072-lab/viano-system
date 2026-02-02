@@ -85,7 +85,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex h-screen w-screen items-center justify-center bg-gray-50 p-4">
+    <div className="relative min-h-screen w-screen flex items-center justify-center bg-gray-50 p-4 overflow-x-hidden">
       {/* Brand Logo - Top Left */}
       <div className="absolute top-6 left-6 md:top-8 md:left-8">
         <Image
@@ -98,7 +98,7 @@ export default function LoginPage() {
       </div>
 
       {/* Main Card Container */}
-      <div className="flex w-full md:max-w-[900px] h-full md:h-auto overflow-hidden md:rounded-2xl bg-white shadow-2xl">
+      <div className="flex w-full md:max-w-[1000px] min-h-[500px] md:h-auto overflow-hidden md:rounded-2xl bg-white shadow-2xl">
 
         {/* LEFT SIDE: Image */}
         <div className="relative hidden w-1/2 md:block">
@@ -129,6 +129,8 @@ export default function LoginPage() {
               {/* Email Input */}
               <div>
                 <input
+                  id="email"
+                  name="email"
                   type="email"
                   placeholder="Email"
                   value={email}
@@ -138,13 +140,16 @@ export default function LoginPage() {
                   }}
                   disabled={isLoading}
                   autoComplete="email"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* Password Input */}
               <div className="relative">
                 <input
+                  id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
@@ -154,12 +159,13 @@ export default function LoginPage() {
                   }}
                   disabled={isLoading}
                   autoComplete="current-password"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 pr-12 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 pr-12 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-1 text-gray-400 hover:text-gray-600 transition-colors"
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
