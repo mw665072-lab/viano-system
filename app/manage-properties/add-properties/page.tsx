@@ -10,7 +10,7 @@ import { propertyAPI, documentAPI, processAPI, CreatePropertyRequest, getCurrent
 const AddPropertyPage = () => {
     const router = useRouter();
     const [formData, setFormData] = useState({
-        propertyName: '',
+
         address: '',
         city: '',
         state: '',
@@ -62,10 +62,7 @@ const AddPropertyPage = () => {
     };
 
     const validateForm = (): boolean => {
-        if (!formData.propertyName.trim()) {
-            setError('Property name is required');
-            return false;
-        }
+
         if (!formData.address.trim()) {
             setError('Address is required');
             return false;
@@ -103,7 +100,7 @@ const AddPropertyPage = () => {
 
             const propertyData: CreatePropertyRequest = {
                 user_id: userId,
-                property_name: formData.propertyName.trim(),
+                property_name: formData.address.trim(),
                 location: location,
                 address: formData.address.trim(),
                 client_name: formData.clientName.trim(),
@@ -291,20 +288,7 @@ const AddPropertyPage = () => {
                             </div>
 
                             {/* Row 3: Property Name and Closing Date */}
-                            <div>
-                                <label className="block text-sm font-medium text-[#374151] mb-2">
-                                    Property Name <span className="text-red-500">*</span>
-                                </label>
-                                <Input
-                                    type="text"
-                                    name="propertyName"
-                                    placeholder="Enter property name"
-                                    value={formData.propertyName}
-                                    onChange={handleInputChange}
-                                    disabled={isSubmitting}
-                                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50"
-                                />
-                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-[#374151] mb-2">
                                     Property Closing Date

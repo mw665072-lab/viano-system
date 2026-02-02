@@ -143,15 +143,11 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                         </p>
                     </div>
                     <div className="text-right">
-                        <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>INSPECTION DATE</p>
+                        <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>VIANO ACTIVATED</p>
                         <p className="text-[14px] leading-[21px] font-semibold" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38", textAlign: "right" }}>
                             {formattedClosingDate}
                         </p>
-                        {daysLeft !== null && (
-                            <p className={`text-xs font-medium ${daysLeft <= 7 ? "text-[#FF3B30]" : daysLeft <= 14 ? "text-amber-500" : "text-emerald-500"}`}>
-                                {daysLeft} days left
-                            </p>
-                        )}
+
                     </div>
                 </div>
 
