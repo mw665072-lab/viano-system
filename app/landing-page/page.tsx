@@ -10,7 +10,7 @@ export default function LandingPage() {
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
     const [pricingDropdownOpen, setPricingDropdownOpen] = useState(false);
-    const [selectedClients, setSelectedClients] = useState("Select Clients");
+    const [selectedClients, setSelectedClients] = useState("1 Client - Free For 60 Days");
     const [teamSizeDropdownOpen, setTeamSizeDropdownOpen] = useState(false);
     const [selectedTeamSize, setSelectedTeamSize] = useState("Team Size");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -38,29 +38,63 @@ export default function LandingPage() {
     const checkScrollPosition = () => {
         if (carouselRef.current) {
             const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-            setCanScrollLeft(scrollLeft > 10);
-            setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+            // Relaxed tolerance to 10px to ensure middle items definitely trigger both arrows
+            const currentScroll = Math.round(scrollLeft);
+            const maxScroll = Math.round(scrollWidth - clientWidth);
+
+            // If currentScroll is > 10px, we can go left.
+            const canGoLeft = currentScroll > 10;
+            // If currentScroll is NOT within 10px of the end, we can go right.
+            const canGoRight = currentScroll < maxScroll - 10;
+
+            setCanScrollLeft(canGoLeft);
+            setCanScrollRight(canGoRight);
         }
     };
 
     useEffect(() => {
+        // Initial check with delay
         checkScrollPosition();
+
+        // Polling to catch late image loads or layout shifts
+        const interval = setInterval(checkScrollPosition, 500);
+        const timeout = setTimeout(() => clearInterval(interval), 5000);
+
         const carousel = carouselRef.current;
         if (carousel) {
             carousel.addEventListener('scroll', checkScrollPosition);
-            return () => carousel.removeEventListener('scroll', checkScrollPosition);
+            window.addEventListener('resize', checkScrollPosition);
+
+            return () => {
+                clearInterval(interval);
+                clearTimeout(timeout);
+                carousel.removeEventListener('scroll', checkScrollPosition);
+                window.removeEventListener('resize', checkScrollPosition);
+            };
         }
+        return () => {
+            clearInterval(interval);
+            clearTimeout(timeout);
+        };
     }, []);
 
     const scrollLeft = () => {
         if (carouselRef.current) {
-            carouselRef.current.scrollBy({ left: -604, behavior: 'smooth' });
+            const firstCard = carouselRef.current.firstElementChild;
+            const gap = window.innerWidth <= 1024 ? 16 : 24;
+            // Precision calculation: Card width + total gap
+            const scrollAmount = firstCard ? firstCard.getBoundingClientRect().width + gap : 604;
+            carouselRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
         }
     };
 
     const scrollRight = () => {
         if (carouselRef.current) {
-            carouselRef.current.scrollBy({ left: 604, behavior: 'smooth' });
+            const firstCard = carouselRef.current.firstElementChild;
+            const gap = window.innerWidth <= 1024 ? 16 : 24;
+            // Precision calculation: Card width + total gap
+            const scrollAmount = firstCard ? firstCard.getBoundingClientRect().width + gap : 604;
+            carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
     };
 
@@ -91,7 +125,7 @@ export default function LandingPage() {
             {/* ============================================
           STICKY HEADER SECTION
           ============================================ */}
-            <header className="landing-header reveal-hidden fade-only">
+            <header className="landing-header fade-only">
                 {/* Frame 128 - Logo + Nav Container */}
                 <div className="main-nav-frame">
                     {/* Logo - image 3 */}
@@ -141,7 +175,7 @@ export default function LandingPage() {
                     </nav>
                 </div>
 
-                {/* Auth Buttons (Desktop) */}
+                {/* Auth Buttons - Always visible */}
                 <div className="auth-buttons">
                     <Link href="/login">
                         <button className="login-btn">Login</button>
@@ -154,7 +188,7 @@ export default function LandingPage() {
                     </Link>
                 </div>
 
-                {/* Hamburger Menu Button (Mobile) */}
+                {/* Hamburger Menu Button (Mobile) - Far right */}
                 <button
                     className="mobile-menu-btn"
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -164,7 +198,7 @@ export default function LandingPage() {
                 </button>
             </header>
 
-            {/* Mobile Navigation Overlay */}
+            {/* Mobile Navigation Overlay - Only navigation links, no auth */}
             {mobileMenuOpen && (
                 <div className="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}>
                     <nav className="mobile-menu" onClick={(e) => e.stopPropagation()}>
@@ -195,16 +229,6 @@ export default function LandingPage() {
                         >
                             Company
                         </button>
-                        <div className="mobile-menu-divider" />
-                        <Link href="/login" className="mobile-auth-link" onClick={() => setMobileMenuOpen(false)}>
-                            Login
-                        </Link>
-                        <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                            <button className="mobile-get-started-btn">
-                                Get Started
-                                <ArrowRight size={16} />
-                            </button>
-                        </Link>
                     </nav>
                 </div>
             )}
@@ -216,7 +240,7 @@ export default function LandingPage() {
             ============================================ */}
                 <section className="hero-section">
                     {/* Hero Image - Full visible picture */}
-                    <div className="hero-image-container reveal-hidden fade-only delay-300">
+                    <div className="hero-image-container">
                         <Image
                             src="/Picture In Hero.png"
                             alt="Team collaboration"
@@ -230,34 +254,39 @@ export default function LandingPage() {
                     </div>
 
                     {/* Ellipse 8 - Major background shape creating the curve over the image */}
-                    <div className="hero-bg-ellipse-8 reveal-hidden fade-only" />
+                    <div className="hero-bg-ellipse-8" />
 
                     {/* Ellipse 7 - Glow effect */}
-                    <div className="hero-bg-ellipse-7 reveal-hidden fade-only delay-200" />
+                    <div className="hero-bg-ellipse-7" />
 
                     {/* Frame 50 - Content Container */}
                     <div className="hero-content-frame">
                         {/* Frame 114 - Icon + Headline */}
                         <div className="hero-text-frame">
                             {/* StarFour Icon with gradient */}
-                            <div className="star-icon-wrapper reveal-hidden scale-only delay-100">
+                            <div className="star-icon-wrapper scale-only delay-100">
                                 <svg
                                     className="star-icon"
-                                    viewBox="0 0 98 98"
+                                    viewBox="0 0 24 24"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
                                 >
                                     <path
-                                        d="M97.6339 48.808C97.6458 50.2391 97.2108 51.637 96.3903 52.8088C95.5698 53.9806 94.4036 54.8687 93.0562 55.3479L65.3966 65.4069L55.3419 93.0622C54.847 94.3971 53.9549 95.5485 52.7857 96.3615C51.6165 97.1746 50.226 97.6104 48.8017 97.6104C47.3775 97.6104 45.987 97.1746 44.8178 96.3615C43.6486 95.5485 42.7565 94.3971 42.2616 93.0622L32.2076 65.402L4.5479 55.3479C3.21295 54.8529 2.06158 53.9608 1.24848 52.7916C0.435386 51.6224 -0.000427246 50.232 -0.000427246 48.8078C-0.000427246 47.3835 0.435386 45.9931 1.24848 44.8239C2.06158 43.6547 3.21295 42.7625 4.5479 42.2676L32.2076 32.2135L42.2616 4.55337C42.7565 3.21843 43.6486 2.06705 44.8178 1.25395C45.987 0.440858 47.3775 0.00500488 48.8017 0.00500488C50.226 0.00500488 51.6165 0.440858 52.7857 1.25395C53.9549 2.06705 54.847 3.21843 55.3419 4.55337L65.4015 32.2135L93.0562 42.2676C94.4036 42.7469 95.5698 43.6349 96.3903 44.8067C97.2108 45.9785 97.6458 47.3764 97.6339 48.808Z"
-                                        fill="url(#star-gradient)"
+                                        d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
+                                        stroke="url(#star-gradient)"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        fill="none"
                                     />
+                                    <path d="M9 22V12h6v10" stroke="url(#star-gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                     <defs>
                                         <linearGradient
                                             id="star-gradient"
-                                            x1="0"
-                                            y1="48.808"
-                                            x2="97.634"
-                                            y2="48.808"
+                                            x1="3"
+                                            y1="12"
+                                            x2="21"
+                                            y2="12"
                                             gradientUnits="userSpaceOnUse"
                                         >
                                             <stop stopColor="#A23BF6" />
@@ -267,8 +296,7 @@ export default function LandingPage() {
                                 </svg>
                             </div>
 
-                            {/* Headline */}
-                            <h1 className="hero-headline reveal-hidden delay-200">
+                            <h1 className="hero-headline">
                                 Property Intelligence AI
                                 <br />
                                 for Elite Realtors
@@ -276,7 +304,7 @@ export default function LandingPage() {
                         </div>
 
                         {/* Frame 17 - Get Started Button */}
-                        <Link href="/signup" className="reveal-hidden delay-300">
+                        <Link href="/signup">
                             <button className="hero-cta-button">
                                 <span className="hero-cta-text">Get Started</span>
                                 <ArrowRight className="hero-cta-arrow" size={24} />
@@ -288,9 +316,10 @@ export default function LandingPage() {
                 {/* ============================================
                     FEATURE CARDS SECTION
                     ============================================ */}
-                <section id="product" className="features-section reveal-hidden">
+                <section id="product" className="features-section">
                     {/* Section Header with Arrows */}
                     <div className="features-header">
+                        <h2 className="features-title">Viano's 3 Part System</h2>
                         <div className="features-header-spacer"></div>
                         <div className="carousel-arrows">
                             <button
@@ -298,14 +327,22 @@ export default function LandingPage() {
                                 onClick={scrollLeft}
                                 disabled={!canScrollLeft}
                             >
-                                <ChevronLeft size={20} />
+                                <ChevronLeft
+                                    size={20}
+                                    strokeWidth={canScrollLeft ? 4 : 1.5}
+                                    style={{ strokeWidth: canScrollLeft ? '4px' : '1.5px' }}
+                                />
                             </button>
                             <button
                                 className={`carousel-arrow ${!canScrollRight ? 'carousel-arrow-disabled' : ''}`}
                                 onClick={scrollRight}
                                 disabled={!canScrollRight}
                             >
-                                <ChevronRight size={20} />
+                                <ChevronRight
+                                    size={20}
+                                    strokeWidth={canScrollRight ? 4 : 1.5}
+                                    style={{ strokeWidth: canScrollRight ? '4px' : '1.5px' }}
+                                />
                             </button>
                         </div>
                     </div>
@@ -313,7 +350,7 @@ export default function LandingPage() {
                     {/* Feature Cards Carousel */}
                     <div className="features-carousel" ref={carouselRef}>
                         {/* Frame 21 - Property Intelligence */}
-                        <div className="feature-card feature-card-dark reveal-hidden delay-100">
+                        <div className="feature-card feature-card-dark">
                             <div className="feature-badge">Property Intelligence</div>
                             <h2 className="feature-headline">
                                 You close new deals.<br />
@@ -337,11 +374,10 @@ export default function LandingPage() {
                         </div>
 
                         {/* Frame 22 - Predictive SMS */}
-                        <div className="feature-card feature-card-light reveal-hidden delay-300">
+                        <div className="feature-card feature-card-light">
                             <div className="feature-badge feature-badge-outline">Predictive SMS</div>
                             <h2 className="feature-headline feature-headline-dark">
-                                We text YOU. You forward<br />
-                                it. You look like a hero.
+                                We text YOU, You Connect With Your Clients, You look like a hero.
                             </h2>
                             <div className="feature-image-container">
                                 <Image
@@ -355,15 +391,14 @@ export default function LandingPage() {
                         </div>
 
                         {/* Frame 120 - Local Contractors */}
-                        <div className="feature-card feature-card-light reveal-hidden delay-500">
+                        <div className="feature-card feature-card-light">
                             <div className="feature-badge feature-badge-outline">Local Contract</div>
                             <h2 className="feature-headline feature-headline-dark">
-                                Vetted Contractors at your<br />
-                                fingertips. Win-win.
+                                Local, Vetted Contractors at your fingertips. Win-win.
                             </h2>
                             <div className="feature-image-container feature-network">
                                 <Image
-                                    src="/Picture in 120.svg"
+                                    src="/Picture In 120.svg"
                                     alt="Network visualization"
                                     width={420}
                                     height={320}
@@ -380,7 +415,7 @@ export default function LandingPage() {
                 <section className="stats-section reveal-hidden">
                     {/* Main Statistic Text */}
                     <p className="stats-main-text reveal-hidden delay-100">
-                        <span className="stats-highlight">88% of your past clients will use a different realtor. Viano keeps you top of mind for the next 5 years.</span>
+                        <span className="highlight-blue">88%</span> of your past clients will use a different realtor. Viano keeps you top of mind for the <span className="highlight-blue">next 5 years</span>.
                     </p>
 
                     {/* Chat Conversation - Frame 74 */}
@@ -394,11 +429,6 @@ export default function LandingPage() {
                         />
                     </div>
 
-                    {/* Reality Text */}
-                    <p className="stats-reality-text reveal-hidden delay-300">
-                        Reality? Only <span className="stats-highlight-blue">12%</span> come back again.
-                    </p>
-
                     {/* Star Icon - Frame 75 */}
                     <div className="stats-star reveal-hidden scale-only delay-400">
                         <Image
@@ -410,11 +440,7 @@ export default function LandingPage() {
                         />
                     </div>
 
-                    {/* Viano Text */}
-                    <p className="stats-viano-text reveal-hidden delay-500">
-                        Viano keeps you top of mind<br />
-                        for years to come.
-                    </p>
+
                 </section>
 
                 {/* ============================================
@@ -434,7 +460,7 @@ export default function LandingPage() {
                             <div className="trending-badge">Trending</div>
                             <h3 className="card-product-title">Property Intelligence</h3>
                             <div className="card-price">
-                                <span className="price-amount">$8/mo</span>
+                                <span className="price-amount">$6/mo</span>
                                 <span className="price-unit">Per Client</span>
                             </div>
                             <p className="card-subtitle">Only pay for the clients you choose to manage.</p>
@@ -481,7 +507,7 @@ export default function LandingPage() {
                                                 6 Clients — $48 / Month
                                             </div>
                                             <div className="dropdown-item" onClick={() => { setSelectedClients("12 Clients — $96 / Month"); setPricingDropdownOpen(false); }}>
-                                                12 Clients — $96 / Month (MVP Limit)
+                                                12 Clients — $96 / Month
                                             </div>
                                         </div>
                                     )}
@@ -680,7 +706,7 @@ export default function LandingPage() {
                             </svg>
                         </div>
                         <h2 className="cta-banner-text">
-                            Viano keeps you top-of-mind with automated, valuable follow-up using inspection data only YOU have.
+                            Viano helps you protect your clients’ investment for the next 10 years so you’re the agent they recommend without hesitation
                         </h2>
                         <Link href="/signup">
                             <button className="cta-overlay-btn">Get Started with Viano</button>
