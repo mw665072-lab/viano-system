@@ -4,7 +4,11 @@ import { useRouter, usePathname } from 'next/navigation';
 import { clearAuth } from '@/lib/api';
 import Image from 'next/image';
 
-export default function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export default function Sidebar({ onClose }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -60,7 +64,10 @@ export default function Sidebar() {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => router.push(item.href)}
+                  onClick={() => {
+                    router.push(item.href);
+                    onClose?.();
+                  }}
                   className={`w-[209px] h-[40px] flex items-center gap-[10px] px-4 py-2 rounded-[12px] text-sm font-medium transition-colors rotate-0 opacity-100 ${isActive
                     ? "bg-[#D8E6FD] text-blue-600"
                     : "text-gray-700 hover:bg-gray-50"

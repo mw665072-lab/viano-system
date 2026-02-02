@@ -320,18 +320,7 @@ export default function ProfilePage() {
 
         {/* Content */}
         <div className="relative z-10">
-          {/* Header */}
-          <header className="flex items-center justify-between px-4 md:px-6 lg:px-10 py-4 lg:py-6">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => window.history.back()}
-                className="text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-              </button>
-              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Profile</h1>
-            </div>
-          </header>
+          {/* Header removed to avoid duplication with Layout header */}
 
           {/* Main Grid Layout */}
           <div className="px-4 sm:px-6 lg:px-10 pb-8">
@@ -361,7 +350,7 @@ export default function ProfilePage() {
                           />
                         )}
                       </div>
-                      <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors">
+                      <button className="hidden sm:flex absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full items-center justify-center shadow-lg hover:bg-blue-700 transition-colors">
                         <Pencil className="w-4 h-4 text-white" />
                       </button>
                     </div>
