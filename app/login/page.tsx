@@ -85,36 +85,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex h-screen w-screen items-center justify-center bg-gray-50 p-4">
-      {/* Brand Logo - Top Left */}
-      <div className="absolute top-6 left-6 md:top-8 md:left-8">
-        <Image
-          src="/Logo Web.svg"
-          alt="Viano Systems"
-          width={123}
-          height={41}
-          priority
-        />
-      </div>
-
+    <div className="relative min-h-screen w-full flex items-center justify-center bg-gray-50 p-4">
       {/* Main Card Container */}
-      <div className="flex w-full md:max-w-[900px] h-full md:h-auto overflow-hidden md:rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
+        <div className="flex flex-col p-8 sm:p-12">
+          <div className="mx-auto w-full">
+            {/* Logo inside card */}
+            <div className="mb-8 flex justify-center">
+              <Image
+                src="/Logo Web.svg"
+                alt="Viano Systems"
+                width={140}
+                height={46}
+                priority
+              />
+            </div>
 
-        {/* LEFT SIDE: Image */}
-        <div className="relative hidden w-1/2 md:block">
-          <Image
-            src="/auth-background.png"
-            alt="City Night"
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
-
-        {/* RIGHT SIDE: Login Form */}
-        <div className="flex w-full flex-col justify-center bg-blue-50/30 p-8 sm:p-12 md:w-1/2">
-          <div className="mx-auto w-full max-w-sm">
-            <h2 className="mb-8 text-center text-2xl font-semibold text-slate-900">
+            <h2 className="mb-8 text-center text-2xl font-semibold text-slate-400">
               Login
             </h2>
 
@@ -127,8 +114,10 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email Input */}
-              <div>
+              <div className="relative">
                 <input
+                  id="email"
+                  name="email"
                   type="email"
                   placeholder="Email"
                   value={email}
@@ -138,13 +127,16 @@ export default function LoginPage() {
                   }}
                   disabled={isLoading}
                   autoComplete="email"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* Password Input */}
               <div className="relative">
                 <input
+                  id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   value={password}
@@ -154,16 +146,17 @@ export default function LoginPage() {
                   }}
                   disabled={isLoading}
                   autoComplete="current-password"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 pr-12 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  required
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 pr-12 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed relative z-0"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-2 text-gray-400 hover:text-gray-600 transition-colors pointer-events-auto inline-flex w-auto"
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={20} className="pointer-events-none" /> : <Eye size={20} className="pointer-events-none" />}
                 </button>
               </div>
 
@@ -182,7 +175,7 @@ export default function LoginPage() {
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="h-4 w-4 rounded border-gray-300 text-blue-900 focus:ring-blue-900 cursor-pointer"
                   />
-                  <span>Remember Me</span>
+                  <span className="text-slate-500">Remember Me</span>
                 </label>
               </div>
 
