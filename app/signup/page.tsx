@@ -138,36 +138,23 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-screen flex items-center justify-center bg-gray-50 p-4 overflow-x-hidden">
-      {/* Brand Logo - Top Left */}
-      <div className="absolute top-6 left-6 md:top-8 md:left-8">
-        <Image
-          src="/Logo Web.svg"
-          alt="Viano Systems"
-          width={123}
-          height={41}
-          priority
-        />
-      </div>
-
+    <div className="relative min-h-screen w-full flex items-center justify-center bg-gray-50 p-4 py-10">
       {/* Main Card Container */}
-      <div className="flex w-full md:max-w-[1000px] min-h-[600px] md:h-auto md:max-h-[min(90vh,900px)] overflow-hidden md:rounded-2xl bg-white shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
+        <div className="flex flex-col p-6 sm:p-8">
+          <div className="mx-auto w-full">
+            {/* Logo inside card */}
+            <div className="mb-6 flex justify-center">
+              <Image
+                src="/Logo Web.svg"
+                alt="Viano Systems"
+                width={140}
+                height={46}
+                priority
+              />
+            </div>
 
-        {/* LEFT SIDE: Image */}
-        <div className="relative hidden w-1/2 md:block">
-          <Image
-            src="/auth-background.png"
-            alt="City Night"
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
-
-        {/* RIGHT SIDE: Signup Form */}
-        <div className="flex w-full flex-col justify-center bg-blue-50/30 p-6 sm:p-8 md:w-1/2 overflow-y-auto">
-          <div className="mx-auto w-full max-w-sm">
-            <h2 className="mb-4 text-center text-2xl font-semibold text-slate-900">
+            <h2 className="mb-4 text-center text-2xl font-semibold text-slate-400">
               Create Account
             </h2>
 
@@ -226,7 +213,7 @@ export default function SignupPage() {
               </div>
 
               {/* Email Input */}
-              <div>
+              <div className="relative">
                 <input
                   id="email"
                   name="email"
@@ -297,16 +284,16 @@ export default function SignupPage() {
                   disabled={isLoading || success}
                   autoComplete="new-password"
                   required
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pr-12 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pr-12 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed relative z-0"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-2 text-gray-400 hover:text-gray-600 transition-colors pointer-events-auto inline-flex w-auto"
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={18} className="pointer-events-none" /> : <Eye size={18} className="pointer-events-none" />}
                 </button>
               </div>
 
@@ -325,16 +312,16 @@ export default function SignupPage() {
                   disabled={isLoading || success}
                   autoComplete="new-password"
                   required
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pr-12 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pr-12 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed relative z-0"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-2 text-gray-400 hover:text-gray-600 transition-colors pointer-events-auto inline-flex w-auto"
                   tabIndex={-1}
                   aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showConfirmPassword ? <EyeOff size={18} className="pointer-events-none" /> : <Eye size={18} className="pointer-events-none" />}
                 </button>
               </div>
 
