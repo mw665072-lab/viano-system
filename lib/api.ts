@@ -52,7 +52,7 @@ async function apiRequest<T>(
     return response.json();
 }
 
-// ============ AUTHENTICATION APIs ============
+// ============ AUTHENTICATION APIs =============
 export const authAPI = {
     /**
      * Register a new user
