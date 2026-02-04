@@ -101,7 +101,7 @@ export function PropertyList({
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold text-gray-900 truncate">
-                  {property.name}
+                  {property.clientName || 'No Client'}
                 </h3>
                 <Badge className={`${getStatusBadgeStyle(property.status)} text-[10px] px-2 py-0.5 rounded-full font-medium`}>
                   {property.status === "In Progress" ? "Processing" : property.status}
@@ -112,12 +112,6 @@ export function PropertyList({
                   <MapPin className="w-3 h-3" />
                   {property.location}
                 </span>
-                {property.clientName && (
-                  <span className="flex items-center gap-1 truncate">
-                    <User className="w-3 h-3" />
-                    {property.clientName}
-                  </span>
-                )}
               </div>
             </div>
 

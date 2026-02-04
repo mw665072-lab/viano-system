@@ -128,18 +128,18 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                     </span>
                 </div>
 
-                {/* Property Name Overlay */}
+                {/* Client Name Overlay */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white/90 to-transparent pt-8 pb-3 px-4">
-                    <h2 className="text-lg font-bold text-[#0C1D38] truncate">{property.name}</h2>
+                    <h2 className="text-lg font-bold text-[#0C1D38] truncate">{property.clientName || 'No Client'}</h2>
                 </div>
             </div>
 
             <div className="p-4 md:p-[20px]">
                 <div className="flex items-center justify-between rounded-[12px] pt-[16px] pb-[16px]">
                     <div>
-                        <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>CLIENT</p>
+                        <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>ADDRESS</p>
                         <p className="text-[14px] leading-[21px] font-semibold" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38" }}>
-                            {property.clientName || "Not specified"}
+                            {property.subtitle || "Not specified"}
                         </p>
                     </div>
                     <div className="text-right">
