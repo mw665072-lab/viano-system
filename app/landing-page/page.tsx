@@ -383,7 +383,7 @@ export default function LandingPage() {
                             </h2>
                             <div className="feature-image-container feature-contractors">
                                 <Image
-                                    src="/Picture In 120.png"
+                                    src="/picture-in-120.png"
                                     alt="Local contractors"
                                     width={420}
                                     height={320}
