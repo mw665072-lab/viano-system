@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { Home } from "lucide-react"
+import { Home, MapPin } from "lucide-react"
 
 interface Property {
   id: string
@@ -12,6 +12,7 @@ interface Property {
   image?: string
   status: "Pending" | "Completed" | "In Progress"
   statusColor: string
+  clientName?: string
 }
 
 interface PropertyListProps {
@@ -68,9 +69,10 @@ export function PropertyList({ properties, selectedProperty, onSelectProperty, i
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold text-[#1E1E1E] leading-none tracking-normal">
-                {property.name}
+                {property.clientName || 'No Client'}
               </h3>
-              <p className="text-sm font-normal text-[#1E1E1E] leading-none tracking-normal truncate mt-1">
+              <p className="text-sm font-normal text-[#1E1E1E] leading-none tracking-normal truncate mt-1 flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-gray-500 flex-shrink-0" />
                 {property.subtitle}
               </p>
             </div>

@@ -289,8 +289,8 @@ export default function LandingPage() {
                                             y2="12"
                                             gradientUnits="userSpaceOnUse"
                                         >
-                                            <stop stopColor="#A23BF6" />
-                                            <stop offset="1" stopColor="#96BEFF" />
+                                            <stop stopColor="#09A8F3" />
+                                            <stop offset="1" stopColor="#2AC7FF" />
                                         </linearGradient>
                                     </defs>
                                 </svg>
@@ -319,7 +319,7 @@ export default function LandingPage() {
                 <section id="product" className="features-section">
                     {/* Section Header with Arrows */}
                     <div className="features-header">
-                        <h2 className="features-title">Viano's 3 Part System</h2>
+                        <h2 className="features-title">Viano For Realtors</h2>
                         <div className="features-header-spacer"></div>
                         <div className="carousel-arrows">
                             <button
@@ -373,39 +373,33 @@ export default function LandingPage() {
                             />
                         </div>
 
-                        {/* Frame 22 - Predictive SMS */}
-                        <div className="feature-card feature-card-light">
-                            <div className="feature-badge feature-badge-outline">Predictive SMS</div>
-                            <h2 className="feature-headline feature-headline-dark">
-                                We text YOU, You Connect With Your Clients, You look like a hero.
-                            </h2>
-                            <div className="feature-image-container">
-                                <Image
-                                    src="/Chat in Frame 23.png"
-                                    alt="Chat bubble"
-                                    width={380}
-                                    height={280}
-                                    className="feature-chat"
-                                />
-                            </div>
-                        </div>
+
 
                         {/* Frame 120 - Local Contractors */}
                         <div className="feature-card feature-card-light">
-                            <div className="feature-badge feature-badge-outline">Local Contract</div>
+                            <div className="feature-badge feature-badge-outline">Local Services</div>
                             <h2 className="feature-headline feature-headline-dark">
-                                Local, Vetted Contractors at your fingertips. Win-win.
+                                Local, Vetted Contractors at your fingertips.
                             </h2>
-                            <div className="feature-image-container feature-network">
+                            <div className="feature-image-container feature-contractors">
                                 <Image
-                                    src="/Picture In 120.svg"
-                                    alt="Network visualization"
+                                    src="/Picture In 120.png"
+                                    alt="Local contractors"
                                     width={420}
                                     height={320}
-                                    className="feature-network-img"
+                                    className="feature-contractors-img"
                                 />
                             </div>
                         </div>
+                    </div>
+
+                    {/* Mobile Scroll Hint */}
+                    <div className="scroll-hint-container" aria-hidden="true">
+                        {!canScrollRight ? (
+                            <span className="scroll-hint">Scroll left ←</span>
+                        ) : (
+                            <span className="scroll-hint">Scroll right →</span>
+                        )}
                     </div>
                 </section>
 
@@ -415,7 +409,7 @@ export default function LandingPage() {
                 <section className="stats-section reveal-hidden">
                     {/* Main Statistic Text */}
                     <p className="stats-main-text reveal-hidden delay-100">
-                        <span className="highlight-blue">88%</span> of your past clients will use a different realtor. Viano keeps you top of mind for the <span className="highlight-blue">next 5 years</span>.
+                        <span className="highlight-blue">88%</span> of your past clients will use a different realtor. Viano keeps you top of mind for the <span className="highlight-blue">next 10 years</span>.
                     </p>
 
                     {/* Chat Conversation - Frame 74 */}
@@ -429,15 +423,28 @@ export default function LandingPage() {
                         />
                     </div>
 
-                    {/* Star Icon - Frame 75 */}
+                    {/* Star Icon - Custom Designed */}
                     <div className="stats-star reveal-hidden scale-only delay-400">
-                        <Image
-                            src="/Frame 75.png"
-                            alt="Star icon"
-                            width={80}
-                            height={80}
-                            className="stats-star-img"
-                        />
+                        <svg
+                            width="120"
+                            height="120"
+                            viewBox="0 0 202 202"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="stats-star-svg"
+                        >
+                            <circle cx="101" cy="101" r="101" fill="#1A1F2E" />
+                            <path
+                                d="M165.687 101C165.702 102.91 165.121 104.777 164.026 106.342C162.931 107.906 161.375 109.091 159.576 109.731L122.652 123.158L109.23 160.076C108.569 161.858 107.377 163.396 105.817 164.481C104.256 165.566 102.401 166.148 100.5 166.148C98.5986 166.148 96.7431 165.566 95.1825 164.481C93.6218 163.396 92.4307 161.858 91.7692 160.076L78.3475 123.152L41.4234 109.731C39.6413 109.069 38.1042 107.878 37.0188 106.317C35.9334 104.757 35.3516 102.901 35.3516 101C35.3516 99.0991 35.9334 97.2436 37.0188 95.6829C38.1042 94.1223 39.6413 92.9312 41.4234 92.2696L78.3475 78.848L91.7692 41.9239C92.4307 40.1417 93.6218 38.6047 95.1825 37.5193C96.7431 36.4338 98.5986 35.8521 100.5 35.8521C102.401 35.8521 104.256 36.4338 105.817 37.5193C107.377 38.6047 108.569 40.1417 109.23 41.9239L122.658 78.848L159.576 92.2696C161.375 92.9094 162.931 94.094 164.026 95.6586C165.121 97.2233 165.702 99.0903 165.687 101Z"
+                                fill="url(#star_blue_grad)"
+                            />
+                            <defs>
+                                <linearGradient id="star_blue_grad" x1="100.519" y1="35.8521" x2="100.519" y2="166.148" gradientUnits="userSpaceOnUse">
+                                    <stop stopColor="#09A8F3" />
+                                    <stop offset="1" stopColor="#2AC7FF" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
                     </div>
 
 
@@ -470,7 +477,7 @@ export default function LandingPage() {
                             <div className="card-features">
                                 <div className="card-feature">
                                     <span className="check-icon">✓</span>
-                                    Five-year personalized client timeline
+                                    Ten-year personalized client timeline
                                 </div>
                                 <div className="card-feature">
                                     <span className="check-icon">✓</span>
@@ -599,6 +606,7 @@ export default function LandingPage() {
                         <p>
                             Everyone tells you to buy more leads. Spend more on ads. Cold call more prospects.
                         </p>
+                        <h2 className="won-clients-heading">But what about the clients you've already won?</h2>
                     </div>
                 </section>
 
@@ -608,9 +616,11 @@ export default function LandingPage() {
                 <section className="data-section reveal-hidden">
                     <div className="data-badge highlight-pill">The Numbers Don't Lie</div>
                     <h2 className="data-title">
-                        The data tells something <span className="data-different">different..</span>
+                        Your Next Deals Are in Your Past Clients
                     </h2>
-
+                    <h3 className="data-subtitle">
+                        Data proves repeat and referral business wins every time.
+                    </h3>
                     <div className="data-grid-container">
                         {/* Card 1: Market Reality */}
                         <div className="data-card dark-card">
@@ -688,8 +698,8 @@ export default function LandingPage() {
                                 <path d="M159.206 79.5761C159.216 81.9081 158.506 84.1891 157.176 86.1001C155.836 88.0111 153.936 89.4581 151.736 90.2401L106.636 106.641L90.2361 151.736C89.4361 153.913 87.9761 155.79 86.0761 157.116C84.1661 158.442 81.8961 159.152 79.5761 159.152C77.2561 159.152 74.9861 158.442 73.0861 157.116C71.1761 155.79 69.7161 153.913 68.9161 151.736L52.5161 106.634L7.41612 90.2401C5.24012 89.4321 3.36212 87.9771 2.03612 86.0701C0.710121 84.1641 0.00012207 81.8981 0.00012207 79.5761C0.00012207 77.2541 0.710121 74.9871 2.03612 73.0811C3.36212 71.1751 5.24012 69.7201 7.41612 68.9121L52.5161 52.5171L68.9161 7.41512C69.7161 5.23912 71.1761 3.36112 73.0861 2.03512C74.9861 0.709121 77.2561 -0.000878906 79.5761 -0.000878906C81.8961 -0.000878906 84.1661 0.709121 86.0761 2.03512C87.9761 3.36112 89.4361 5.23912 90.2361 7.41512L106.646 52.5171L151.736 68.9121C153.936 69.6931 155.836 71.1401 157.176 73.0511C158.506 74.9621 159.216 77.2431 159.206 79.5761Z" fill="url(#blue_grad_cta)" />
                                 <defs>
                                     <linearGradient id="blue_grad_cta" x1="51.576" y1="20.076" x2="180.076" y2="186.576" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#A23BF6" />
-                                        <stop offset="1" stopColor="#DBAFFF" />
+                                        <stop stopColor="#09A8F3" />
+                                        <stop offset="1" stopColor="#2AC7FF" />
                                     </linearGradient>
                                 </defs>
                             </svg>
@@ -699,14 +709,14 @@ export default function LandingPage() {
                                 <path d="M80 40C80.01 41.173 79.65 42.319 78.98 43.28C78.31 44.24 77.35 44.968 76.25 45.36L53.58 53.605L45.35 76.272C44.94 77.366 44.21 78.31 43.25 78.976C42.29 79.643 41.15 80 39.99 80C38.82 80 37.68 79.643 36.72 78.976C35.77 78.31 35.04 77.366 34.63 76.272L26.39 53.601L3.73 45.36C2.63 44.954 1.69 44.223 1.02 43.265C0.36 42.306 0 41.167 0 40C0 38.833 0.36 37.694 1.02 36.735C1.69 35.777 2.63 35.046 3.73 34.64L26.39 26.399L34.63 3.728C35.04 2.634 35.77 1.69 36.72 1.024C37.68 0.357 38.82 0 39.99 0C41.15 0 42.29 0.357 43.25 1.024C44.21 1.69 44.94 2.634 45.35 3.728L53.59 26.399L76.25 34.64C77.35 35.032 78.31 35.76 78.98 36.72C79.65 37.681 80.01 38.827 80 40Z" fill="url(#violet_grad_cta)" />
                                 <defs>
                                     <linearGradient id="violet_grad_cta" x1="25.92" y1="10.092" x2="90.51" y2="93.765" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#A23BF6" />
-                                        <stop offset="1" stopColor="#DBAFFF" />
+                                        <stop stopColor="#09A8F3" />
+                                        <stop offset="1" stopColor="#2AC7FF" />
                                     </linearGradient>
                                 </defs>
                             </svg>
                         </div>
                         <h2 className="cta-banner-text">
-                            Viano helps you protect your clients’ investment for the next 10 years so you’re the agent they recommend without hesitation
+                            Viano helps you protect your clients’ investment for the next 10 years so you’re the agent they recommend without hesitation.
                         </h2>
                         <Link href="/signup">
                             <button className="cta-overlay-btn">Get Started with Viano</button>
@@ -720,7 +730,13 @@ export default function LandingPage() {
                 <footer className="landing-footer reveal-hidden fade-only">
                     <div className="footer-content">
                         <div className="footer-brand">
-                            <h2 className="footer-logo">viano systems®</h2>
+                            <Image
+                                src="/Logo.svg"
+                                alt="Viano Logo"
+                                width={120}
+                                height={40}
+                                className="footer-logo-img"
+                            />
                             <p className="footer-tagline">Property Intelligence AI for Elite Realtors</p>
                         </div>
 

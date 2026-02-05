@@ -150,11 +150,6 @@ export function PropertyDetailPanel({
                         {property.status === "Completed" ? "✓ Complete" : "⏳ Pending"}
                     </span>
                 </div>
-
-                {/* Property Name Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white/90 to-transparent pt-8 pb-3 px-4">
-                    <h2 className="text-lg font-bold text-[#0C1D38] truncate">{property.name}</h2>
-                </div>
             </div>
 
             {/* Header */}
@@ -169,7 +164,7 @@ export function PropertyDetailPanel({
                         </button>
                         <div>
                             <h2 className="text-xl lg:text-2xl font-bold text-[#0C1D38]">
-                                {property.name}
+                                {property.client}
                             </h2>
                             <p className="text-sm text-[#64748B] mt-1">{property.address}</p>
                         </div>
@@ -274,12 +269,16 @@ export function PropertyDetailPanel({
 
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-[#64748B]">TYPE:</span>
-                            <span className="text-sm font-medium text-[#0C1D38]">{property.type}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
                             <span className="text-sm text-[#64748B]">CLIENT:</span>
                             <span className="text-sm font-medium text-[#0C1D38]">{property.client}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-[#64748B]">ADDRESS:</span>
+                            <span className="text-sm font-medium text-[#0C1D38]">{property.address}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-[#64748B]">TYPE:</span>
+                            <span className="text-sm font-medium text-[#0C1D38]">{property.type}</span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-sm text-[#64748B]">INSPECTION DATE:</span>
