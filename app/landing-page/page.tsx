@@ -585,7 +585,7 @@ export default function LandingPage() {
                 <section className="business-impact-section reveal-hidden">
                     <h2 className="impact-title reveal-hidden delay-100">
                         Here's what changes in your<br />
-                        business : <span className="nothing-text">Nothing</span>
+                        business : <span className="nothing-text">NOTHING</span>
                     </h2>
 
                     <div className="impact-details reveal-hidden delay-200">

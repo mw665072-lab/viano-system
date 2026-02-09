@@ -1741,7 +1741,7 @@ body {
 }
 
 /* Force hamburger visibility on all screens under 768px */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 767px) {
     .landing-header .mobile-menu-btn {
         display: flex !important;
         visibility: visible !important;
@@ -1948,10 +1948,248 @@ body {
     }
 }
 
+
+/* ============================================================
+   TABLET / LARGE TABLET (768px - 1024px) - Nest Hub and similar devices
+   Smart hero section that fills the screen without extra blue space
+   ============================================================ */
+@media (min-width: 768px) and (max-width: 1024px) {
+
+    /* Prevent horizontal overflow on tablets - AGGRESSIVE */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box !important;
+    }
+
+    html {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+    }
+
+    body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        position: relative !important;
+    }
+
+    .landing-page {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        position: relative !important;
+    }
+
+    .page-content {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        position: relative !important;
+    }
+
+    /* Header - Full width, no overflow */
+    .landing-header {
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding: 0 24px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Hero Section - Match desktop design with taller smart height */
+    .hero-section {
+        position: relative !important;
+        width: 100% !important;
+        min-height: 650px !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: stretch !important;
+        background: #0A1628 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Hero Image Container - Match desktop: 65% width, positioned right */
+    .hero-image-container {
+        position: absolute !important;
+        width: 65% !important;
+        height: 100% !important;
+        right: 0 !important;
+        top: 0 !important;
+        left: auto !important;
+        z-index: 1 !important;
+        overflow: visible !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+    }
+
+    .hero-image {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center center !important;
+    }
+
+    /* Ellipse - Refined laptop-style curve for premium tablet look */
+    .hero-bg-ellipse-8 {
+        position: absolute !important;
+        width: 170% !important;
+        height: 310% !important;
+        left: -110% !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        z-index: 2 !important;
+        background: #0A1628 !important;
+        border-radius: 50% !important;
+    }
+
+    /* Glow effect */
+    .hero-bg-ellipse-7 {
+        left: -150px !important;
+        width: 450px !important;
+        height: 400px !important;
+    }
+
+    /* Content Frame - Refined for premium tablet layout */
+    .hero-content-frame {
+        position: relative !important;
+        z-index: 10 !important;
+        padding: 40px 64px !important;
+        max-width: 550px !important;
+        min-height: auto !important;
+        gap: 16px !important;
+    }
+
+    .hero-text-frame {
+        gap: 20px !important;
+    }
+
+    .star-icon-wrapper {
+        width: 100px !important;
+        height: 100px !important;
+    }
+
+    .hero-headline {
+        font-size: 44px !important;
+        line-height: 1.15 !important;
+        letter-spacing: -0.02em !important;
+    }
+
+    .hero-cta-button {
+        padding: 16px 32px !important;
+        height: 56px !important;
+    }
+
+    .hero-cta-text {
+        font-size: 18px !important;
+    }
+
+    .hero-cta-arrow {
+        width: 24px !important;
+        height: 24px !important;
+    }
+
+    /* FEATURES SECTION - Hide scroll hints and constrain carousel */
+    .scroll-hint-container {
+        display: none !important;
+    }
+
+    .scroll-hint {
+        display: none !important;
+    }
+
+    .features-section {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow: hidden !important;
+        padding: 30px 24px 10px !important;
+        /* Balanced vertical space to fit two frames exactly */
+    }
+
+    .features-carousel {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        margin: 0 !important;
+        padding: 5px 0 !important;
+        /* Compact vertical space */
+    }
+
+    .features-header {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin-bottom: 20px !important;
+        text-align: center !important;
+        /* Explicit centering */
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+    .features-title {
+        font-size: 32px !important;
+        text-align: center !important;
+    }
+
+    .carousel-arrows {
+        display: none !important;
+        /* Remove arrows as requested */
+    }
+
+    /* STATS SECTION - Perfect fit with features section */
+    .stats-section {
+        padding: 10px 24px 30px !important;
+        /* Minimal vertical space */
+        gap: 20px !important;
+        /* Optimized gap */
+        background: #FFFFFF !important;
+    }
+
+    .stats-main-text {
+        font-size: 24px !important;
+        line-height: 1.3 !important;
+        max-width: 600px !important;
+        text-align: center !important;
+        /* Center text as requested */
+        margin: 0 auto !important;
+    }
+
+    .stats-chat-img {
+        margin-top: 0 !important;
+        max-width: 380px !important;
+    }
+
+    .stats-chat {
+        margin-top: 0 !important;
+        gap: 0 !important;
+    }
+
+    .stats-star {
+        display: none !important;
+    }
+
+    /* Feature Card Adjustments - perfect sizing for all tablets */
+    .feature-card {
+        width: 440px !important;
+        height: 350px !important;
+        padding: 24px !important;
+    }
+
+    .feature-headline {
+        font-size: 22px !important;
+        max-width: 100% !important;
+    }
+}
+
 /* ============================================================
    MOBILE (max-width: 768px) - Fully responsive stacked layout
    ============================================================ */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
 
     /* Header - prevent overflow */
     .landing-header {
@@ -2725,6 +2963,7 @@ body {
     .card-sub-info {
         display: -webkit-box !important;
         -webkit-line-clamp: 4 !important;
+        line-clamp: 4 !important;
         /* Allow more lines */
         -webkit-box-orient: vertical !important;
         overflow: hidden !important;
@@ -3007,7 +3246,7 @@ body {
    FINAL ABSOLUTE STABILIZATION (Iron Lock)
    Ensures zero shifts on refresh, resize, or session restart.
    ============================================================ */
-@media (max-width: 1024px) {
+@media (max-width: 767px) {
 
     /* Prevent body-level shifts */
     html,
@@ -3040,7 +3279,7 @@ body {
         position: absolute !important;
         width: 350% !important;
         height: 350% !important;
-        left: -295% !important;
+        left: -305% !important;
         top: 20% !important;
         transform: translateY(-50%) !important;
         z-index: 2 !important;

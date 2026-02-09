@@ -13,7 +13,6 @@ interface ProfileData {
   role: string;
   email: string;
   phone: string;
-  joined: string;
   location: string;
   avatar: string;
 }
@@ -44,7 +43,6 @@ export default function ProfilePage() {
     role: "Property Evaluation Specialist",
     email: "",
     phone: "",
-    joined: "",
     location: "Florida, US",
     avatar: "/profile-placeholder.jpg"
   });
@@ -65,6 +63,8 @@ export default function ProfilePage() {
     { label: "IN PROGRESS", value: "0", trend: null, trendColor: null, indicator: "bg-blue-500" },
   ]);
 
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [allAudits, setAllAudits] = useState<AuditItem[]>([]);
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
@@ -84,17 +84,11 @@ export default function ProfilePage() {
         // 1. Fetch User Profile from API
         const userData: UserResponse = await authAPI.getUser(userId);
 
-        // Format the date
-        const joinedDate = userData.created_at
-          ? new Date(userData.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-          : 'N/A';
-
         setProfile({
           name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 'User',
           role: userData.role || 'Property Evaluation Specialist',
           email: userData.email || '',
           phone: userData.mobile_number || 'Not provided',
-          joined: joinedDate,
           location: 'Florida, US',
           avatar: '/profile-placeholder.jpg'
         });
@@ -124,7 +118,7 @@ export default function ProfilePage() {
         });
 
         // Transform processes to audit format
-        const auditItems: AuditItem[] = processesData.slice(0, 5).map((process) => ({
+        const transformedAudits: AuditItem[] = processesData.map((process) => ({
           name: propertyMap.get(process.property_id) || 'Property',
           type: '4 Point Evaluation',
           date: process.process_start
@@ -134,18 +128,28 @@ export default function ProfilePage() {
           initial: (propertyMap.get(process.property_id) || 'P').charAt(0).toUpperCase(),
           propertyId: process.property_id,
         }));
-        setAudits(auditItems);
 
-        // 4. Calculate Stats from processes
-        const completed = processesData.filter(p => p.status === 'completed').length;
-        const pending = processesData.filter(p => p.status === 'pending').length;
-        const inProgress = processesData.filter(p => p.status === 'in_progress' || p.status === 'processing').length;
+        setAllAudits(transformedAudits);
+        setAudits(transformedAudits.slice(0, 5));
+
+        // 4. Calculate Stats from properties
+        // Create a property-to-status map
+        const propertyStatuses = propertiesData.map(prop => {
+          const process = processesData.find(p => p.property_id === prop.property_id);
+          return process?.status?.toLowerCase() || 'pending';
+        });
+
+        const completedCount = propertyStatuses.filter(s => s === 'completed').length;
+        const pendingCount = propertyStatuses.filter(s => s === 'pending').length;
+        const inProgressCount = propertyStatuses.filter(s =>
+          ['started', 'downloading', 'generating_messages', 'storing_messages', 'in_progress', 'processing', 'paused'].includes(s)
+        ).length;
 
         setStats([
-          { label: "TOTAL AUDITS", value: String(processesData.length), trend: null, trendColor: null, indicator: null },
-          { label: "COMPLETED", value: String(completed), trend: null, trendColor: null, indicator: "bg-green-500" },
-          { label: "PENDING", value: String(pending), trend: null, trendColor: null, indicator: "bg-amber-400" },
-          { label: "IN PROGRESS", value: String(inProgress), trend: null, trendColor: null, indicator: "bg-blue-500" },
+          { label: "TOTAL PROPERTIES", value: String(propertiesData.length), trend: null, trendColor: null, indicator: null },
+          { label: "COMPLETED", value: String(completedCount), trend: null, trendColor: null, indicator: "bg-green-500" },
+          { label: "PENDING", value: String(pendingCount), trend: null, trendColor: null, indicator: "bg-amber-400" },
+          { label: "PROCESSING", value: String(inProgressCount), trend: null, trendColor: null, indicator: "bg-blue-500" },
         ]);
 
       } catch (err) {
@@ -194,7 +198,7 @@ export default function ProfilePage() {
       });
 
       // Update audits
-      const auditItems = processesData.slice(0, 5).map((process) => ({
+      const transformedAudits = processesData.map((process) => ({
         name: propertyMap.get(process.property_id) || 'Property',
         type: '4 Point Evaluation',
         date: process.process_start
@@ -204,19 +208,27 @@ export default function ProfilePage() {
         initial: (propertyMap.get(process.property_id) || 'P').charAt(0).toUpperCase(),
         propertyId: process.property_id,
       }));
-      setAudits(auditItems);
 
-      // Update stats
-      const completed = processesData.filter(p => p.status === 'completed').length;
-      const pending = processesData.filter(p => p.status === 'pending').length;
-      const inProgress = processesData.filter(p =>
-        ['started', 'downloading', 'generating_messages', 'storing_messages'].includes(p.status)).length;
+      setAllAudits(transformedAudits);
+      setAudits(transformedAudits.slice(0, 5));
+
+      // Update stats based on properties
+      const propertyStatuses = propertiesData.map(prop => {
+        const process = processesData.find(p => p.property_id === prop.property_id);
+        return process?.status?.toLowerCase() || 'pending';
+      });
+
+      const completedCount = propertyStatuses.filter(s => s === 'completed').length;
+      const pendingCount = propertyStatuses.filter(s => s === 'pending').length;
+      const inProgressCount = propertyStatuses.filter(s =>
+        ['started', 'downloading', 'generating_messages', 'storing_messages', 'in_progress', 'processing', 'paused'].includes(s)
+      ).length;
 
       setStats([
-        { label: "TOTAL AUDITS", value: String(processesData.length), trend: null, trendColor: null, indicator: null },
-        { label: "COMPLETED", value: String(completed), trend: null, trendColor: null, indicator: "bg-green-500" },
-        { label: "PENDING", value: String(pending), trend: null, trendColor: null, indicator: "bg-amber-400" },
-        { label: "IN PROGRESS", value: String(inProgress), trend: null, trendColor: null, indicator: "bg-blue-500" },
+        { label: "TOTAL PROPERTIES", value: String(propertiesData.length), trend: null, trendColor: null, indicator: null },
+        { label: "COMPLETED", value: String(completedCount), trend: null, trendColor: null, indicator: "bg-green-500" },
+        { label: "PENDING", value: String(pendingCount), trend: null, trendColor: null, indicator: "bg-amber-400" },
+        { label: "PROCESSING", value: String(inProgressCount), trend: null, trendColor: null, indicator: "bg-blue-500" },
       ]);
     } catch (err) {
       console.error('Profile Polling: Error refreshing data', err);
@@ -271,10 +283,12 @@ export default function ProfilePage() {
     switch (status.toLowerCase()) {
       case "completed": return "Completed";
       case "pending": return "Pending";
-      case "in_progress": return "In Progress";
+      case "in_progress": return "Processing"; // Map to Processing for consistency
       case "processing": return "Processing";
+      case "paused": return "Paused";
       case "failed": return "Failed";
       case "error": return "Error";
+      case "insufficient_credits": return "Credits Exhausted";
       default: return status;
     }
   }
@@ -371,10 +385,6 @@ export default function ProfilePage() {
                           <p className="text-sm text-gray-900 mt-1">{profile.phone}</p>
                         </div>
                         <div>
-                          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">MEMBER SINCE</p>
-                          <p className="text-sm text-gray-900 mt-1">{profile.joined}</p>
-                        </div>
-                        <div>
                           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">LOCATION</p>
                           <p className="text-sm text-gray-900 mt-1">{profile.location}</p>
                         </div>
@@ -389,7 +399,10 @@ export default function ProfilePage() {
                 >
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-gray-900">Audit History</h2>
-                    <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    <button
+                      onClick={() => setIsAuditModalOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
                       View All
                       <ChevronRight className="w-4 h-4" />
                     </button>
@@ -488,6 +501,75 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Audit History Modal */}
+      {isAuditModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setIsAuditModalOpen(false)}
+          />
+
+          {/* Modal Content */}
+          <Card className="relative w-full max-w-2xl bg-white shadow-2xl rounded-[24px] md:rounded-[32px] overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Full Audit History</h2>
+                <p className="text-sm text-gray-500 mt-1">Total {allAudits.length} evaluations recorded</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsAuditModalOpen(false)}
+                className="rounded-full hover:bg-gray-100"
+              >
+                <ArrowLeft className="w-6 h-6 text-gray-400 rotate-90 sm:rotate-0" />
+              </Button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4">
+              {allAudits.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <p>No audit history found.</p>
+                </div>
+              ) : (
+                allAudits.map((audit, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200"
+                  >
+                    <div className="flex-shrink-0 w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                      <span className="text-lg font-bold text-gray-600">{audit.initial}</span>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold text-gray-900">{audit.name}</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">{audit.type}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{audit.date}</p>
+                    </div>
+
+                    <Badge
+                      className={`${getStatusColor(audit.status)} text-xs capitalize rounded-md px-3 py-1 font-medium border`}
+                    >
+                      {getStatusLabel(audit.status)}
+                    </Badge>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end sticky bottom-0">
+              <Button
+                onClick={() => setIsAuditModalOpen(false)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 rounded-full"
+              >
+                Close
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

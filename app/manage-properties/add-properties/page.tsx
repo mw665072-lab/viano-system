@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Upload, Loader2, X, AlertCircle, CheckCircle, FileText, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,10 @@ const AddPropertyPage = () => {
     const [fourPointFile, setFourPointFile] = useState<File | null>(null);
     const [homeInspectionFile, setHomeInspectionFile] = useState<File | null>(null);
 
+    // Refs for file inputs
+    const fourPointInputRef = useRef<HTMLInputElement>(null);
+    const homeInspectionInputRef = useRef<HTMLInputElement>(null);
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
@@ -31,6 +35,7 @@ const AddPropertyPage = () => {
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [errorModalTitle, setErrorModalTitle] = useState('');
     const [errorModalMessage, setErrorModalMessage] = useState('');
+    const [isFormShaking, setIsFormShaking] = useState(false);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -55,22 +60,44 @@ const AddPropertyPage = () => {
 
     const removeFourPointFile = () => {
         setFourPointFile(null);
+        if (fourPointInputRef.current) {
+            fourPointInputRef.current.value = '';
+        }
     };
 
     const removeHomeInspectionFile = () => {
         setHomeInspectionFile(null);
+        if (homeInspectionInputRef.current) {
+            homeInspectionInputRef.current.value = '';
+        }
     };
 
     const validateForm = (): boolean => {
+        if (!formData.clientName.trim()) {
+            setError('Client Name is required');
+            return false;
+        }
+        // Prevent purely numeric client names
+        if (/^\d+$/.test(formData.clientName.trim())) {
+            setError('Client Name cannot be purely numeric');
+            return false;
+        }
 
         if (!formData.address.trim()) {
             setError('Address is required');
             return false;
         }
+
         if (!formData.city.trim()) {
             setError('City is required');
             return false;
         }
+        // Prevent purely numeric cities
+        if (/^\d+$/.test(formData.city.trim())) {
+            setError('City cannot be purely numeric');
+            return false;
+        }
+
         if (!formData.state.trim()) {
             setError('State is required');
             return false;
@@ -81,7 +108,11 @@ const AddPropertyPage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!validateForm()) return;
+        if (!validateForm()) {
+            setIsFormShaking(true);
+            setTimeout(() => setIsFormShaking(false), 500);
+            return;
+        }
 
         setIsSubmitting(true);
         setError(null);
@@ -193,10 +224,10 @@ const AddPropertyPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#EBF0F7]">
+        <div className="min-h-full bg-[#EBF0F7]">
             {/* Background Container with rounded top-left corner */}
             <div
-                className="bg-white min-h-[calc(100vh-64px)] rounded-t-[24px] md:rounded-tl-[32px] md:rounded-tr-none"
+                className="bg-white min-h-full rounded-t-[24px] md:rounded-tl-[32px] md:rounded-tr-none"
                 style={{
                     marginTop: '0',
                 }}
@@ -314,6 +345,7 @@ const AddPropertyPage = () => {
                                     <div>
                                         <input
                                             id="fourpoint-upload"
+                                            ref={fourPointInputRef}
                                             type="file"
                                             accept=".pdf"
                                             onChange={handleFourPointSelect}
@@ -323,7 +355,7 @@ const AddPropertyPage = () => {
                                         {!fourPointFile ? (
                                             <button
                                                 type="button"
-                                                onClick={() => document.getElementById('fourpoint-upload')?.click()}
+                                                onClick={() => fourPointInputRef.current?.click()}
                                                 disabled={isSubmitting}
                                                 className="w-full h-[120px] rounded-[16px] border-2 border-dashed border-[#00346C] bg-white hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
@@ -352,6 +384,7 @@ const AddPropertyPage = () => {
                                     <div>
                                         <input
                                             id="homeinspection-upload"
+                                            ref={homeInspectionInputRef}
                                             type="file"
                                             accept=".pdf"
                                             onChange={handleHomeInspectionSelect}
@@ -361,7 +394,7 @@ const AddPropertyPage = () => {
                                         {!homeInspectionFile ? (
                                             <button
                                                 type="button"
-                                                onClick={() => document.getElementById('homeinspection-upload')?.click()}
+                                                onClick={() => homeInspectionInputRef.current?.click()}
                                                 disabled={isSubmitting}
                                                 className="w-full h-[120px] rounded-[16px] border-2 border-dashed border-[#00346C] bg-white hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
@@ -400,9 +433,9 @@ const AddPropertyPage = () => {
                             <div className="col-span-1 md:col-span-2">
                                 <Button
                                     type="submit"
-                                    className="w-full h-[48px] rounded-full text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                                    className={`w-full h-[48px] rounded-full text-white text-sm font-medium hover:opacity-90 transition-all duration-300 ${isFormShaking ? 'animate-shake error-state' : ''}`}
                                     style={{
-                                        background: '#00346C',
+                                        background: isFormShaking ? undefined : '#00346C',
                                         fontFamily: 'Roboto',
                                         fontWeight: 500
                                     }}

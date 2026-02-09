@@ -13,7 +13,7 @@ interface Property {
   type?: string
   value?: string
   closingDate?: string
-  status: "Pending" | "Completed" | "In Progress"
+  status: "Pending" | "Completed" | "Processing" | "Failed"
   statusColor: string
   clientName?: string
 }
@@ -33,8 +33,10 @@ function getStatusBadgeStyle(status: string): string {
   switch (status) {
     case "Completed":
       return "bg-emerald-100 text-emerald-700"
-    case "In Progress":
+    case "Processing":
       return "bg-blue-100 text-blue-700"
+    case "Failed":
+      return "bg-red-100 text-red-700"
     case "Pending":
     default:
       return "bg-amber-100 text-amber-700"
@@ -72,7 +74,7 @@ export function PropertyList({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Property List - Compact Cards */}
       <div className="flex-1 overflow-y-auto space-y-2 pr-1">
         {properties.map((property) => (
@@ -104,7 +106,7 @@ export function PropertyList({
                   {property.clientName || 'No Client'}
                 </h3>
                 <Badge className={`${getStatusBadgeStyle(property.status)} text-[10px] px-2 py-0.5 rounded-full font-medium`}>
-                  {property.status === "In Progress" ? "Processing" : property.status}
+                  {property.status}
                 </Badge>
               </div>
               <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
@@ -121,7 +123,7 @@ export function PropertyList({
       </div>
 
       {/* Compact Pagination */}
-      <div className="flex items-center justify-between pt-3 mt-2 border-t border-gray-100">
+      <div className="flex items-center justify-between pt-4 pb-4 mt-auto border-t border-gray-100">
         <span className="text-xs text-gray-500">
           Page {currentPage} of {totalPages}
         </span>

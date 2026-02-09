@@ -1,11 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Eye, EyeOff, ArrowRight, Loader2, CheckCircle } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Eye, EyeOff, ArrowRight, Loader2, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { authAPI, isAuthenticated } from "@/lib/api";
+
+// Password requirement validation
+interface PasswordRequirement {
+  label: string;
+  test: (password: string) => boolean;
+}
+
+const PASSWORD_REQUIREMENTS: PasswordRequirement[] = [
+  { label: "At least 8 characters", test: (p) => p.length >= 8 },
+  { label: "One uppercase letter (A-Z)", test: (p) => /[A-Z]/.test(p) },
+  { label: "One lowercase letter (a-z)", test: (p) => /[a-z]/.test(p) },
+  { label: "One number (0-9)", test: (p) => /[0-9]/.test(p) },
+  { label: "One special character (!@#$%^&*)", test: (p) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
+];
 
 export default function SignupPage() {
   const router = useRouter();
@@ -20,11 +34,24 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
 
   // UI state
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  // Password validation state
+  const passwordValidation = useMemo(() => {
+    return PASSWORD_REQUIREMENTS.map((req) => ({
+      ...req,
+      passed: req.test(password),
+    }));
+  }, [password]);
+
+  const isPasswordValid = useMemo(() => {
+    return passwordValidation.every((req) => req.passed);
+  }, [passwordValidation]);
 
   // Check if already logged in
   useEffect(() => {
@@ -86,8 +113,11 @@ export default function SignupPage() {
       setError("Please enter a password");
       return;
     }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (!isPasswordValid) {
+      const failedRequirements = passwordValidation
+        .filter((req) => !req.passed)
+        .map((req) => req.label);
+      setError(`Password must include: ${failedRequirements.join(", ")}`);
       return;
     }
     if (password !== confirmPassword) {
@@ -124,7 +154,7 @@ export default function SignupPage() {
       } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
         setError("Unable to connect to server. Please check your internet connection.");
       } else if (errorMessage.includes("password")) {
-        setError("Password does not meet requirements. Please use a stronger password.");
+        setError("Password must include: at least 8 characters, one uppercase letter (A-Z), one lowercase letter (a-z), one number (0-9), and one special character (!@#$%^&*).");
       } else {
         setError(errorMessage);
       }
@@ -275,11 +305,16 @@ export default function SignupPage() {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Password * (min. 6 characters)"
+                  placeholder="Password *"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
                     clearError();
+                  }}
+                  onFocus={() => setShowPasswordRequirements(true)}
+                  onBlur={() => {
+                    // Hide requirements after a delay to allow clicking on them
+                    setTimeout(() => setShowPasswordRequirements(false), 200);
                   }}
                   disabled={isLoading || success}
                   autoComplete="new-password"
@@ -296,6 +331,29 @@ export default function SignupPage() {
                   {showPassword ? <EyeOff size={18} className="pointer-events-none" /> : <Eye size={18} className="pointer-events-none" />}
                 </button>
               </div>
+
+              {/* Password Requirements Indicator */}
+              {(showPasswordRequirements || password.length > 0) && (
+                <div className="mt-1 p-3 bg-slate-50 rounded-lg border border-slate-200 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <p className="text-xs font-medium text-slate-600 mb-2">Password must include:</p>
+                  <ul className="space-y-1">
+                    {passwordValidation.map((req, index) => (
+                      <li
+                        key={index}
+                        className={`flex items-center gap-2 text-xs transition-colors ${req.passed ? 'text-green-600' : 'text-slate-500'
+                          }`}
+                      >
+                        {req.passed ? (
+                          <CheckCircle size={14} className="text-green-500 flex-shrink-0" />
+                        ) : (
+                          <XCircle size={14} className="text-slate-400 flex-shrink-0" />
+                        )}
+                        <span>{req.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Confirm Password Input */}
               <div className="relative">
