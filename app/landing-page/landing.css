@@ -1696,11 +1696,195 @@ body {
 }
 
 
-/* Large screens (1440px+) */
-@media (min-width: 1440px) {
+/* ============================================================
+   LAPTOP RESPONSIVE DESIGN - CONSISTENT ACROSS ALL SIZES
+   Uses viewport-based heights (vh) for uniform section proportions
+   Covers: Small (1024-1280), Medium (1280-1440), Large (1440-1600), Extra Large (1600+)
+   ============================================================ */
+
+/* Extra Large Laptops & Large Desktops (1600px+) - 17"+ displays */
+@media (min-width: 1600px) {
+
+    /* Hero Section - Consistent height */
     .hero-section {
-        max-height: 697px;
-        height: auto;
+        min-height: calc(100vh - 70px);
+        max-height: calc(100vh - 70px);
+        height: calc(100vh - 70px);
+    }
+
+    .hero-bg-ellipse-8 {
+        width: 160%;
+        height: 330%;
+        left: -110%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .hero-image-container {
+        width: 70%;
+        height: 100%;
+        right: 0;
+        top: 0;
+    }
+
+    .hero-content-frame {
+        padding-left: 80px;
+        max-width: 900px;
+        min-height: 400px;
+        justify-content: center;
+    }
+
+    .hero-headline {
+        font-size: 56px;
+        line-height: 68px;
+    }
+
+    .star-icon-wrapper {
+        width: 115px;
+        height: 115px;
+    }
+
+    /* Features Section - Full viewport height */
+    .features-section {
+        min-height: 100vh;
+        padding: 100px 80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .features-carousel {
+        width: 1200px;
+        gap: 32px;
+    }
+
+    .feature-card {
+        width: 560px;
+        height: 500px;
+        padding: 40px 36px;
+    }
+
+    .feature-headline {
+        font-size: 28px;
+    }
+
+    /* Stats Section - Full viewport height */
+    .stats-section {
+        min-height: 100vh;
+        padding: 120px 80px;
+        gap: 70px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .stats-main-text {
+        font-size: 36px;
+        max-width: 500px;
+    }
+
+    /* Pricing Section - Full viewport height */
+    .pricing-section {
+        min-height: 100vh;
+        padding: 80px 80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .pricing-title {
+        font-size: 48px;
+    }
+
+    .pricing-card-outer {
+        max-width: 580px;
+    }
+
+    /* Teams Section - Full viewport height */
+    .teams-section {
+        min-height: 100vh;
+        padding: 120px 80px;
+        gap: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .teams-title {
+        font-size: 38px;
+    }
+
+    /* Business Impact - Full viewport height */
+    .business-impact-section {
+        min-height: 100vh;
+        padding: 100px 80px;
+        gap: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .impact-title {
+        font-size: 50px;
+    }
+
+    /* Data Section - Full viewport height */
+    .data-section {
+        min-height: 100vh;
+        padding: 100px 80px;
+        gap: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .data-title {
+        font-size: 60px;
+    }
+
+    .data-grid-container {
+        max-width: 1050px;
+        gap: 24px;
+    }
+
+    .data-card {
+        min-height: 420px;
+        padding: 40px;
+    }
+
+    /* Final CTA - Full viewport height */
+    .final-cta-section {
+        min-height: 100vh;
+        padding: 140px 80px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .final-cta-container {
+        max-width: 1400px;
+        padding: 80px 100px;
+        min-height: 480px;
+    }
+
+    .cta-banner-text {
+        font-size: 44px;
+        max-width: 800px;
+    }
+
+    .landing-footer {
+        padding: 40px 80px;
+    }
+}
+
+/* Large Laptops (1440px - 1600px) - 15-16" displays */
+@media (min-width: 1440px) and (max-width: 1599px) {
+
+    /* Hero Section - Full viewport minus header */
+    .hero-section {
+        min-height: calc(100vh - 70px);
+        max-height: calc(100vh - 70px);
+        height: calc(100vh - 70px);
     }
 
     .hero-bg-ellipse-8 {
@@ -1712,7 +1896,7 @@ body {
     }
 
     .hero-image-container {
-        width: 75%;
+        width: 72%;
         height: 100%;
         right: 0;
         top: 0;
@@ -1721,8 +1905,1009 @@ body {
     .hero-content-frame {
         padding-left: 63px;
         max-width: 845px;
+        min-height: 380px;
+        justify-content: center;
+    }
+
+    .hero-headline {
+        font-size: 52px;
+        line-height: 62px;
+    }
+
+    .star-icon-wrapper {
+        width: 105px;
+        height: 105px;
+    }
+
+    /* Features Section - Full viewport height */
+    .features-section {
+        min-height: 100vh;
+        padding: 80px 64px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .features-carousel {
+        width: 1064px;
+        gap: 24px;
+    }
+
+    .feature-card {
+        width: 520px;
+        height: 480px;
+        padding: 32px 30px;
+    }
+
+    .feature-headline {
+        font-size: 25px;
+    }
+
+    /* Stats Section - Full viewport height */
+    .stats-section {
+        min-height: 100vh;
+        padding: 100px 64px;
+        gap: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .stats-main-text {
+        font-size: 32px;
+        max-width: 450px;
+    }
+
+    /* Pricing Section - Full viewport height */
+    .pricing-section {
+        min-height: 100vh;
+        padding: 60px 64px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .pricing-title {
+        font-size: 44px;
+    }
+
+    .pricing-card-outer {
+        max-width: 540px;
+    }
+
+    /* Teams Section - Full viewport height */
+    .teams-section {
+        min-height: 100vh;
+        padding: 100px 64px;
+        gap: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .teams-title {
+        font-size: 32px;
+    }
+
+    /* Business Impact - Full viewport height */
+    .business-impact-section {
+        min-height: 100vh;
+        padding: 80px 64px;
+        gap: 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .impact-title {
+        font-size: 45px;
+    }
+
+    /* Data Section - Full viewport height */
+    .data-section {
+        min-height: 100vh;
+        padding: 80px 64px;
+        gap: 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .data-title {
+        font-size: 56px;
+    }
+
+    .data-grid-container {
+        max-width: 950px;
+        gap: 20px;
+    }
+
+    .data-card {
+        min-height: 400px;
+        padding: 32px;
+    }
+
+    /* Final CTA - Compact height */
+    .final-cta-section {
+        min-height: auto;
+        /* Remove 100vh force */
+        padding: 80px 64px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .final-cta-container {
+        max-width: 1296px;
+        padding: 64px 80px;
+        min-height: 420px;
+    }
+
+    .cta-banner-text {
+        font-size: 40px;
+        max-width: 700px;
+    }
+
+    .landing-footer {
+        padding: 30px 64px;
     }
 }
+
+/* Medium Laptops (1280px - 1440px) - 14-15" displays */
+@media (min-width: 1280px) and (max-width: 1439px) {
+    .landing-header {
+        padding: 0 48px;
+        height: 65px;
+    }
+
+    .main-nav-frame {
+        gap: 24px;
+    }
+
+    .viano-main-logo {
+        width: 100px !important;
+        height: 33px !important;
+    }
+
+    .nav-links-frame {
+        gap: 30px;
+    }
+
+    .nav-link {
+        font-size: 16px;
+    }
+
+    .login-btn {
+        padding: 10px 14px;
+        width: 120px;
+        height: 44px;
+        font-size: 16px;
+    }
+
+    .get-started-btn {
+        padding: 10px 14px;
+        width: 150px;
+        height: 44px;
+        font-size: 16px;
+    }
+
+    .page-content {
+        padding-top: 65px;
+    }
+
+    /* Hero Section - Full viewport minus header */
+    .hero-section {
+        min-height: calc(100vh - 65px);
+        max-height: calc(100vh - 65px);
+        height: calc(100vh - 65px);
+    }
+
+    .hero-bg-ellipse-8 {
+        width: 160%;
+        height: 300%;
+        left: -110%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .hero-image-container {
+        width: 68%;
+        height: 100%;
+        right: 0;
+        top: 0;
+    }
+
+    .hero-content-frame {
+        padding: 0 48px;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        max-width: 550px;
+        min-height: 350px;
+        justify-content: center;
+    }
+
+    .hero-headline {
+        font-size: 46px;
+        line-height: 56px;
+    }
+
+    .star-icon-wrapper {
+        width: 90px;
+        height: 90px;
+    }
+
+    .hero-cta-button {
+        padding: 12px 22px;
+        height: 46px;
+    }
+
+    .hero-cta-text {
+        font-size: 17px;
+    }
+
+    /* Features Section - Full viewport height */
+    .features-section {
+        min-height: 100vh;
+        padding: 70px 48px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .features-header {
+        width: 960px;
+        max-width: calc(100vw - 96px);
+    }
+
+    .features-title {
+        font-size: 36px;
+    }
+
+    .features-carousel {
+        width: 960px;
+        gap: 20px;
+    }
+
+    .feature-card {
+        width: 470px;
+        height: 450px;
+        padding: 28px 26px;
+    }
+
+    .feature-headline {
+        font-size: 24px;
+    }
+
+    .feature-mobile {
+        width: 320px;
+    }
+
+    .feature-dots {
+        width: 400px;
+    }
+
+    /* Stats Section - Full viewport height */
+    .stats-section {
+        min-height: 100vh;
+        padding: 80px 48px;
+        gap: 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .stats-main-text {
+        font-size: 30px;
+        max-width: 420px;
+    }
+
+    .stats-star {
+        width: 400px;
+    }
+
+    .stats-star-img,
+    .stats-star-svg {
+        width: 100px;
+        height: 100px;
+    }
+
+    .stats-viano-text {
+        font-size: 28px;
+        max-width: 420px;
+    }
+
+    /* Pricing Section - Full viewport height */
+    .pricing-section {
+        min-height: 100vh;
+        padding: 50px 48px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .pricing-title {
+        font-size: 40px;
+    }
+
+    .pricing-description {
+        font-size: 15px;
+        max-width: 600px;
+    }
+
+    .pricing-card-outer {
+        max-width: 500px;
+    }
+
+    .pricing-card {
+        padding: 38px;
+    }
+
+    /* Teams Section - Full viewport height */
+    .teams-section {
+        min-height: 100vh;
+        padding: 80px 48px;
+        gap: 32px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .teams-content {
+        max-width: 450px;
+    }
+
+    .teams-title {
+        font-size: 30px;
+    }
+
+    .teams-description {
+        font-size: 15px;
+    }
+
+    .teams-image {
+        max-width: 50%;
+    }
+
+    .team-pic {
+        max-width: 100%;
+    }
+
+    /* Business Impact - Full viewport height */
+    .business-impact-section {
+        min-height: 100vh;
+        padding: 70px 48px;
+        gap: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .impact-title {
+        font-size: 40px;
+    }
+
+    .impact-description {
+        font-size: 18px;
+        max-width: 750px;
+    }
+
+    .frame-45-container {
+        width: 450px;
+        height: 140px;
+        padding: 36px;
+    }
+
+    .frame-45-content {
+        font-size: 22px;
+    }
+
+    .ad-spend-text {
+        font-size: 28px;
+    }
+
+    /* Data Section - Full viewport height */
+    .data-section {
+        min-height: 100vh;
+        padding: 70px 48px;
+        gap: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .data-title {
+        font-size: 50px;
+    }
+
+    .data-subtitle {
+        font-size: 22px;
+    }
+
+    .data-grid-container {
+        max-width: 850px;
+        gap: 18px;
+    }
+
+    .data-card {
+        min-height: 380px;
+        padding: 28px;
+    }
+
+    .card-value {
+        font-size: 54px;
+    }
+
+    .card-desc {
+        font-size: 16px;
+    }
+
+    /* Final CTA - Compact height */
+    .final-cta-section {
+        min-height: auto;
+        /* Remove 100vh force */
+        padding: 80px 48px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .final-cta-container {
+        max-width: 1150px;
+        padding: 56px 70px;
+        min-height: 400px;
+    }
+
+    .cta-banner-text {
+        font-size: 36px;
+        max-width: 620px;
+    }
+
+    .star-big {
+        width: 140px;
+        height: 140px;
+    }
+
+    .star-small {
+        width: 70px;
+        height: 70px;
+    }
+
+    .landing-footer {
+        padding: 28px 48px;
+    }
+
+    .footer-content {
+        max-width: 1050px;
+    }
+}
+
+/* Small Laptops (1024px - 1280px) - 13-14" displays */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    .landing-header {
+        padding: 0 40px;
+        height: 60px;
+    }
+
+    .main-nav-frame {
+        gap: 20px;
+    }
+
+    .viano-main-logo {
+        width: 95px !important;
+        height: 31px !important;
+    }
+
+    .nav-links-frame {
+        gap: 24px;
+    }
+
+    .nav-link {
+        font-size: 15px;
+    }
+
+    .login-btn {
+        padding: 9px 12px;
+        width: auto;
+        min-width: 100px;
+        height: 40px;
+        font-size: 15px;
+    }
+
+    .get-started-btn {
+        padding: 9px 12px;
+        width: auto;
+        min-width: 130px;
+        height: 40px;
+        font-size: 15px;
+    }
+
+    .arrow-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .page-content {
+        padding-top: 60px;
+    }
+
+    /* Hero Section - Full viewport minus header */
+    .hero-section {
+        min-height: calc(100vh - 60px);
+        max-height: calc(100vh - 60px);
+        height: calc(100vh - 60px);
+    }
+
+    .hero-bg-ellipse-8 {
+        width: 160%;
+        height: 280%;
+        left: -105%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .hero-bg-ellipse-7 {
+        width: 500px;
+        height: 420px;
+        left: -150px;
+        top: -120px;
+    }
+
+    .hero-image-container {
+        width: 65%;
+        height: 100%;
+        right: 0;
+        top: 0;
+    }
+
+    .hero-content-frame {
+        padding: 0 40px;
+        padding-top: 16px;
+        padding-bottom: 16px;
+        max-width: 480px;
+        gap: 14px;
+        min-height: 320px;
+        justify-content: center;
+    }
+
+    .hero-text-frame {
+        gap: 14px;
+    }
+
+    .hero-headline {
+        font-size: 38px;
+        line-height: 48px;
+    }
+
+    .star-icon-wrapper {
+        width: 75px;
+        height: 75px;
+    }
+
+    .hero-cta-button {
+        padding: 10px 20px;
+        height: 44px;
+    }
+
+    .hero-cta-text {
+        font-size: 16px;
+    }
+
+    .hero-cta-arrow {
+        width: 22px;
+        height: 22px;
+    }
+
+    /* Features Section - Full viewport height */
+    .features-section {
+        min-height: 100vh;
+        padding: 60px 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .features-header {
+        width: 880px;
+        max-width: calc(100vw - 80px);
+        margin-bottom: 16px;
+    }
+
+    .features-title {
+        font-size: 34px;
+    }
+
+    .features-carousel {
+        width: 880px;
+        max-width: calc(100vw - 80px);
+        gap: 18px;
+    }
+
+    .feature-card {
+        width: 430px;
+        height: 420px;
+        padding: 26px 24px;
+    }
+
+    .feature-badge {
+        font-size: 13px;
+        padding: 7px 18px;
+    }
+
+    .feature-headline {
+        font-size: 22px;
+        line-height: 1.25;
+    }
+
+    .feature-mobile {
+        width: 280px;
+    }
+
+    .feature-dots {
+        width: 360px;
+    }
+
+    .feature-chat {
+        max-height: 240px;
+    }
+
+    .feature-contractors-img {
+        max-height: 300px;
+    }
+
+    /* Stats Section - Full viewport height */
+    .stats-section {
+        min-height: 100vh;
+        padding: 60px 40px;
+        gap: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .stats-main-text {
+        font-size: 26px;
+        max-width: 380px;
+    }
+
+    .stats-chat {
+        max-width: 380px;
+    }
+
+    .stats-star {
+        width: 350px;
+    }
+
+    .stats-star-img,
+    .stats-star-svg {
+        width: 90px;
+        height: 90px;
+    }
+
+    .stats-viano-text {
+        font-size: 26px;
+        max-width: 380px;
+        margin-top: -40px;
+    }
+
+    /* Pricing Section - Full viewport height */
+    .pricing-section {
+        min-height: 100vh;
+        padding: 50px 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .no-hidden-badge {
+        font-size: 11px;
+        padding: 7px 18px;
+    }
+
+    .pricing-title {
+        font-size: 36px;
+    }
+
+    .pricing-description {
+        font-size: 14px;
+        max-width: 550px;
+        margin-bottom: 40px;
+    }
+
+    .pricing-card-outer {
+        max-width: 460px;
+    }
+
+    .pricing-card {
+        padding: 34px;
+        border-radius: 36px;
+    }
+
+    .trending-badge {
+        font-size: 12px;
+        padding: 5px 16px;
+    }
+
+    .card-product-title {
+        font-size: 32px;
+    }
+
+    .price-amount {
+        font-size: 32px;
+    }
+
+    .card-features {
+        gap: 14px;
+        margin-bottom: 32px;
+    }
+
+    .card-feature {
+        font-size: 13px;
+        gap: 14px;
+    }
+
+    .check-icon {
+        width: 18px;
+        height: 18px;
+    }
+
+    .custom-dropdown {
+        width: 55%;
+    }
+
+    .dropdown-toggle {
+        padding: 14px 20px;
+        font-size: 14px;
+    }
+
+    .start-trial-btn {
+        padding: 16px;
+        font-size: 15px;
+    }
+
+    /* Teams Section - Full viewport height */
+    .teams-section {
+        min-height: 100vh;
+        padding: 60px 40px;
+        gap: 28px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .teams-content {
+        max-width: 420px;
+    }
+
+    .teams-badge {
+        font-size: 13px;
+        padding: 5px 14px;
+    }
+
+    .teams-title {
+        font-size: 28px;
+    }
+
+    .teams-description {
+        font-size: 14px;
+        margin-bottom: 28px;
+    }
+
+    .teams-form {
+        gap: 14px;
+    }
+
+    .form-input {
+        padding: 12px 18px;
+        font-size: 15px;
+    }
+
+    .request-demo-btn {
+        padding: 14px;
+        font-size: 16px;
+    }
+
+    .teams-image {
+        max-width: 48%;
+    }
+
+    .team-pic {
+        border-radius: 16px;
+    }
+
+    /* Business Impact - Full viewport height */
+    .business-impact-section {
+        min-height: 100vh;
+        padding: 60px 40px;
+        gap: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .impact-title {
+        font-size: 36px;
+        margin: 24px;
+    }
+
+    .nothing-text {
+        font-size: 50px;
+    }
+
+    .impact-description {
+        font-size: 17px;
+        max-width: 700px;
+        margin: 24px;
+    }
+
+    .frame-45-container {
+        width: 420px;
+        height: 130px;
+        padding: 32px;
+        margin: 24px;
+    }
+
+    .frame-45-content {
+        font-size: 20px;
+    }
+
+    .ad-spend-text {
+        font-size: 26px;
+        gap: 60px;
+    }
+
+    .won-clients-heading {
+        font-size: 42px;
+    }
+
+    /* Data Section - Full viewport height */
+    .data-section {
+        min-height: 100vh;
+        padding: 60px 40px;
+        gap: 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .data-badge {
+        font-size: 13px;
+        padding: 7px 18px;
+        margin-bottom: 24px;
+    }
+
+    .data-title {
+        font-size: 44px;
+    }
+
+    .data-subtitle {
+        font-size: 20px;
+        margin-top: -24px;
+    }
+
+    .data-grid-container {
+        max-width: 780px;
+        gap: 16px;
+    }
+
+    .data-card {
+        min-height: 350px;
+        padding: 26px;
+        border-radius: 24px;
+    }
+
+    .card-header {
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .card-label {
+        font-size: 18px;
+    }
+
+    .card-value {
+        font-size: 50px;
+        margin-bottom: 20px;
+    }
+
+    .card-value .unit {
+        font-size: 24px;
+    }
+
+    .progress-container {
+        height: 18px;
+        margin-bottom: 28px;
+    }
+
+    .card-desc {
+        font-size: 15px;
+        margin-bottom: 14px;
+    }
+
+    .card-source,
+    .card-sub-info {
+        font-size: 11px;
+    }
+
+    /* Final CTA - Compact height */
+    .final-cta-section {
+        min-height: auto;
+        /* Remove 100vh force */
+        padding: 80px 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .final-cta-container {
+        max-width: 1000px;
+        padding: 50px 60px;
+        min-height: 380px;
+        border-radius: 32px;
+    }
+
+    .cta-banner-text {
+        font-size: 32px;
+        max-width: 550px;
+    }
+
+    .cta-overlay-btn {
+        padding: 16px 34px;
+        font-size: 16px;
+    }
+
+    .star-big {
+        width: 120px;
+        height: 120px;
+        right: 12%;
+    }
+
+    .star-small {
+        width: 60px;
+        height: 60px;
+        right: 6%;
+    }
+
+    .landing-footer {
+        padding: 24px 40px;
+        min-height: 200px;
+    }
+
+    .footer-content {
+        max-width: 950px;
+        margin-bottom: 16px;
+    }
+
+    .footer-logo-img {
+        height: 28px;
+        margin-bottom: 10px;
+    }
+
+    .footer-tagline {
+        font-size: 13px;
+    }
+
+    .footer-nav {
+        gap: 32px;
+    }
+
+    .footer-col-title {
+        font-size: 15px;
+        margin-bottom: 6px;
+    }
+
+    .footer-link {
+        font-size: 13px;
+    }
+
+    .footer-divider {
+        margin-bottom: 16px;
+    }
+
+    .copyright {
+        font-size: 13px;
+    }
+}
+
 
 /* ============================================================
    RESPONSIVE DESIGN - EXACT MATCH TO DESKTOP SCALED
@@ -2001,7 +3186,7 @@ body {
     .hero-section {
         position: relative !important;
         width: 100% !important;
-        min-height: 650px !important;
+        min-height: 500px !important;
         height: auto !important;
         max-height: none !important;
         overflow: hidden !important;
@@ -2015,7 +3200,7 @@ body {
     /* Hero Image Container - Match desktop: 65% width, positioned right */
     .hero-image-container {
         position: absolute !important;
-        width: 65% !important;
+        width: 85% !important;
         height: 100% !important;
         right: 0 !important;
         top: 0 !important;
@@ -2031,15 +3216,15 @@ body {
         width: 100% !important;
         height: 100% !important;
         object-fit: cover !important;
-        object-position: center center !important;
+        object-position: center !important;
     }
 
     /* Ellipse - Refined laptop-style curve for premium tablet look */
     .hero-bg-ellipse-8 {
         position: absolute !important;
-        width: 170% !important;
+        width: 200% !important;
         height: 310% !important;
-        left: -110% !important;
+        left: -155% !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
         z-index: 2 !important;
@@ -2059,7 +3244,8 @@ body {
         position: relative !important;
         z-index: 10 !important;
         padding: 40px 64px !important;
-        max-width: 550px !important;
+        padding-left: 48px !important;
+        max-width: 400px !important;
         min-height: auto !important;
         gap: 16px !important;
     }
@@ -2069,13 +3255,13 @@ body {
     }
 
     .star-icon-wrapper {
-        width: 100px !important;
-        height: 100px !important;
+        width: 70px !important;
+        height: 70px !important;
     }
 
     .hero-headline {
-        font-size: 44px !important;
-        line-height: 1.15 !important;
+        font-size: 30px !important;
+        line-height: 38px !important;
         letter-spacing: -0.02em !important;
     }
 
@@ -2106,83 +3292,151 @@ body {
         width: 100% !important;
         max-width: 100vw !important;
         overflow: hidden !important;
-        padding: 30px 24px 10px !important;
-        /* Balanced vertical space to fit two frames exactly */
+        padding: 100px 0 60px !important;
+        /* Center section as its own screen frame */
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #F8FAFC !important;
+        min-height: 600px !important;
     }
 
     .features-carousel {
         width: 100% !important;
-        max-width: 100% !important;
+        max-width: 100vw !important;
         overflow-x: auto !important;
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: flex-start !important;
+        /* Start from left but snapping will center them */
+        gap: 20px !important;
         margin: 0 !important;
-        padding: 5px 0 !important;
-        /* Compact vertical space */
+        padding: 20px 32px 40px !important;
+        /* Balanced side padding */
+        scroll-snap-type: x mandatory !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
     }
 
     .features-header {
         width: 100% !important;
-        max-width: 100% !important;
-        padding: 0 !important;
-        margin-bottom: 20px !important;
+        max-width: 600px !important;
+        padding: 0 24px !important;
+        margin-bottom: 40px !important;
         text-align: center !important;
-        /* Explicit centering */
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
     }
 
     .features-title {
-        font-size: 32px !important;
+        font-size: 36px !important;
+        /* Bold bold header for full screen frame */
         text-align: center !important;
+        line-height: 1.2 !important;
+        font-weight: 700 !important;
     }
 
-    .carousel-arrows {
-        display: none !important;
-        /* Remove arrows as requested */
-    }
-
-    /* STATS SECTION - Perfect fit with features section */
+    /* STATS SECTION - Full Screen Frame */
     .stats-section {
-        padding: 10px 24px 30px !important;
-        /* Minimal vertical space */
-        gap: 20px !important;
-        /* Optimized gap */
+        width: 100% !important;
+        max-width: 100vw !important;
+        min-height: 500px !important;
+        /* Slightly reduced for safety */
+        padding: 60px 24px 80px !important;
+        /* Significantly reduced padding-top (60px instead of 120px) */
+        gap: 30px !important;
         background: #FFFFFF !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow-x: hidden !important;
     }
 
     .stats-main-text {
-        font-size: 24px !important;
-        line-height: 1.3 !important;
-        max-width: 600px !important;
+        font-size: 28px !important;
+        /* Large centered text */
+        line-height: 1.4 !important;
+        max-width: 650px !important;
         text-align: center !important;
-        /* Center text as requested */
         margin: 0 auto !important;
+        font-weight: 500 !important;
     }
 
     .stats-chat-img {
-        margin-top: 0 !important;
-        max-width: 380px !important;
+        margin-top: 10px !important;
+        max-width: 440px !important;
+        /* Premium sized image */
+        width: 100% !important;
+        height: auto !important;
     }
 
-    .stats-chat {
-        margin-top: 0 !important;
-        gap: 0 !important;
-    }
-
-    .stats-star {
-        display: none !important;
-    }
-
-    /* Feature Card Adjustments - perfect sizing for all tablets */
+    /* Feature Card Adjustments - premium full-screen sizing */
     .feature-card {
-        width: 440px !important;
-        height: 350px !important;
-        padding: 24px !important;
+        width: calc(100vw - 64px) !important;
+        /* Wide centered card */
+        max-width: 700px !important;
+        height: 420px !important;
+        /* Taller and premium */
+        padding: 40px !important;
+        flex-shrink: 0 !important;
+        scroll-snap-align: center !important;
+        scroll-snap-stop: always !important;
+        border-radius: 20px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
     }
 
     .feature-headline {
-        font-size: 22px !important;
+        font-size: 24px !important;
+        /* Bolder headlines */
         max-width: 100% !important;
+        line-height: 1.3 !important;
+        font-weight: 600 !important;
+        margin-top: 10px !important;
+        margin-bottom: 0 !important;
+    }
+
+    .feature-contractors-img {
+        width: 200% !important;
+        max-width: 650px !important;
+        height: 230px !important;
+        object-fit: contain !important;
+        /* Ensure aspect ratio is maintained visually */
+        bottom: 0px !important;
+        position: absolute !important;
+        right: 0px !important;
+        z-index: 2 !important;
+    }
+
+    /* Maintain spacing for other sections to continue the page-by-page feel */
+    .pricing-section,
+    .teams-section,
+    .business-impact-section,
+    .data-section,
+    .landing-footer {
+        padding: 40px 40px !important;
+    }
+
+    .final-cta-section {
+        padding: 0 !important;
+        margin: 0 !important;
+        /* Fit fully to 100vw */
+        width: 100% !important;
+        max-width: 100vw !important;
+        min-height: auto !important;
+    }
+
+    .final-cta-container {
+        border-radius: 0 !important;
+        width: calc(100% + 2px) !important;
+        max-width: none !important;
+        margin: 0 -1px !important;
+        border: none !important;
+        outline: none !important;
     }
 }
 
@@ -2489,13 +3743,15 @@ body {
     }
 
     .features-header {
-        flex-direction: row !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
         align-items: center !important;
         gap: 12px;
         margin-bottom: 20px;
-        width: 100%;
-        padding: 0 20px !important;
-        /* Lock side spacing */
+        width: 100% !important;
+        padding: 0 !important;
+        text-align: center !important;
     }
 
     .features-header-spacer {
@@ -2505,39 +3761,38 @@ body {
 
     .features-header {
         display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
+        flex-direction: column !important;
+        justify-content: center !important;
         align-items: center !important;
-        width: 100vw !important;
-        margin-left: calc(50% - 50vw) !important;
-        margin-right: calc(50% - 50vw) !important;
-        padding: 0 16px !important;
-        /* Safe edge buffer */
+        width: 100% !important;
+        margin: 0 auto 24px auto !important;
+        padding: 0 !important;
         position: relative !important;
         min-height: 48px !important;
-        margin-bottom: 24px !important;
         box-sizing: border-box !important;
         overflow: visible !important;
+        text-align: center !important;
     }
 
     .features-title {
         color: #000000 !important;
-        font-size: clamp(14px, 4.2vw, 18px) !important;
-        white-space: nowrap !important;
-        text-align: left !important;
-        /* Left Align */
+        font-size: clamp(18px, 5vw, 24px) !important;
+        white-space: normal !important;
+        text-align: center !important;
         margin: 0 !important;
-        max-width: 70% !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        line-height: 48px !important;
-        flex-shrink: 1 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        line-height: 1.3 !important;
+        display: block !important;
     }
 
     .carousel-arrows {
         position: static !important;
         /* Natural flex flow */
-        display: flex !important;
+        display: none !important;
         gap: 8px !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -2619,13 +3874,34 @@ body {
     }
 
     .feature-contractors-img {
-        width: 160px !important;
+        width: 150px !important;
         /* Micro-scale for zero overlap */
         height: auto !important;
         bottom: 10px !important;
         position: absolute !important;
         right: 0px !important;
         z-index: 2 !important;
+    }
+
+    /* Samsung A51/71 and larger phones (390px+) */
+    @media (min-width: 390px) {
+        .feature-contractors-img {
+            width: 190px !important;
+        }
+    }
+
+    /* Surface Duo (540px) and wide phones */
+    @media (min-width: 540px) {
+        .feature-contractors-img {
+            width: 250px !important;
+            height: auto !important;
+            bottom: 0px !important;
+        }
+
+        .feature-headline {
+            max-width: 320px !important;
+            font-size: 24px !important;
+        }
     }
 
     .feature-badge {
@@ -2641,7 +3917,8 @@ body {
         font-size: 22px !important;
         line-height: 1.3 !important;
         max-width: 260px !important;
-        margin: 0 !important;
+        margin-top: 10px !important;
+        margin-bottom: 0 !important;
         color: inherit !important;
         z-index: 10 !important;
         font-family: 'Inter', sans-serif !important;
@@ -3308,13 +4585,11 @@ body {
         flex-direction: column !important;
         justify-content: center !important;
         align-items: center !important;
-        width: 100vw !important;
-        margin-left: calc(50% - 50vw) !important;
-        margin-right: calc(50% - 50vw) !important;
-        padding: 0 16px !important;
+        width: 100% !important;
+        margin: 0 auto 20px auto !important;
+        padding: 0 !important;
         position: relative !important;
         min-height: 48px !important;
-        margin-bottom: 20px !important;
         box-sizing: border-box !important;
         overflow: visible !important;
         text-align: center !important;
@@ -3325,11 +4600,14 @@ body {
         font-size: clamp(20px, 6vw, 24px) !important;
         white-space: normal !important;
         text-align: center !important;
-        margin: 0 auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
         max-width: 100% !important;
+        width: 100% !important;
         overflow: visible !important;
         text-overflow: clip !important;
         line-height: 1.2 !important;
+        display: block !important;
     }
 
     .carousel-arrows {

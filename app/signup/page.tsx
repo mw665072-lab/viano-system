@@ -148,14 +148,19 @@ export default function SignupPage() {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Signup failed";
-      // Provide user-friendly error messages
-      if (errorMessage.includes("already") || errorMessage.includes("exists") || errorMessage.includes("duplicate")) {
+      
+      // Provide specific error message from server but with fallback checks
+      if (errorMessage.includes("email") && errorMessage.includes("already")) {
         setError("An account with this email already exists. Please login instead.");
+      } else if (errorMessage.includes("username") && errorMessage.includes("already")) {
+        setError("This username is already taken. Please choose another one.");
+      } else if (errorMessage.includes("already exists") || errorMessage.includes("exists") || errorMessage.includes("duplicate")) {
+        setError(errorMessage); // Show specific "item already exists" message from server
       } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
         setError("Unable to connect to server. Please check your internet connection.");
-      } else if (errorMessage.includes("password")) {
-        setError("Password must include: at least 8 characters, one uppercase letter (A-Z), one lowercase letter (a-z), one number (0-9), and one special character (!@#$%^&*).");
       } else {
+        // Don't mask password errors with a hardcoded requirements list anymore.
+        // The requirements are already visible in the indicator below the field.
         setError(errorMessage);
       }
     } finally {
