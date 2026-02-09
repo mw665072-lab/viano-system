@@ -29,22 +29,26 @@ interface Property {
     processId?: string
     progress: number
     documentsSubmitted: number // Actual document count from API
+    createdAt?: string // Added
 }
 
 interface PropertyDetail {
     id: string
     name: string
     address: string
+    location: string
     type: string
     client: string
     closingDays: number
-    status: "Pending" | "Completed"
+    status: DisplayStatus
     documentsSubmitted: number
     documentsTotal: number
     aiAnalysisProgress: number
     totalIssues: number
     criticalIssues: number
+    statusMessage?: string
     processId?: string
+    createdAt?: string // Added
 }
 
 // Status configuration with colors and messages
@@ -55,7 +59,12 @@ const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: strin
     generating_messages: { displayStatus: "Processing", color: "bg-purple-100 text-purple-700", message: "Analyzing documents...", progress: 50 },
     storing_messages: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Saving messages...", progress: 90 },
     completed: { displayStatus: "Completed", color: "bg-emerald-100 text-emerald-700", message: "Process completed!", progress: 100 },
-    failed: { displayStatus: "Failed", color: "bg-red-100 text-red-700", message: "Process failed", progress: 0 }
+    failed: { displayStatus: "Failed", color: "bg-red-100 text-red-700", message: "Process failed", progress: 0 },
+    insufficient_credits: { displayStatus: "Failed", color: "bg-amber-100 text-amber-700", message: "AI credits exhausted", progress: 50 },
+    paused: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Process paused", progress: 50 },
+    in_progress: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Processing documents...", progress: 30 },
+    processing: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Processing documents...", progress: 30 },
+    error: { displayStatus: "Failed", color: "bg-red-100 text-red-700", message: "Analysis error", progress: 0 },
 };
 
 // Helper function to get status config
@@ -67,16 +76,7 @@ function getStatusConfig(processStatus: string | undefined) {
     return STATUS_CONFIG[status] || STATUS_CONFIG.pending;
 }
 
-// Helper function to map to display status for backward compatibility with PropertyList
-function mapToListStatus(displayStatus: DisplayStatus): "Pending" | "Completed" | "In Progress" {
-    switch (displayStatus) {
-        case "Completed": return "Completed";
-        case "Processing": return "In Progress";
-        case "Failed": return "Pending"; // Show as pending in the list for failed
-        case "Pending":
-        default: return "Pending";
-    }
-}
+
 
 const Page = () => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -148,20 +148,21 @@ const Page = () => {
                 const statusConfig = getStatusConfig(process?.status);
                 const progress = process?.progress ?? statusConfig.progress;
 
-                // Infer document count from process status
-                // If process started (not pending), documents were uploaded (typically 2)
+                // Infer document count from process presence
+                // If a process record exists, it means the upload phase has completed
                 let documentsSubmitted = 0;
-                if (process && process.status && process.status !== 'pending') {
-                    documentsSubmitted = 2; // Both docs uploaded if process started
+                if (process) {
+                    documentsSubmitted = 2; // Assume both uploaded if process exists
                 }
 
                 return {
                     id: prop.property_id,
-                    name: prop.property_name,
+                    name: prop.address || prop.property_name,
                     location: prop.location,
                     image: undefined,
                     type: undefined,
                     closingDate: prop.property_closing_date ? new Date(prop.property_closing_date).toLocaleDateString() : undefined,
+                    createdAt: process?.process_start ? new Date(process.process_start).toLocaleDateString() : undefined, // Map from process_start
                     status: statusConfig.displayStatus,
                     detailedStatus: process?.status || "pending",
                     statusColor: statusConfig.color,
@@ -445,8 +446,7 @@ const Page = () => {
             // Status filter - map display status to filter options
             let matchesStatus = statusFilter === 'All Status';
             if (!matchesStatus) {
-                const listStatus = mapToListStatus(property.status);
-                matchesStatus = listStatus === statusFilter;
+                matchesStatus = property.status === statusFilter;
             }
 
             return matchesSearch && matchesStatus;
@@ -461,10 +461,7 @@ const Page = () => {
     );
 
     // Transform properties for PropertyList component (needs specific status type)
-    const listProperties = paginatedProperties.map(p => ({
-        ...p,
-        status: mapToListStatus(p.status),
-    }));
+    const listProperties = paginatedProperties;
 
     // Reset to page 1 when filters change
     useEffect(() => {
@@ -476,26 +473,29 @@ const Page = () => {
     const selectedDetail: PropertyDetail | null = selectedProperty ? {
         id: selectedProperty.id,
         name: selectedProperty.name,
-        address: selectedProperty.location,
+        address: selectedProperty.name, // The user wants full address, which is property_name/name
+        location: selectedProperty.location,
         type: selectedProperty.type || "Property",
         client: selectedProperty.clientName || "N/A",
         closingDays: selectedProperty.closingDate
             ? Math.max(0, Math.ceil((new Date(selectedProperty.closingDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
             : 0,
-        status: selectedProperty.status === "Completed" ? "Completed" : "Pending",
+        status: selectedProperty.status,
         documentsSubmitted: selectedProperty.documentsSubmitted,
-        documentsTotal: Math.max(selectedProperty.documentsSubmitted, 1), // Dynamic: matches actual uploaded count
+        documentsTotal: 2, // Fixed: Always 2 (4-Point and Home Inspection)
         aiAnalysisProgress: selectedProperty.progress,
         totalIssues: 0,
         criticalIssues: 0,
+        statusMessage: selectedProperty.statusMessage,
         processId: selectedProperty.processId,
+        createdAt: selectedProperty.createdAt,
     } : null;
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
 
-    const handleSelectProperty = (property: Property | { id: string; status: "Pending" | "Completed" | "In Progress" }) => {
+    const handleSelectProperty = (property: { id: string }) => {
         // Find the full property from our state
         const fullProperty = properties.find(p => p.id === property.id);
         if (fullProperty) {
@@ -516,7 +516,7 @@ const Page = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="h-full bg-gray-50">
             {/* Error Message */}
             {error && (
                 <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
@@ -544,7 +544,7 @@ const Page = () => {
             )}
 
             {/* Split View Layout */}
-            <div className="flex h-screen overflow-hidden">
+            <div className="flex h-full overflow-hidden">
                 {/* Left Panel - Property List */}
                 <div className={`flex flex-col bg-white transition-all duration-300 ${selectedProperty
                     ? 'hidden lg:flex lg:w-1/2 border-r border-gray-200'

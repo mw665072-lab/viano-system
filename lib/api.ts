@@ -372,7 +372,6 @@ export interface UserResponse {
     mobile_number: string;
     last_login: string | null;
     role: string;
-    created_at: string | null;
 }
 
 // Property Types

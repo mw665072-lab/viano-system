@@ -15,6 +15,7 @@ interface Property {
     statusColor: string
     clientName?: string
     closingDate?: string
+    createdAt?: string // Added
     processId?: string
 }
 
@@ -87,9 +88,9 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
         },
     ]
 
-    // Format closing date for display
-    const formattedClosingDate = property.closingDate
-        ? new Date(property.closingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    // Format activation date for display
+    const formattedActivationDate = property.createdAt
+        ? new Date(property.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         : "Not set";
 
     return (
@@ -135,19 +136,28 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
             </div>
 
             <div className="p-4 md:p-[20px]">
-                <div className="flex items-center justify-between rounded-[12px] pt-[16px] pb-[16px]">
-                    <div>
-                        <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>ADDRESS</p>
-                        <p className="text-[14px] leading-[21px] font-semibold" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38" }}>
-                            {property.subtitle || "Not specified"}
-                        </p>
+                {/* Location Details Section */}
+                <div className="rounded-[12px] pt-[16px] pb-[16px] space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                        <div className="flex-1 min-w-[200px]">
+                            <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>CLIENT</p>
+                            <p className="text-[14px] leading-[21px] font-semibold" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38" }}>
+                                {property.clientName || "Not specified"}
+                            </p>
+                        </div>
+                        <div className="flex-shrink-0 text-left sm:text-right">
+                            <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>VIANO ACTIVATED</p>
+                            <p className="text-[14px] leading-[21px] font-semibold" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38" }}>
+                                {formattedActivationDate}
+                            </p>
+                        </div>
                     </div>
-                    <div className="text-right">
-                        <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>VIANO ACTIVATED</p>
-                        <p className="text-[14px] leading-[21px] font-semibold" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38", textAlign: "right" }}>
-                            {formattedClosingDate}
-                        </p>
 
+                    <div className="pt-2 border-t border-gray-50">
+                        <p className="text-[12px] leading-[18px] tracking-[0.3px] uppercase font-medium" style={{ fontFamily: "Inter, sans-serif", color: "#64748B", fontWeight: 500 }}>COMPLETE ADDRESS</p>
+                        <p className="text-[14px] leading-[21px] font-semibold break-words" style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, color: "#0C1D38" }}>
+                            {property.name || "Not specified"}
+                        </p>
                     </div>
                 </div>
 
