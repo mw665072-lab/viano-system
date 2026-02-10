@@ -72,56 +72,84 @@ export default function SignupPage() {
     return phoneRegex.test(phone);
   };
 
+  // Process complex error messages (like Clerk JSON strings)
+  const parseErrorMessage = (msg: string): string[] => {
+    try {
+      // Check if it's a JSON string (common with Clerk errors)
+      if (msg.includes('{"errors":[')) {
+        const errorData = JSON.parse(msg.substring(msg.indexOf('{')));
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          return errorData.errors.map((e: any) => e.long_message || e.message);
+        }
+      }
+    } catch (e) {
+      // If parsing fails, use the original message
+    }
+
+    // Special case for common single errors
+    if (msg.includes("email") && msg.includes("already")) {
+      return ["An account with this email already exists."];
+    }
+    if (msg.includes("username") && msg.includes("already")) {
+      return ["This username is already taken. Please choose another one."];
+    }
+
+    return [msg];
+  };
+
+  const [errors, setErrors] = useState<string[]>([]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setErrors([]);
+    setError(""); // Keep for backward compatibility if any component uses it
 
     // Validation
     if (!firstName.trim()) {
-      setError("Please enter your first name");
+      setErrors(["Please enter your first name"]);
       return;
     }
     if (!lastName.trim()) {
-      setError("Please enter your last name");
+      setErrors(["Please enter your last name"]);
       return;
     }
     if (!email.trim()) {
-      setError("Please enter your email");
+      setErrors(["Please enter your email"]);
       return;
     }
     if (!validateEmail(email.trim())) {
-      setError("Please enter a valid email address");
+      setErrors(["Please enter a valid email address"]);
       return;
     }
     if (!username.trim()) {
-      setError("Please enter a username");
+      setErrors(["Please enter a username"]);
       return;
     }
     if (username.trim().length < 3) {
-      setError("Username must be at least 3 characters");
+      setErrors(["Username must be at least 3 characters"]);
       return;
     }
     if (!mobileNumber.trim()) {
-      setError("Please enter your mobile number");
+      setErrors(["Please enter your mobile number"]);
       return;
     }
     if (!validatePhone(mobileNumber)) {
-      setError("Please enter a valid mobile number");
+      setErrors(["Please enter a valid mobile number"]);
       return;
     }
     if (!password) {
-      setError("Please enter a password");
+      setErrors(["Please enter a password"]);
       return;
     }
     if (!isPasswordValid) {
       const failedRequirements = passwordValidation
         .filter((req) => !req.passed)
         .map((req) => req.label);
-      setError(`Password must include: ${failedRequirements.join(", ")}`);
+      setErrors([`Password must include: ${failedRequirements.join(", ")}`]);
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setErrors(["Passwords do not match"]);
       return;
     }
 
@@ -144,31 +172,18 @@ export default function SignupPage() {
           router.push("/login");
         }, 2000);
       } else {
-        setError("Signup failed. Please try again.");
+        setErrors(["Signup failed. Please try again."]);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Signup failed";
-      
-      // Provide specific error message from server but with fallback checks
-      if (errorMessage.includes("email") && errorMessage.includes("already")) {
-        setError("An account with this email already exists. Please login instead.");
-      } else if (errorMessage.includes("username") && errorMessage.includes("already")) {
-        setError("This username is already taken. Please choose another one.");
-      } else if (errorMessage.includes("already exists") || errorMessage.includes("exists") || errorMessage.includes("duplicate")) {
-        setError(errorMessage); // Show specific "item already exists" message from server
-      } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
-        setError("Unable to connect to server. Please check your internet connection.");
-      } else {
-        // Don't mask password errors with a hardcoded requirements list anymore.
-        // The requirements are already visible in the indicator below the field.
-        setError(errorMessage);
-      }
+      const rawMessage = err instanceof Error ? err.message : "Signup failed";
+      setErrors(parseErrorMessage(rawMessage));
     } finally {
       setIsLoading(false);
     }
   };
 
   const clearError = () => {
+    if (errors.length > 0) setErrors([]);
     if (error) setError("");
   };
 
@@ -201,10 +216,19 @@ export default function SignupPage() {
               </div>
             )}
 
-            {/* Error Message */}
-            {error && (
-              <div className="mb-3 rounded-lg bg-red-50 border border-red-200 px-4 py-2.5 text-sm text-red-600 animate-in fade-in duration-200">
-                {error}
+            {/* Error Message(s) */}
+            {errors.length > 0 && (
+              <div className="mb-3 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-600 animate-in fade-in duration-200">
+                <div className="flex items-start gap-2">
+                  <XCircle size={16} className="mt-0.5 flex-shrink-0" />
+                  <div className="flex flex-col gap-1">
+                    {errors.map((err, idx) => (
+                      <span key={idx} className="leading-relaxed">
+                        {err}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
