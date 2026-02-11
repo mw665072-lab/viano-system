@@ -287,6 +287,14 @@ export const processAPI = {
         apiRequest<ProcessSummaryResponse[]>(`/api/process/user/${userId}`),
 
     /**
+     * Delete a specific message by ID
+     */
+    deleteMessage: (messageId: string) =>
+        apiRequest<string>(`/api/process/messages/${messageId}`, {
+            method: 'DELETE',
+        }),
+
+    /**
      * SSE endpoint for real-time process status updates
      * Keeps the connection open and pushes updates every second until:
      * - Process reaches 100% progress, or

@@ -11,7 +11,7 @@ interface Property {
     name: string
     subtitle: string
     image?: string
-    status: "Pending" | "Completed" | "In Progress"
+    status: "Pending" | "Completed" | "In Progress" | "Failed"
     statusColor: string
     clientName?: string
     closingDate?: string
@@ -123,9 +123,11 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                 <div className="absolute top-4 right-4">
                     <span className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-md ${property.status === "Completed"
                         ? "bg-emerald-500 text-white"
-                        : "bg-amber-500 text-white"
+                        : property.status === "Failed"
+                            ? "bg-red-500 text-white"
+                            : "bg-amber-500 text-white"
                         }`}>
-                        {property.status === "Completed" ? "✓ Complete" : "⏳ Pending"}
+                        {property.status === "Completed" ? "✓ Complete" : property.status === "Failed" ? "⚠ Failed" : "⏳ Pending"}
                     </span>
                 </div>
 

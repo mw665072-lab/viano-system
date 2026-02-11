@@ -111,31 +111,36 @@ export default function ProfilePage() {
           propertiesData = [];
         }
 
-        // Create a map of property_id to property_name
-        const propertyMap = new Map<string, string>();
-        propertiesData.forEach(prop => {
-          propertyMap.set(prop.property_id, prop.property_name);
+        // Create a map of property_id to the MOST RECENT process record
+        const latestProcessMap = new Map<string, ProcessSummaryResponse>();
+        processesData.forEach(proc => {
+          const existing = latestProcessMap.get(proc.property_id);
+          if (!existing || (proc.process_start && existing.process_start && new Date(proc.process_start) > new Date(existing.process_start))) {
+            latestProcessMap.set(proc.property_id, proc);
+          }
         });
 
-        // Transform processes to audit format
-        const transformedAudits: AuditItem[] = processesData.map((process) => ({
-          name: propertyMap.get(process.property_id) || 'Property',
-          type: '4 Point Evaluation',
-          date: process.process_start
-            ? new Date(process.process_start).toLocaleDateString('en-US')
-            : 'N/A',
-          status: process.status,
-          initial: (propertyMap.get(process.property_id) || 'P').charAt(0).toUpperCase(),
-          propertyId: process.property_id,
-        }));
+        // Transform ALL properties to audit format (ensures count matches Total Properties)
+        const transformedAudits: AuditItem[] = propertiesData.map((prop) => {
+          const process = latestProcessMap.get(prop.property_id);
+          return {
+            name: prop.property_name || 'Property',
+            type: '4 Point Evaluation',
+            date: process?.process_start
+              ? new Date(process.process_start).toLocaleDateString('en-US')
+              : 'N/A',
+            status: process?.status || 'pending',
+            initial: (prop.property_name || 'P').charAt(0).toUpperCase(),
+            propertyId: prop.property_id,
+          };
+        });
 
         setAllAudits(transformedAudits);
         setAudits(transformedAudits.slice(0, 5));
 
-        // 4. Calculate Stats from properties
-        // Create a property-to-status map
+        // 4. Calculate Stats from properties using the LATEST process for each
         const propertyStatuses = propertiesData.map(prop => {
-          const process = processesData.find(p => p.property_id === prop.property_id);
+          const process = latestProcessMap.get(prop.property_id);
           return process?.status?.toLowerCase() || 'pending';
         });
 
@@ -191,30 +196,36 @@ export default function ProfilePage() {
       const processesData = await processAPI.getUserProcesses(userId);
       const propertiesData = await propertyAPI.getUserProperties(userId);
 
-      // Create property name map
-      const propertyMap = new Map<string, string>();
-      propertiesData.forEach(prop => {
-        propertyMap.set(prop.property_id, prop.property_name);
+      // Create a map of property_id to the MOST RECENT process record
+      const latestProcessMap = new Map<string, ProcessSummaryResponse>();
+      processesData.forEach(proc => {
+        const existing = latestProcessMap.get(proc.property_id);
+        if (!existing || (proc.process_start && existing.process_start && new Date(proc.process_start) > new Date(existing.process_start))) {
+          latestProcessMap.set(proc.property_id, proc);
+        }
       });
 
-      // Update audits
-      const transformedAudits = processesData.map((process) => ({
-        name: propertyMap.get(process.property_id) || 'Property',
-        type: '4 Point Evaluation',
-        date: process.process_start
-          ? new Date(process.process_start).toLocaleDateString('en-US')
-          : 'N/A',
-        status: process.status,
-        initial: (propertyMap.get(process.property_id) || 'P').charAt(0).toUpperCase(),
-        propertyId: process.property_id,
-      }));
+      // Update audits based on properties (ensures consistency)
+      const transformedAudits = propertiesData.map((prop) => {
+        const process = latestProcessMap.get(prop.property_id);
+        return {
+          name: prop.property_name || 'Property',
+          type: '4 Point Evaluation',
+          date: process?.process_start
+            ? new Date(process.process_start).toLocaleDateString('en-US')
+            : 'N/A',
+          status: process?.status || 'pending',
+          initial: (prop.property_name || 'P').charAt(0).toUpperCase(),
+          propertyId: prop.property_id,
+        };
+      });
 
       setAllAudits(transformedAudits);
       setAudits(transformedAudits.slice(0, 5));
 
-      // Update stats based on properties
+      // Update stats based on properties using the LATEST process for each
       const propertyStatuses = propertiesData.map(prop => {
-        const process = processesData.find(p => p.property_id === prop.property_id);
+        const process = latestProcessMap.get(prop.property_id);
         return process?.status?.toLowerCase() || 'pending';
       });
 

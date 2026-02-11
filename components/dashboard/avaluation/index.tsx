@@ -15,7 +15,7 @@ interface DashboardProperty {
     name: string
     subtitle: string
     image?: string
-    status: "Pending" | "Completed" | "In Progress" // For PropertyList component
+    status: "Pending" | "Completed" | "In Progress" | "Failed" // For PropertyList component
     displayStatus: DisplayStatus
     detailedStatus: string
     statusColor: string
@@ -27,7 +27,7 @@ interface DashboardProperty {
 }
 
 // Status configuration with colors and messages
-const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: string; message: string; listStatus: "Pending" | "Completed" | "In Progress"; progress: number }> = {
+const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: string; message: string; listStatus: "Pending" | "Completed" | "In Progress" | "Failed"; progress: number }> = {
     pending: {
         displayStatus: "Pending",
         color: "bg-gray-100 text-gray-700",
@@ -74,7 +74,42 @@ const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: strin
         displayStatus: "Failed",
         color: "bg-red-100 text-red-700",
         message: "Process failed",
-        listStatus: "Pending",
+        listStatus: "Failed",
+        progress: 0
+    },
+    insufficient_credits: {
+        displayStatus: "Failed",
+        color: "bg-amber-100 text-amber-700",
+        message: "AI credits exhausted",
+        listStatus: "Failed",
+        progress: 50
+    },
+    paused: {
+        displayStatus: "Processing",
+        color: "bg-blue-100 text-blue-700",
+        message: "Process paused",
+        listStatus: "In Progress",
+        progress: 50
+    },
+    in_progress: {
+        displayStatus: "Processing",
+        color: "bg-blue-100 text-blue-700",
+        message: "Processing documents...",
+        listStatus: "In Progress",
+        progress: 30
+    },
+    processing: {
+        displayStatus: "Processing",
+        color: "bg-blue-100 text-blue-700",
+        message: "Processing documents...",
+        listStatus: "In Progress",
+        progress: 30
+    },
+    error: {
+        displayStatus: "Failed",
+        color: "bg-red-100 text-red-700",
+        message: "Analysis error",
+        listStatus: "Failed",
         progress: 0
     }
 };
@@ -222,7 +257,7 @@ export function PropertyEvaluationDashboard() {
     }, [properties, selectedProperty]);
 
     // Handler for property selection from list
-    const handleSelectProperty = (property: { id: string; status: "Pending" | "Completed" | "In Progress" }) => {
+    const handleSelectProperty = (property: { id: string; status: "Pending" | "Completed" | "In Progress" | "Failed" }) => {
         const fullProperty = properties.find(p => p.id === property.id);
         if (fullProperty) {
             setSelectedProperty(fullProperty);
