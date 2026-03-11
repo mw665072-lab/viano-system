@@ -10,10 +10,10 @@ import { propertyAPI, documentAPI, processAPI, CreatePropertyRequest, getCurrent
 const AddPropertyPage = () => {
     const router = useRouter();
     const [formData, setFormData] = useState({
-
         address: '',
         city: '',
         state: '',
+        zipCode: '',
         closingDate: '',
         clientName: '',
     });
@@ -102,6 +102,18 @@ const AddPropertyPage = () => {
             setError('State is required');
             return false;
         }
+
+        if (!formData.zipCode.trim()) {
+            setError('Zip Code is required');
+            return false;
+        }
+
+        // Basic zip code validation (5-10 chars, typically 5 or 5+4)
+        if (!/^\d{5}(-\d{4})?$/.test(formData.zipCode.trim())) {
+            setError('Please enter a valid Zip Code (e.g., 12345 or 12345-6789)');
+            return false;
+        }
+
         return true;
     };
 
@@ -134,6 +146,7 @@ const AddPropertyPage = () => {
                 property_name: formData.address.trim(),
                 location: location,
                 address: formData.address.trim(),
+                zip_code: formData.zipCode.trim(),
                 client_name: formData.clientName.trim(),
                 property_closing_date: formData.closingDate || null,
             };
@@ -312,6 +325,22 @@ const AddPropertyPage = () => {
                                     name="state"
                                     placeholder="Enter state"
                                     value={formData.state}
+                                    onChange={handleInputChange}
+                                    disabled={isSubmitting}
+                                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50"
+                                />
+                            </div>
+
+                            {/* Row 3: Zip Code and Closing Date */}
+                            <div>
+                                <label className="block text-sm font-medium text-[#374151] mb-2">
+                                    Zip Code <span className="text-red-500">*</span>
+                                </label>
+                                <Input
+                                    type="text"
+                                    name="zipCode"
+                                    placeholder="Enter zip code"
+                                    value={formData.zipCode}
                                     onChange={handleInputChange}
                                     disabled={isSubmitting}
                                     className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50"

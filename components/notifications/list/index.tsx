@@ -10,7 +10,7 @@ interface NotificationItem {
   title: string
   description: string
   timestamp: string
-  status: string
+  status: "completed" | "pending" | "failed" // Match display statuses
   isHighlighted: boolean
   propertyId?: string
   messageId?: string
@@ -205,6 +205,21 @@ export default function Notifications() {
     )
   }
 
+  // Handle notification deletion
+  const handleDeleteNotification = async (messageId: string) => {
+    try {
+      await processAPI.deleteMessage(messageId)
+
+      // Update local state by removing the deleted notification
+      setNotifications((prev) =>
+        prev.filter((n) => n.messageId !== messageId)
+      )
+    } catch (err) {
+      console.error("Failed to delete notification:", err)
+      alert("Failed to delete notification. Please try again.")
+    }
+  }
+
   return (
     <div className="max-w-full">
       <div className="mb-4 flex items-center justify-between">
@@ -224,7 +239,11 @@ export default function Notifications() {
       </div>
       <div className="space-y-4">
         {notifications.map((notification) => (
-          <NotificationCard key={notification.id} notification={notification} />
+          <NotificationCard
+            key={notification.id}
+            notification={notification}
+            onDelete={handleDeleteNotification}
+          />
         ))}
       </div>
     </div>

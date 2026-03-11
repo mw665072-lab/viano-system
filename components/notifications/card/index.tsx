@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -10,14 +12,31 @@ interface Notification {
   timestamp: string
   status: "completed" | "pending"
   isHighlighted: boolean
+  messageId?: string
 }
 
 interface NotificationCardProps {
   notification: Notification
+  onDelete: (messageId: string) => Promise<void>
 }
 
-export function NotificationCard({ notification }: any) {
+export function NotificationCard({ notification, onDelete }: NotificationCardProps) {
+  const [isDeleting, setIsDeleting] = useState(false)
   const statusColor = notification.status === "completed" ? "bg-green-500" : "bg-gray-400"
+
+  const handleDelete = async () => {
+    if (!notification.messageId) {
+      console.error("No messageId found for notification")
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      await onDelete(notification.messageId)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <div
@@ -58,9 +77,16 @@ export function NotificationCard({ notification }: any) {
             <Button
               variant="ghost"
               size="sm"
+              disabled={isDeleting}
+              onClick={handleDelete}
               className="h-auto p-0 text-red-500 hover:text-red-600 hover:bg-transparent font-semibold text-xs"
             >
-              DELETE
+              {isDeleting ? (
+                <span className="flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  DELETING...
+                </span>
+              ) : "DELETE"}
             </Button>
           </div>
         </div>
