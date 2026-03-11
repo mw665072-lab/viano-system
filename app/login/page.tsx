@@ -97,6 +97,7 @@ export default function LoginPage() {
                 alt="Viano Systems"
                 width={140}
                 height={46}
+                style={{ height: "auto" }}
                 priority
               />
             </div>

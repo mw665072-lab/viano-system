@@ -387,6 +387,7 @@ export interface CreatePropertyRequest {
     property_name: string;
     location: string;
     address: string;
+    zip_code: string;
     client_name: string;
     property_closing_date?: string | null;
     user_id: string;
@@ -397,6 +398,7 @@ export interface PropertyResponse {
     property_name: string;
     location: string;
     address: string;
+    zip_code: string;
     client_name: string;
     property_closing_date: string | null;
     user_id: string;
