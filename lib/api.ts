@@ -30,8 +30,12 @@ async function apiRequest<T>(
 ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
 
+    // Get token from localStorage if available
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
     const defaultHeaders: HeadersInit = {
         'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     };
 
     const config: RequestInit = {
@@ -45,8 +49,14 @@ async function apiRequest<T>(
     const response = await fetch(url, config);
 
     if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'An error occurred' }));
-        throw new Error(error.detail || `HTTP Error: ${response.status}`);
+        let errorDetail = 'An error occurred';
+        try {
+            const error = await response.json();
+            errorDetail = error.detail || error.message || errorDetail;
+        } catch (e) {
+            errorDetail = `HTTP Error: ${response.status}`;
+        }
+        throw new Error(errorDetail);
     }
 
     return response.json();
@@ -415,6 +425,7 @@ export interface SignUpResponse {
     success: boolean;
     user_id: string;
     message: string;
+    access_token?: string; // JWT token returned after signup
 }
 
 export interface LoginRequest {
@@ -428,6 +439,7 @@ export interface LoginResponse {
     email: string;
     first_name: string;
     last_name: string;
+    access_token: string; // JWT token required for future requests
 }
 
 export interface UserResponse {
@@ -582,6 +594,14 @@ export function isAuthenticated(): boolean {
 }
 
 /**
+ * Get current auth token from localStorage
+ */
+export function getAuthToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('authToken');
+}
+
+/**
  * Clear auth data (for logout)
  */
 export function clearAuth(): void {
@@ -589,6 +609,7 @@ export function clearAuth(): void {
     localStorage.removeItem('userId');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userName');
+    localStorage.removeItem('authToken');
 }
 
 /**
@@ -599,6 +620,9 @@ export function saveAuth(loginResponse: LoginResponse): void {
     localStorage.setItem('userId', loginResponse.user_id);
     localStorage.setItem('userEmail', loginResponse.email);
     localStorage.setItem('userName', `${loginResponse.first_name} ${loginResponse.last_name}`);
+    if (loginResponse.access_token) {
+        localStorage.setItem('authToken', loginResponse.access_token);
+    }
 }
 
 /**

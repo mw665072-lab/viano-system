@@ -5,7 +5,7 @@ import { Eye, EyeOff, ArrowRight, Loader2, CheckCircle, XCircle } from "lucide-r
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { authAPI, isAuthenticated } from "@/lib/api";
+import { authAPI, isAuthenticated, saveAuth, LoginResponse } from "@/lib/api";
 
 // Password requirement validation
 interface PasswordRequirement {
@@ -167,10 +167,31 @@ export default function SignupPage() {
 
       if (response.success) {
         setSuccess(true);
-        // Redirect to login after short delay
-        setTimeout(() => {
-          router.push("/login");
-        }, 2000);
+
+        // If signup returns a token, we can log the user in immediately
+        if (response.access_token) {
+          // Construct a partial LoginResponse to satisfy saveAuth
+          // Since saveAuth only needs user_id, email, first_name, last_name, and access_token
+          const authData: LoginResponse = {
+            success: true,
+            user_id: response.user_id,
+            email: email.trim(),
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            access_token: response.access_token
+          };
+          saveAuth(authData);
+
+          // Redirect to dashboard after short delay
+          setTimeout(() => {
+            router.push("/dashboard");
+          }, 2000);
+        } else {
+          // Standard flow: redirect to login
+          setTimeout(() => {
+            router.push("/login");
+          }, 2000);
+        }
       } else {
         setErrors(["Signup failed. Please try again."]);
       }
