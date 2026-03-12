@@ -23,6 +23,14 @@ interface PropertyDetailData {
     statusMessage?: string
     processId?: string
     createdAt?: string // Added
+    yearBuilt?: number
+    squareFootage?: number
+    bedrooms?: number
+    bathrooms?: number
+    lotSize?: number
+    propertyType?: string
+    purchasePrice?: number
+    purchaseDate?: string
 }
 
 interface PropertyDetailPanelProps {
@@ -224,6 +232,55 @@ export function PropertyDetailPanel({
                             {property.createdAt || 'N/A'}
                         </span>
                     </div>
+
+                    {/* Property Specs Section */}
+                    {(property.yearBuilt || property.squareFootage || property.propertyType) && (
+                        <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+                            <h3 className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-3">
+                                Property Specifications
+                            </h3>
+                            <div className="grid grid-cols-2 gap-y-3">
+                                {property.propertyType && (
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-tight">Type</p>
+                                        <p className="text-sm font-semibold text-[#0C1D38] capitalize">
+                                            {property.propertyType.replace('_', ' ')}
+                                        </p>
+                                    </div>
+                                )}
+                                {property.yearBuilt && (
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-tight">Year Built</p>
+                                        <p className="text-sm font-semibold text-[#0C1D38]">{property.yearBuilt}</p>
+                                    </div>
+                                )}
+                                {property.squareFootage && (
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-tight">Sq Footage</p>
+                                        <p className="text-sm font-semibold text-[#0C1D38]">{property.squareFootage.toLocaleString()} sq ft</p>
+                                    </div>
+                                )}
+                                {property.lotSize && (
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-tight">Lot Size</p>
+                                        <p className="text-sm font-semibold text-[#0C1D38]">{property.lotSize} Acres</p>
+                                    </div>
+                                )}
+                                {property.bedrooms && (
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-tight">Beds</p>
+                                        <p className="text-sm font-semibold text-[#0C1D38]">{property.bedrooms}</p>
+                                    </div>
+                                )}
+                                {property.bathrooms && (
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-tight">Baths</p>
+                                        <p className="text-sm font-semibold text-[#0C1D38]">{property.bathrooms}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Inspection Status Section */}
                     <div>

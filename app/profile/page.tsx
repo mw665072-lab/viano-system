@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Pencil, ChevronRight, Loader2 } from "lucide-react"
 import Image from "next/image"
-import { authAPI, processAPI, propertyAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, getCurrentUserId } from "@/lib/api"
+import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, getCurrentUserId } from "@/lib/api"
+import { CreditCard, ExternalLink, ShieldCheck, Zap } from "lucide-react"
 
 interface ProfileData {
   name: string;
@@ -37,6 +38,8 @@ interface StatItem {
 export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [billingStatus, setBillingStatus] = useState<BillingStatusResponse | null>(null);
+  const [isBillingLoading, setIsBillingLoading] = useState(false);
 
   const [profile, setProfile] = useState<ProfileData>({
     name: "",
@@ -156,6 +159,14 @@ export default function ProfilePage() {
           { label: "PENDING", value: String(pendingCount), trend: null, trendColor: null, indicator: "bg-amber-400" },
           { label: "PROCESSING", value: String(inProgressCount), trend: null, trendColor: null, indicator: "bg-blue-500" },
         ]);
+
+        // 5. Fetch Billing Status
+        try {
+          const billingData = await billingAPI.getStatus(userId);
+          setBillingStatus(billingData);
+        } catch (e) {
+          console.log('Error fetching billing status:', e);
+        }
 
       } catch (err) {
         console.error("Failed to fetch data from API:", err);
@@ -299,10 +310,45 @@ export default function ProfilePage() {
       case "paused": return "Paused";
       case "failed": return "Failed";
       case "error": return "Error";
+      case "active": return "Active";
+      case "past_due": return "Past Due";
+      case "canceled": return "Canceled";
       case "insufficient_credits": return "Credits Exhausted";
       default: return status;
     }
   }
+
+  const handleUpgrade = async () => {
+    const userId = getCurrentUserId();
+    if (!userId) return;
+
+    setIsBillingLoading(true);
+    try {
+      const { checkout_url } = await billingAPI.createCheckoutSession(userId);
+      window.location.href = checkout_url;
+    } catch (err) {
+      console.error('Failed to create checkout session:', err);
+      alert('Failed to initiate upgrade. Please try again.');
+    } finally {
+      setIsBillingLoading(false);
+    }
+  };
+
+  const handleManageBilling = async () => {
+    const userId = getCurrentUserId();
+    if (!userId) return;
+
+    setIsBillingLoading(true);
+    try {
+      const { portal_url } = await billingAPI.getPortalLink(userId);
+      window.location.href = portal_url;
+    } catch (err) {
+      console.error('Failed to get portal link:', err);
+      alert('Failed to open billing portal. Please try again.');
+    } finally {
+      setIsBillingLoading(false);
+    }
+  };
 
   // Loading state
   if (isLoading) {
@@ -481,6 +527,97 @@ export default function ProfilePage() {
                       </div>
                     ))}
                   </div>
+                </Card>
+
+                {/* Subscription & Billing Container */}
+                <Card
+                  className="bg-white shadow-sm border-0 rounded-[24px] md:rounded-[32px] p-6"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-gray-900">Subscription</h2>
+                    <CreditCard className="w-5 h-5 text-gray-400" />
+                  </div>
+
+                  {billingStatus?.has_subscription ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                        <div>
+                          <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Active Plan</p>
+                          <p className="text-lg font-bold text-emerald-900 mt-1">$49/month Pro Plan</p>
+                        </div>
+                        <ShieldCheck className="w-8 h-8 text-emerald-500" />
+                      </div>
+
+                      <div className="space-y-3 px-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Status</span>
+                          <span className="font-semibold text-emerald-600 capitalize">{billingStatus.subscription?.status}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Next Invoice</span>
+                          <span className="font-semibold text-gray-900">
+                            {billingStatus.subscription?.current_period_end
+                              ? new Date(billingStatus.subscription.current_period_end).toLocaleDateString()
+                              : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={handleManageBilling}
+                        disabled={isBillingLoading}
+                        className="w-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-full h-11 flex items-center gap-2 group"
+                      >
+                        {isBillingLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            Manage Billing
+                            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Free Plan</p>
+                        <p className="text-sm font-medium text-gray-600 mt-2">
+                          Upgrade to Pro to unlock unlimited properties and advanced features.
+                        </p>
+                      </div>
+
+                      <div className="space-y-4 pt-2">
+                        <div className="flex items-start gap-3 text-sm text-gray-600">
+                          <Zap className="w-4 h-4 text-amber-500 mt-0.5" />
+                          <span>Unlimited properties analyze</span>
+                        </div>
+                        <div className="flex items-start gap-3 text-sm text-gray-600">
+                          <Zap className="w-4 h-4 text-amber-500 mt-0.5" />
+                          <span>Personalized negotiation messages</span>
+                        </div>
+                        <div className="flex items-start gap-3 text-sm text-gray-600">
+                          <Zap className="w-4 h-4 text-amber-500 mt-0.5" />
+                          <span>Priority AI processing</span>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={handleUpgrade}
+                        disabled={isBillingLoading}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full h-11 font-bold shadow-md shadow-blue-100 mt-2"
+                      >
+                        {isBillingLoading ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Connecting...
+                          </span>
+                        ) : (
+                          "Upgrade to Pro ($49/mo)"
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </Card>
 
                 {/* Preferences Container */}

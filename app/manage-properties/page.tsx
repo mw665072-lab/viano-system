@@ -30,6 +30,14 @@ interface Property {
     progress: number
     documentsSubmitted: number // Actual document count from API
     createdAt?: string // Added
+    yearBuilt?: number
+    squareFootage?: number
+    bedrooms?: number
+    bathrooms?: number
+    lotSize?: number
+    propertyType?: string
+    purchasePrice?: number
+    purchaseDate?: string
 }
 
 interface PropertyDetail {
@@ -49,6 +57,14 @@ interface PropertyDetail {
     statusMessage?: string
     processId?: string
     createdAt?: string // Added
+    yearBuilt?: number
+    squareFootage?: number
+    bedrooms?: number
+    bathrooms?: number
+    lotSize?: number
+    propertyType?: string
+    purchasePrice?: number
+    purchaseDate?: string
 }
 
 // Status configuration with colors and messages
@@ -161,7 +177,7 @@ const Page = () => {
                     location: prop.location,
                     image: undefined,
                     type: undefined,
-                    closingDate: prop.property_closing_date ? new Date(prop.property_closing_date).toLocaleDateString() : undefined,
+                    closingDate: prop.purchase_date ? new Date(prop.purchase_date).toLocaleDateString() : undefined,
                     createdAt: process?.process_start ? new Date(process.process_start).toLocaleDateString() : undefined, // Map from process_start
                     status: statusConfig.displayStatus,
                     detailedStatus: process?.status || "pending",
@@ -171,6 +187,14 @@ const Page = () => {
                     processId: process?.process_id,
                     progress: progress,
                     documentsSubmitted: documentsSubmitted,
+                    yearBuilt: prop.year_built ?? undefined,
+                    squareFootage: prop.square_footage ?? undefined,
+                    bedrooms: prop.bedrooms ?? undefined,
+                    bathrooms: prop.bathrooms ?? undefined,
+                    lotSize: prop.lot_size ?? undefined,
+                    propertyType: prop.property_type ?? undefined,
+                    purchasePrice: prop.purchase_price ?? undefined,
+                    purchaseDate: prop.purchase_date ?? undefined,
                 };
             });
 
@@ -489,6 +513,14 @@ const Page = () => {
         statusMessage: selectedProperty.statusMessage,
         processId: selectedProperty.processId,
         createdAt: selectedProperty.createdAt,
+        yearBuilt: selectedProperty.yearBuilt,
+        squareFootage: selectedProperty.squareFootage,
+        bedrooms: selectedProperty.bedrooms,
+        bathrooms: selectedProperty.bathrooms,
+        lotSize: selectedProperty.lotSize,
+        propertyType: selectedProperty.propertyType,
+        purchasePrice: selectedProperty.purchasePrice,
+        purchaseDate: selectedProperty.purchaseDate,
     } : null;
 
     const handlePageChange = (page: number) => {

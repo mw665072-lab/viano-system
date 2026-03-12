@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
-import { Upload, Loader2, X, AlertCircle, CheckCircle, FileText, AlertTriangle } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Upload, Loader2, X, AlertCircle, CheckCircle, FileText, AlertTriangle, ShieldAlert, Zap } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { propertyAPI, documentAPI, processAPI, CreatePropertyRequest, getCurrentUserId } from '@/lib/api';
+import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId } from '@/lib/api';
 
 const AddPropertyPage = () => {
     const router = useRouter();
@@ -16,6 +17,14 @@ const AddPropertyPage = () => {
         zipCode: '',
         closingDate: '',
         clientName: '',
+        yearBuilt: '',
+        squareFootage: '',
+        bedrooms: '',
+        bathrooms: '',
+        lotSize: '',
+        propertyType: '',
+        purchasePrice: '',
+        purchaseDate: '',
     });
 
     // Separate state for each document type
@@ -36,6 +45,27 @@ const AddPropertyPage = () => {
     const [errorModalTitle, setErrorModalTitle] = useState('');
     const [errorModalMessage, setErrorModalMessage] = useState('');
     const [isFormShaking, setIsFormShaking] = useState(false);
+
+    const [canAddProperty, setCanAddProperty] = useState<{ allowed: boolean; reason: string; requires_subscription: boolean } | null>(null);
+    const [isCheckingLimit, setIsCheckingLimit] = useState(true);
+
+    // Check property limit on mount
+    useEffect(() => {
+        const checkLimit = async () => {
+            const userId = getCurrentUserId();
+            if (!userId) return;
+
+            try {
+                const limit = await billingAPI.canAddProperty(userId);
+                setCanAddProperty(limit);
+            } catch (err) {
+                console.error('Error checking property limit:', err);
+            } finally {
+                setIsCheckingLimit(false);
+            }
+        };
+        checkLimit();
+    }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -148,7 +178,17 @@ const AddPropertyPage = () => {
                 address: formData.address.trim(),
                 zip_code: formData.zipCode.trim(),
                 client_name: formData.clientName.trim(),
-                property_closing_date: formData.closingDate || null,
+                inspection_date: null,
+                city: formData.city.trim(),
+                state: formData.state.trim(),
+                year_built: formData.yearBuilt ? parseInt(formData.yearBuilt) : null,
+                square_footage: formData.squareFootage ? parseFloat(formData.squareFootage) : null,
+                bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
+                bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
+                lot_size: formData.lotSize ? parseFloat(formData.lotSize) : null,
+                property_type: formData.propertyType || null,
+                purchase_price: formData.purchasePrice ? parseFloat(formData.purchasePrice) : null,
+                purchase_date: formData.purchaseDate || null,
             };
 
             const createdProperty = await propertyAPI.create(propertyData);
@@ -220,6 +260,53 @@ const AddPropertyPage = () => {
             setIsSubmitting(false);
         }
     };
+
+    // Loading state while checking limit
+    if (isCheckingLimit) {
+        return (
+            <div className="flex h-screen items-center justify-center bg-gray-50">
+                <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-[#00346C]" />
+                    <p className="text-gray-500 text-sm">Verifying subscription status...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Limit reached state
+    if (canAddProperty && !canAddProperty.allowed) {
+        return (
+            <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+                <Card className="max-w-md w-full p-8 rounded-[32px] border-0 shadow-xl text-center">
+                    <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <ShieldAlert className="w-8 h-8 text-amber-500" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Limit Reached</h2>
+                    <p className="text-gray-600 mb-8 whitespace-pre-wrap">
+                        {canAddProperty.reason || "You have reached the limit of properties for your current plan."}
+                    </p>
+                    
+                    <div className="space-y-3">
+                        {canAddProperty.requires_subscription && (
+                            <Button
+                                onClick={() => router.push('/profile')}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full h-12 font-bold"
+                            >
+                                Upgrade to Pro
+                            </Button>
+                        ) }
+                        <Button
+                            variant="ghost"
+                            onClick={() => router.push('/manage-properties')}
+                            className="w-full text-gray-500 hover:text-gray-700 rounded-full h-12"
+                        >
+                            Back to Properties
+                        </Button>
+                    </div>
+                </Card>
+            </div>
+        );
+    }
 
     // Success state
     if (success) {
@@ -364,6 +451,106 @@ const AddPropertyPage = () => {
                                     />
                                 </div>
                                 <p className="text-xs text-[#9CA3AF] mt-1">Format: MM/DD/YYYY</p>
+                            </div>
+
+                            {/* Additional CMA Fields */}
+                            <div className="col-span-1 md:col-span-2 mt-4">
+                                <h3 className="text-md font-semibold text-[#1E1E1E] mb-3">Property Specifications</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-[#374151] mb-2">Property Type</label>
+                                        <select
+                                            name="propertyType"
+                                            value={formData.propertyType}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, propertyType: e.target.value }))}
+                                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] focus:outline-none focus:ring-1 focus:ring-[#00346C]"
+                                        >
+                                            <option value="">Select Type</option>
+                                            <option value="single_family">Single Family</option>
+                                            <option value="condo">Condo</option>
+                                            <option value="townhouse">Townhouse</option>
+                                            <option value="multi_family">Multi-Family</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-[#374151] mb-2">Year Built</label>
+                                        <Input
+                                            type="number"
+                                            name="yearBuilt"
+                                            placeholder="e.g. 1995"
+                                            value={formData.yearBuilt}
+                                            onChange={handleInputChange}
+                                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-[#374151] mb-2">Square Footage</label>
+                                        <Input
+                                            type="number"
+                                            name="squareFootage"
+                                            placeholder="Total sq ft"
+                                            value={formData.squareFootage}
+                                            onChange={handleInputChange}
+                                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-[#374151] mb-2">Lot Size (Acres)</label>
+                                        <Input
+                                            type="number"
+                                            name="lotSize"
+                                            placeholder="e.g. 0.25"
+                                            step="0.01"
+                                            value={formData.lotSize}
+                                            onChange={handleInputChange}
+                                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-[#374151] mb-2">Bedrooms</label>
+                                        <Input
+                                            type="number"
+                                            name="bedrooms"
+                                            placeholder="Number of bedrooms"
+                                            value={formData.bedrooms}
+                                            onChange={handleInputChange}
+                                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-[#374151] mb-2">Bathrooms</label>
+                                        <Input
+                                            type="number"
+                                            name="bathrooms"
+                                            placeholder="Number of bathrooms"
+                                            step="0.5"
+                                            value={formData.bathrooms}
+                                            onChange={handleInputChange}
+                                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-[#374151] mb-2">Purchase Price</label>
+                                        <Input
+                                            type="number"
+                                            name="purchasePrice"
+                                            placeholder="Last purchase price"
+                                            value={formData.purchasePrice}
+                                            onChange={handleInputChange}
+                                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-[#374151] mb-2">Purchase Date</label>
+                                        <Input
+                                            type="date"
+                                            name="purchaseDate"
+                                            value={formData.purchaseDate}
+                                            onChange={handleInputChange}
+                                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Row 4: Upload Buttons - Two separate buttons */}
