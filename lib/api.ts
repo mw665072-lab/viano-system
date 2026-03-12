@@ -186,6 +186,45 @@ export const propertyAPI = {
     },
 };
 
+// ============ BILLING APIs ============
+export const billingAPI = {
+    /**
+     * Get full billing overview for a user
+     */
+    getStatus: (userId: string) =>
+        apiRequest<BillingStatusResponse>(`/api/billing/status/${userId}`),
+
+    /**
+     * Check if a user is allowed to add another property
+     */
+    canAddProperty: (userId: string) =>
+        apiRequest<{ allowed: boolean; reason: string; requires_subscription: boolean }>(`/api/billing/can-add-property/${userId}`),
+
+    /**
+     * Create a Stripe Checkout Session for a new subscription
+     */
+    createCheckoutSession: (userId: string) =>
+        apiRequest<{ checkout_url: string }>('/api/billing/create-checkout-session', {
+            method: 'POST',
+            body: JSON.stringify({ user_id: userId }),
+        }),
+
+    /**
+     * Cancel subscription at the end of the current billing period
+     */
+    cancel: (userId: string) =>
+        apiRequest<any>('/api/billing/cancel', {
+            method: 'POST',
+            body: JSON.stringify({ user_id: userId }),
+        }),
+
+    /**
+     * Get a Stripe Customer Portal URL
+     */
+    getPortalLink: (userId: string) =>
+        apiRequest<{ portal_url: string }>(`/api/billing/portal/${userId}`),
+};
+
 // ============ DOCUMENT APIs ============
 export const documentAPI = {
     /**
@@ -380,6 +419,7 @@ export interface UserResponse {
     mobile_number: string;
     last_login: string | null;
     role: string;
+    stripe_customer_id?: string | null;
 }
 
 // Property Types
@@ -387,9 +427,20 @@ export interface CreatePropertyRequest {
     property_name: string;
     location: string;
     address: string;
-    zip_code: string;
+    zip_code?: string | null;
     client_name: string;
-    property_closing_date?: string | null;
+    inspection_date?: string | null;
+    negotiated_wins?: string | null;
+    city?: string | null;
+    state?: string | null;
+    year_built?: number | null;
+    square_footage?: number | null;
+    bedrooms?: number | null;
+    bathrooms?: number | null;
+    lot_size?: number | null;
+    property_type?: string | null;
+    purchase_price?: number | null;
+    purchase_date?: string | null;
     user_id: string;
 }
 
@@ -398,9 +449,20 @@ export interface PropertyResponse {
     property_name: string;
     location: string;
     address: string;
-    zip_code: string;
+    zip_code: string | null;
     client_name: string;
-    property_closing_date: string | null;
+    inspection_date: string | null;
+    negotiated_wins: string | null;
+    city: string | null;
+    state: string | null;
+    year_built: number | null;
+    square_footage: number | null;
+    bedrooms: number | null;
+    bathrooms: number | null;
+    lot_size: number | null;
+    property_type: string | null;
+    purchase_price: number | null;
+    purchase_date: string | null;
     user_id: string;
 }
 
@@ -451,6 +513,24 @@ export interface EngineResultResponse {
     doc_id: string;
     status: string;
     json_result_preview: string;
+}
+
+// Billing Types
+export interface SubscriptionResponse {
+    subscription_id: string;
+    stripe_subscription_id: string;
+    status: string;
+    current_period_start: string | null;
+    current_period_end: string | null;
+    monthly_cost: number;
+}
+
+export interface BillingStatusResponse {
+    user_id: string;
+    total_properties: number;
+    has_subscription: boolean;
+    subscription: SubscriptionResponse | null;
+    monthly_cost: number;
 }
 
 // Validation Error (from API)
