@@ -432,10 +432,10 @@ export default function ProfilePage() {
                       <p className="text-gray-500 mt-1">{profile.role}</p>
 
                       {/* Contact Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                      <div className="grid grid-cols-1 gap-4 mt-6">
                         <div>
                           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">EMAIL</p>
-                          <p className="text-sm text-gray-900 mt-1">{profile.email}</p>
+                          <p className="text-sm text-gray-900 mt-1 break-all">{profile.email}</p>
                         </div>
                         <div>
                           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">PHONE</p>
