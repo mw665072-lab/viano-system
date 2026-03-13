@@ -136,9 +136,14 @@ export const propertyAPI = {
         const queryString = params.toString();
         const url = `${API_BASE_URL}/api/property/user/${userId}/property/${propertyId}/reset-and-reprocess${queryString ? `?${queryString}` : ''}`;
 
+        const token = getAuthToken();
+
         const response = await fetch(url, {
             method: 'POST',
             body: formData,
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
         });
 
         if (!response.ok) {
@@ -182,9 +187,14 @@ export const propertyAPI = {
         const queryString = params.toString();
         const url = `${API_BASE_URL}/api/property/user/${userId}/property/${propertyId}/documents${queryString ? `?${queryString}` : ''}`;
 
+        const token = getAuthToken();
+
         const response = await fetch(url, {
             method: 'PUT',
             body: formData,
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
         });
 
         if (!response.ok) {
@@ -264,9 +274,14 @@ export const documentAPI = {
         const docTypesParam = docTypes.map(dt => `doc_types=${encodeURIComponent(dt)}`).join('&');
         const url = `${API_BASE_URL}/api/documents/upload/${userId}/${propertyId}?${docTypesParam}`;
 
+        const token = getAuthToken();
+
         const response = await fetch(url, {
             method: 'POST',
             body: formData,
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
         });
 
         if (!response.ok) {
