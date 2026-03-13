@@ -15,7 +15,6 @@ const AddPropertyPage = () => {
         city: '',
         state: '',
         zipCode: '',
-        closingDate: '',
         clientName: '',
         yearBuilt: '',
         squareFootage: '',
@@ -179,7 +178,7 @@ const AddPropertyPage = () => {
                 address: formData.address.trim(),
                 zip_code: formData.zipCode.trim(),
                 client_name: formData.clientName.trim(),
-                inspection_date: formData.closingDate || null,
+                inspection_date: null,
                 negotiated_wins: formData.negotiatedWins.trim() || null,
                 city: formData.city.trim(),
                 state: formData.state.trim(),
@@ -434,25 +433,6 @@ const AddPropertyPage = () => {
                                     disabled={isSubmitting}
                                     className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50"
                                 />
-                            </div>
-
-                            {/* Row 3: Property Name and Closing Date */}
-
-                            <div>
-                                <label className="block text-sm font-medium text-[#374151] mb-2">
-                                    Property Closing Date
-                                </label>
-                                <div className="relative">
-                                    <Input
-                                        type="date"
-                                        name="closingDate"
-                                        value={formData.closingDate}
-                                        onChange={handleInputChange}
-                                        disabled={isSubmitting}
-                                        className={`h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm focus-visible:ring-1 focus-visible:ring-[#00346C] focus-visible:border-[#00346C] disabled:opacity-50 cursor-pointer ${formData.closingDate ? 'text-[#1E1E1E]' : 'text-[#9CA3AF]'}`}
-                                    />
-                                </div>
-                                <p className="text-xs text-[#9CA3AF] mt-1">Format: MM/DD/YYYY</p>
                             </div>
 
                             {/* Additional CMA Fields */}
