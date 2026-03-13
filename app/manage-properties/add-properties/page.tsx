@@ -25,6 +25,7 @@ const AddPropertyPage = () => {
         propertyType: '',
         purchasePrice: '',
         purchaseDate: '',
+        negotiatedWins: '',
     });
 
     // Separate state for each document type
@@ -178,7 +179,8 @@ const AddPropertyPage = () => {
                 address: formData.address.trim(),
                 zip_code: formData.zipCode.trim(),
                 client_name: formData.clientName.trim(),
-                inspection_date: null,
+                inspection_date: formData.closingDate || null,
+                negotiated_wins: formData.negotiatedWins.trim() || null,
                 city: formData.city.trim(),
                 state: formData.state.trim(),
                 year_built: formData.yearBuilt ? parseInt(formData.yearBuilt) : null,
@@ -551,6 +553,22 @@ const AddPropertyPage = () => {
                                         />
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Negotiated Wins */}
+                            <div className="col-span-1 md:col-span-2 mt-4">
+                                <label className="block text-sm font-medium text-[#374151] mb-2">
+                                    Negotiated Wins
+                                </label>
+                                <textarea
+                                    name="negotiatedWins"
+                                    placeholder="Enter any negotiated wins or concessions..."
+                                    value={formData.negotiatedWins}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, negotiatedWins: e.target.value }))}
+                                    disabled={isSubmitting}
+                                    className="w-full min-h-[100px] rounded-[8px] border border-[#D9D9D9] bg-white px-4 py-3 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#00346C] disabled:opacity-50"
+                                />
+                                <p className="text-xs text-[#9CA3AF] mt-1">Document any specific wins achieved during negotiation.</p>
                             </div>
 
                             {/* Row 4: Upload Buttons - Two separate buttons */}
