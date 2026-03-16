@@ -52,6 +52,7 @@ async function apiRequest<T>(
         if (!refreshToken) {
             // No refresh token, force logout
             if (typeof window !== 'undefined') {
+                clearAuth();
                 window.location.href = '/login';
             }
             throw new Error('Authentication required');
