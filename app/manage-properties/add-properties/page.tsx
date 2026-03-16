@@ -190,7 +190,7 @@ const AddPropertyPage = () => {
                 lot_size: formData.lotSize ? parseFloat(formData.lotSize) : null,
                 property_type: formData.propertyType || null,
                 purchase_price: formData.purchasePrice ? parseFloat(formData.purchasePrice) : null,
-                purchase_date: formData.purchaseDate || null,
+                purchase_date: formData.purchaseDate ? new Date(formData.purchaseDate).toISOString() : null,
             };
 
             const createdProperty = await propertyAPI.create(propertyData);
