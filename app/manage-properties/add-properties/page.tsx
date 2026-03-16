@@ -48,6 +48,7 @@ const AddPropertyPage = () => {
 
     const [canAddProperty, setCanAddProperty] = useState<{ allowed: boolean; reason: string; requires_subscription: boolean } | null>(null);
     const [isCheckingLimit, setIsCheckingLimit] = useState(true);
+    const [isBillingLoading, setIsBillingLoading] = useState(false);
 
     // Check property limit on mount
     useEffect(() => {
@@ -274,6 +275,21 @@ const AddPropertyPage = () => {
         );
     }
 
+    const handleUpgrade = async () => {
+        const userId = getCurrentUserId();
+        if (!userId) return;
+
+        setIsBillingLoading(true);
+        try {
+            const { checkout_url } = await billingAPI.createCheckoutSession(userId);
+            window.location.href = checkout_url;
+        } catch (err) {
+            console.error('Failed to create checkout session:', err);
+            alert('Failed to initiate upgrade. Please try again.');
+            setIsBillingLoading(false);
+        }
+    };
+
     // Limit reached state
     if (canAddProperty && !canAddProperty.allowed) {
         return (
@@ -290,10 +306,18 @@ const AddPropertyPage = () => {
                     <div className="space-y-3">
                         {canAddProperty.requires_subscription && (
                             <Button
-                                onClick={() => router.push('/profile')}
+                                onClick={handleUpgrade}
+                                disabled={isBillingLoading}
                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full h-12 font-bold"
                             >
-                                Upgrade to Pro
+                                {isBillingLoading ? (
+                                    <span className="flex items-center gap-2">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Connecting to Stripe...
+                                    </span>
+                                ) : (
+                                    "Upgrade to Pro"
+                                )}
                             </Button>
                         ) }
                         <Button
