@@ -47,7 +47,7 @@ export default function ProfilePage() {
     email: "",
     phone: "",
     location: "Florida, US",
-    avatar: "/profile-placeholder.jpg"
+    avatar: ""
   });
 
   const [preferences, setPreferences] = useState({
@@ -93,7 +93,7 @@ export default function ProfilePage() {
           email: userData.email || '',
           phone: userData.mobile_number || 'Not provided',
           location: 'Florida, US',
-          avatar: '/profile-placeholder.jpg'
+          avatar: ''
         });
 
         // 2. Fetch User Processes from API
@@ -406,19 +406,19 @@ export default function ProfilePage() {
                     {/* Profile Image */}
                     <div className="relative flex-shrink-0 mx-auto sm:mx-0">
                       <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden bg-gray-200">
-                        {imageError ? (
-                          <div className="w-full h-full bg-gradient-to-br from-amber-200 to-amber-400 flex items-center justify-center text-3xl font-bold text-white">
-                            {profile.name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
-                          </div>
-                        ) : (
+                        {profile.avatar && !imageError ? (
                           <Image
-                            src="/profile-placeholder.jpg"
+                            src={profile.avatar}
                             alt="Profile"
                             width={128}
                             height={128}
                             className="w-full h-full object-cover"
                             onError={() => setImageError(true)}
                           />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-amber-200 to-amber-400 flex items-center justify-center text-3xl font-bold text-white">
+                            {profile.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U'}
+                          </div>
                         )}
                       </div>
                       <button className="hidden sm:flex absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full items-center justify-center shadow-lg hover:bg-blue-700 transition-colors">
