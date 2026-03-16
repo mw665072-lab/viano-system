@@ -1,5 +1,6 @@
 // lib/api.ts - API Service Layer for VianoSystems
 // Updated to match exact backend OpenAPI schemas
+// Includes JWT refresh token handling and 401 interceptor
 
 // Base API URL - Uses environment variable
 // Note: NEXT_PUBLIC_ variables are bundled at build time in Next.js
@@ -22,6 +23,21 @@ function getApiBaseUrl(): string {
 }
 
 const API_BASE_URL = getApiBaseUrl();
+
+// Mutex and state for token refreshing
+let isRefreshing = false;
+let failedQueue: { resolve: (value: string | null) => void; reject: (reason?: any) => void }[] = [];
+
+const processQueue = (error: Error | null, token: string | null = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
 
 // Generic fetch wrapper with error handling
 async function apiRequest<T>(
@@ -46,7 +62,89 @@ async function apiRequest<T>(
         },
     };
 
-    const response = await fetch(url, config);
+    let response = await fetch(url, config);
+
+    // Initial 401 interceptor
+    if (response.status === 401 && endpoint !== '/api/auth/login' && endpoint !== '/api/auth/signup' && endpoint !== '/api/auth/refresh') {
+        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+        
+        if (!refreshToken) {
+            // No refresh token, force logout
+            if (typeof window !== 'undefined') {
+                window.location.href = '/login';
+            }
+            throw new Error('Authentication required');
+        }
+
+        if (isRefreshing) {
+            // If already refreshing, wait in queue for the new token
+            try {
+                const newToken = await new Promise<string | null>((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                });
+
+                if (newToken) {
+                    // Token refreshed successfully by another request, retry this one with new token
+                    const retryConfig: RequestInit = {
+                        ...config,
+                        headers: {
+                            ...config.headers,
+                            'Authorization': `Bearer ${newToken}`,
+                        },
+                    };
+                    response = await fetch(url, retryConfig);
+                }
+            } catch (err) {
+                 throw new Error('Token refresh failed queue');
+            }
+        } else {
+             // We are the first one to hit 401, start the refresh process
+            isRefreshing = true;
+
+            try {
+                const refreshResponse = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refresh_token: refreshToken }),
+                });
+
+                if (!refreshResponse.ok) {
+                    throw new Error('Refresh token invalid or expired');
+                }
+
+                const refreshData = await refreshResponse.json();
+                const newAccessToken = refreshData.access_token;
+                
+                if (typeof window !== 'undefined' && newAccessToken) {
+                    localStorage.setItem('authToken', newAccessToken);
+                }
+
+                // Process the queue and let other requests know
+                processQueue(null, newAccessToken);
+
+                // Retry original request
+                const retryConfig: RequestInit = {
+                    ...config,
+                    headers: {
+                        ...config.headers,
+                        'Authorization': `Bearer ${newAccessToken}`,
+                    },
+                };
+                response = await fetch(url, retryConfig);
+
+            } catch (err) {
+                // Refresh failed completely
+                processQueue(err as Error, null);
+                if (typeof window !== 'undefined') {
+                    clearAuth();
+                    window.location.href = '/login';
+                }
+                throw new Error('Session expired. Please log in again.');
+            } finally {
+                isRefreshing = false;
+            }
+        }
+    }
 
     if (!response.ok) {
         let errorDetail = 'An error occurred';
@@ -92,6 +190,15 @@ export const authAPI = {
      */
     getUser: (userId: string) =>
         apiRequest<UserResponse>(`/api/auth/user/${userId}`),
+
+    /**
+     * Refresh the access token
+     */
+    refresh: (refreshToken: string) =>
+        apiRequest<{ access_token: string }>('/api/auth/refresh', {
+            method: 'POST',
+            body: JSON.stringify({ refresh_token: refreshToken }),
+        }),
 };
 
 // ============ PROPERTY APIs ============
@@ -455,6 +562,7 @@ export interface LoginResponse {
     first_name: string;
     last_name: string;
     access_token: string; // JWT token required for future requests
+    refresh_token?: string; // JWT token required for refreshing access_token
 }
 
 export interface UserResponse {
@@ -625,6 +733,7 @@ export function clearAuth(): void {
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userName');
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
 }
 
 /**
@@ -637,6 +746,9 @@ export function saveAuth(loginResponse: LoginResponse): void {
     localStorage.setItem('userName', `${loginResponse.first_name} ${loginResponse.last_name}`);
     if (loginResponse.access_token) {
         localStorage.setItem('authToken', loginResponse.access_token);
+    }
+    if (loginResponse.refresh_token) {
+        localStorage.setItem('refreshToken', loginResponse.refresh_token);
     }
 }
 
