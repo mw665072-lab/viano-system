@@ -14,7 +14,6 @@ interface ProfileData {
   role: string;
   email: string;
   phone: string;
-  location: string;
   avatar: string;
 }
 
@@ -46,7 +45,6 @@ export default function ProfilePage() {
     role: "Property Evaluation Specialist",
     email: "",
     phone: "",
-    location: "Florida, US",
     avatar: ""
   });
 
@@ -92,7 +90,6 @@ export default function ProfilePage() {
           role: userData.role || 'Property Evaluation Specialist',
           email: userData.email || '',
           phone: userData.mobile_number || 'Not provided',
-          location: 'Florida, US',
           avatar: ''
         });
 
@@ -440,10 +437,6 @@ export default function ProfilePage() {
                         <div>
                           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">PHONE</p>
                           <p className="text-sm text-gray-900 mt-1">{profile.phone}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">LOCATION</p>
-                          <p className="text-sm text-gray-900 mt-1">{profile.location}</p>
                         </div>
                       </div>
                     </div>
