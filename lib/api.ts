@@ -67,7 +67,7 @@ async function apiRequest<T>(
     // Initial 401 interceptor
     if (response.status === 401 && endpoint !== '/api/auth/login' && endpoint !== '/api/auth/signup' && endpoint !== '/api/auth/refresh') {
         const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
-        
+
         if (!refreshToken) {
             // No refresh token, force logout
             if (typeof window !== 'undefined') {
@@ -96,10 +96,10 @@ async function apiRequest<T>(
                     response = await fetch(url, retryConfig);
                 }
             } catch (err) {
-                 throw new Error('Token refresh failed queue');
+                throw new Error('Token refresh failed queue');
             }
         } else {
-             // We are the first one to hit 401, start the refresh process
+            // We are the first one to hit 401, start the refresh process
             isRefreshing = true;
 
             try {
@@ -115,7 +115,7 @@ async function apiRequest<T>(
 
                 const refreshData = await refreshResponse.json();
                 const newAccessToken = refreshData.access_token;
-                
+
                 if (typeof window !== 'undefined' && newAccessToken) {
                     localStorage.setItem('authToken', newAccessToken);
                 }
@@ -661,6 +661,16 @@ export interface MessageResponse {
     scheduled_for: string | null;
     created_at: string | null;
     priority_level: number | null;
+    priority: any;
+    realtor_alert?: {
+        title?: string;
+        body?: {
+            realtor_context?: string;
+            client_sample_message?: string;
+            referrals?: string;
+        };
+        priority?: string;
+    } | null;
 }
 
 export interface EngineResultResponse {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info } from "lucide-react"
+import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { processAPI, documentAPI, MessageResponse, getCurrentUserId } from "@/lib/api"
@@ -31,6 +31,9 @@ interface PropertyDetailData {
     propertyType?: string
     purchasePrice?: number
     purchaseDate?: string
+    city?: string
+    state?: string
+    zipCode?: string
 }
 
 interface PropertyDetailPanelProps {
@@ -70,6 +73,22 @@ export function PropertyDetailPanel({
     // Document count state - initialize to the count from props for immediate display
     const [documentCount, setDocumentCount] = useState<number>(property.documentsSubmitted)
     const [isLoadingDocs, setIsLoadingDocs] = useState(true)
+
+    // Helper: resolve effective priority from realtor_alert.priority (string) first
+    const getEffectivePriority = (m: MessageResponse): number => {
+        // Prefer realtor_alert.priority (the string inside the nested object)
+        const alertPriority = m.realtor_alert?.priority;
+        if (alertPriority && typeof alertPriority === 'string') {
+            const p = alertPriority.toLowerCase();
+            if (p === 'critical') return 1;
+            if (p === 'high') return 2;
+            if (p === 'medium') return 3;
+            if (p === 'low') return 4;
+        }
+        // Fallback to priority_level if realtor_alert.priority is not available
+        if (m.priority_level != null) return m.priority_level;
+        return 4; // default to low
+    }
 
     // Fetch messages when property or processId changes
     useEffect(() => {
@@ -128,10 +147,9 @@ export function PropertyDetailPanel({
 
     // Calculate tier breakdown
     const tierBreakdown = {
-        critical: messages.filter(m => m.priority_level === 1).length,
-        high: messages.filter(m => m.priority_level === 2).length,
-        medium: messages.filter(m => m.priority_level === 3).length,
-        low: messages.filter(m => m.priority_level === 4 || m.priority_level === null).length,
+        high: messages.filter(m => getEffectivePriority(m) === 1 || getEffectivePriority(m) === 2).length,
+        medium: messages.filter(m => getEffectivePriority(m) === 3).length,
+        low: messages.filter(m => getEffectivePriority(m) === 4).length,
     }
 
     const documentsProgress = (documentCount / property.documentsTotal) * 100
@@ -223,6 +241,9 @@ export function PropertyDetailPanel({
                         </p>
                         <p className="text-sm font-semibold text-[#0C1D38] break-words">
                             {property.address}
+                            {property.city && `, ${property.city}`}
+                            {property.state && `, ${property.state}`}
+                            {property.zipCode && ` ${property.zipCode}`}
                         </p>
                     </div>
 
@@ -327,38 +348,104 @@ export function PropertyDetailPanel({
                     </div>
 
                     {/* Issues Summary Section - Restored Original Visuals */}
-                    <div>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-semibold text-[#64748B] uppercase tracking-wide">
-                                Issues Summary
-                            </h3>
-                            <Star className="w-5 h-5 text-amber-500" />
-                        </div>
+                    {/* Issues Summary Section */}
+                    <div className="mt-2 p-5 bg-white rounded-[28px] border border-gray-100/80 shadow-[0_4px_20px_rgb(0,0,0,0.03)] relative overflow-hidden group">
+                        {/* Background Decorative Element */}
+                        <div className="absolute -top-12 -right-12 w-24 h-24 bg-blue-50/50 rounded-full blur-2xl group-hover:bg-blue-100/50 transition-colors duration-700" />
 
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-4xl font-bold text-[#0C1D38]">
-                                {isLoadingMessages ? "..." : messageCount}
-                            </span>
-                            <span className="text-sm font-bold text-[#64748B] uppercase tracking-wider">Total Issues</span>
-                        </div>
-
-                        {!isLoadingMessages && messageCount > 0 && (
-                            <div className="grid grid-cols-2 gap-2 pt-4 border-t border-gray-100">
-                                {[
-                                    { key: 'critical', count: tierBreakdown.critical, label: 'Critical', bgColor: 'bg-red-50', borderColor: 'border-red-200', textColor: 'text-red-700', iconColor: 'text-red-600', Icon: AlertTriangle },
-                                    { key: 'high', count: tierBreakdown.high, label: 'High', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', textColor: 'text-orange-700', iconColor: 'text-orange-600', Icon: AlertCircle },
-                                    { key: 'medium', count: tierBreakdown.medium, label: 'Medium', bgColor: 'bg-amber-50', borderColor: 'border-amber-200', textColor: 'text-amber-700', iconColor: 'text-amber-600', Icon: Info },
-                                    { key: 'low', count: tierBreakdown.low, label: 'Low', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', textColor: 'text-blue-700', iconColor: 'text-blue-600', Icon: Info },
-                                ]
-                                    .filter(item => item.count > 0)
-                                    .map(({ key, count, label, bgColor, borderColor, textColor, iconColor, Icon }) => (
-                                        <div key={key} className={`flex items-center gap-2 p-3 rounded-xl ${bgColor} border ${borderColor}`}>
-                                            <Icon className={`w-4 h-4 ${iconColor}`} />
-                                            <span className={`text-sm font-bold ${textColor}`}>{label}: {count}</span>
-                                        </div>
-                                    ))}
+                        <div className="relative z-10">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-100">
+                                        <MessageSquare className="w-5 h-5 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xs font-bold text-[#0C1D38] uppercase tracking-wider">Issues Summary</h3>
+                                        <p className="text-[9px] text-[#64748B] font-bold mt-0.5 uppercase tracking-tight opacity-60">Priority Distribution</p>
+                                    </div>
+                                </div>
+                                <Star className="w-4 h-4 text-amber-500 fill-amber-500 opacity-80" />
                             </div>
-                        )}
+
+                            <div className="flex items-end justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-5xl font-black text-[#0C1D38] tracking-tighter leading-none">
+                                        {isLoadingMessages ? "..." : messageCount}
+                                    </span>
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] font-bold text-[#64748B] uppercase tracking-[0.15em] leading-tight mb-0.5 opacity-50">Property</span>
+                                        <span className="text-xs font-bold text-[#0C1D38] uppercase tracking-wider">Total touchpoints</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {!isLoadingMessages && messageCount > 0 && (
+                                <div className="mb-6">
+                                    <div className="w-full h-1.5 bg-gray-100 rounded-full flex overflow-hidden p-0">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-orange-400 to-orange-500 transition-all duration-1000"
+                                            style={{ width: `${(tierBreakdown.high / messageCount) * 100}%` }}
+                                        />
+                                        <div
+                                            className="h-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-1000"
+                                            style={{ width: `${(tierBreakdown.medium / messageCount) * 100}%` }}
+                                        />
+                                        <div
+                                            className="h-full bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-1000"
+                                            style={{ width: `${(tierBreakdown.low / messageCount) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {!isLoadingMessages && (
+                                <div className="grid grid-cols-3 gap-3">
+                                    {[
+                                        {
+                                            key: 'high',
+                                            count: tierBreakdown.high,
+                                            label: 'High',
+                                            gradient: 'from-orange-50 to-white',
+                                            borderColor: 'border-orange-100',
+                                            textColor: 'text-orange-700',
+                                            iconColor: 'text-orange-500',
+                                            Icon: AlertCircle
+                                        },
+                                        {
+                                            key: 'medium',
+                                            count: tierBreakdown.medium,
+                                            label: 'Medium',
+                                            gradient: 'from-amber-50 to-white',
+                                            borderColor: 'border-amber-100',
+                                            textColor: 'text-amber-700',
+                                            iconColor: 'text-amber-500',
+                                            Icon: Info
+                                        },
+                                        {
+                                            key: 'low',
+                                            count: tierBreakdown.low,
+                                            label: 'Low',
+                                            gradient: 'from-blue-50 to-white',
+                                            borderColor: 'border-blue-100',
+                                            textColor: 'text-blue-700',
+                                            iconColor: 'text-blue-500',
+                                            Icon: Info
+                                        },
+                                    ]
+                                        .map(({ key, count, label, gradient, borderColor, textColor, iconColor, Icon }) => (
+                                            <div key={key} className={`flex flex-col items-start gap-2 p-3 rounded-2xl bg-gradient-to-b ${gradient} border ${borderColor} transition-all duration-300 hover:shadow-sm h-full group/card`}>
+                                                <div className={`p-1.5 rounded-lg bg-white/80 shadow-sm backdrop-blur-sm`}>
+                                                    <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className={`text-[9px] uppercase font-black tracking-widest ${textColor} opacity-50 mb-0.5`}>{label}</p>
+                                                    <p className={`text-lg font-black ${textColor} tracking-tight`}>{count}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

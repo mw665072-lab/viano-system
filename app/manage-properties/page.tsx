@@ -7,6 +7,7 @@ import { AlertCircle, Loader2, X, Upload, FileText, Trash2 } from 'lucide-react'
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, EngineResultResponse, MessageResponse, getCurrentUserId } from '@/lib/api';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 
 // All possible process statuses from the workflow
 type ProcessStatus = "pending" | "started" | "downloading" | "generating_messages" | "storing_messages" | "completed" | "failed";
@@ -38,6 +39,9 @@ interface Property {
     propertyType?: string
     purchasePrice?: number
     purchaseDate?: string
+    city?: string
+    state?: string
+    zipCode?: string
 }
 
 interface PropertyDetail {
@@ -65,6 +69,9 @@ interface PropertyDetail {
     propertyType?: string
     purchasePrice?: number
     purchaseDate?: string
+    city?: string
+    state?: string
+    zipCode?: string
 }
 
 // Status configuration with colors and messages
@@ -195,6 +202,9 @@ const Page = () => {
                     propertyType: prop.property_type ?? undefined,
                     purchasePrice: prop.purchase_price ?? undefined,
                     purchaseDate: prop.purchase_date ?? undefined,
+                    city: prop.city ?? undefined,
+                    state: prop.state ?? undefined,
+                    zipCode: prop.zip_code ?? undefined,
                 };
             });
 
@@ -284,14 +294,6 @@ const Page = () => {
                 return;
             }
 
-            // Fetch engine results (AI analysis)
-            let engineResults: EngineResultResponse[] = [];
-            try {
-                engineResults = await processAPI.getEngineResults(propProcessId);
-            } catch (err) {
-                console.log('Could not fetch engine results:', err);
-            }
-
             // Fetch generated messages
             let messages: MessageResponse[] = [];
             try {
@@ -300,54 +302,186 @@ const Page = () => {
                 console.log('Could not fetch messages:', err);
             }
 
-            // Get process status
-            let processStatus = null;
-            try {
-                processStatus = await processAPI.getStatus(propProcessId);
-            } catch (err) {
-                console.log('Could not fetch process status:', err);
-            }
-
             // Check if we have any results to download
-            if (engineResults.length === 0 && messages.length === 0) {
+            if (messages.length === 0) {
                 alert('No AI analysis results available yet. The processing may still be in progress.');
                 setIsDownloading(false);
                 return;
             }
 
-            // Create the report object
-            const report = {
-                propertyName: property?.name || 'Unknown Property',
-                propertyLocation: property?.location || 'Unknown Location',
-                clientName: property?.clientName || 'N/A',
-                generatedAt: new Date().toISOString(),
-                processStatus: processStatus?.status || 'unknown',
-                processProgress: processStatus?.progress || 0,
-                engineResults: engineResults.map(result => ({
-                    resultId: result.engine_result_id,
-                    documentId: result.doc_id,
-                    status: result.status,
-                    analysisPreview: result.json_result_preview,
-                })),
-                messages: messages.map(msg => ({
-                    messageId: msg.message_id,
-                    text: msg.message_text,
-                    status: msg.status,
-                    tier: msg.priority_level, // Priority level: 1=Critical, 2=High, 3=Medium, 4=Low
-                    scheduledFor: msg.scheduled_for,
-                    createdAt: msg.created_at,
-                })),
-            };
+            // 1. Sort messages by scheduled_for date
+            const sortedMessages = [...messages].sort((a, b) => {
+                const dateA = a.scheduled_for ? new Date(a.scheduled_for).getTime() : 0;
+                const dateB = b.scheduled_for ? new Date(b.scheduled_for).getTime() : 0;
+                return dateA - dateB;
+            });
 
-            // Create a downloadable blob
-            const reportJson = JSON.stringify(report, null, 2);
-            const blob = new Blob([reportJson], { type: 'application/json' });
+            // 2. Group messages by year
+            const messagesByYear: Record<string, MessageResponse[]> = {};
+            sortedMessages.forEach(msg => {
+                const year = msg.scheduled_for ? new Date(msg.scheduled_for).getFullYear().toString() : 'Scheduled';
+                if (!messagesByYear[year]) messagesByYear[year] = [];
+                messagesByYear[year].push(msg);
+            });
+
+            const years = Object.keys(messagesByYear).sort();
+            const startYear = years.length > 0 ? years[0] : new Date().getFullYear().toString();
+            const endYear = years.length > 0 ? years[years.length - 1] : new Date().getFullYear().toString();
+
+            // 3. Create DOCX structure
+            const docSections: any[] = [];
+
+            // Header Section
+            docSections.push(
+                new Paragraph({
+                    text: "Realtor Alert",
+                    heading: HeadingLevel.HEADING_1,
+                    alignment: AlignmentType.CENTER,
+                    spacing: { after: 400 },
+                }),
+                new Paragraph({
+                    children: [
+                        new TextRun({ text: "Client Name: ", bold: true }),
+                        new TextRun(property?.clientName || "N/A"),
+                    ],
+                }),
+                new Paragraph({
+                    children: [
+                        new TextRun({ text: "Plan Duration: ", bold: true }),
+                        new TextRun(`${startYear} – ${endYear}`),
+                    ],
+                    spacing: { after: 600 },
+                })
+            );
+
+            // Yearly Sections
+            years.forEach(year => {
+                docSections.push(
+                    new Paragraph({
+                        text: `${year} Scheduled Touchpoints`,
+                        heading: HeadingLevel.HEADING_2,
+                        spacing: { before: 400, after: 300 },
+                    })
+                );
+
+                // Touchpoint Items
+                messagesByYear[year].forEach(msg => {
+                    // Resolve priority from realtor_alert.priority (string) first
+                    let priorityValue: number | null = null;
+                    const alertPriority = msg.realtor_alert?.priority;
+                    if (alertPriority && typeof alertPriority === 'string') {
+                        const p = alertPriority.toLowerCase();
+                        priorityValue = p === 'critical' ? 1 : p === 'high' ? 2 : p === 'medium' ? 3 : 4;
+                    } else if (msg.priority_level != null) {
+                        priorityValue = msg.priority_level;
+                    }
+                    priorityValue = priorityValue || 3;
+                    const priority = (priorityValue === 1 || priorityValue === 2) ? "High" :
+                        priorityValue === 3 ? "Medium" : "Low";
+
+                    const dateStr = msg.scheduled_for
+                        ? new Date(msg.scheduled_for).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                        : "N/A";
+
+                    // Extract realtor_alert fields
+                    const alertTitle = msg.realtor_alert?.title || `${priority} Maintenance Alert - ${dateStr}`;
+                    const realtorContext = msg.realtor_alert?.body?.realtor_context || "AI-generated insights and recommendations for professional follow-up.";
+                    const referrals = msg.realtor_alert?.body?.referrals;
+
+                    const paragraphs: typeof docSections = [
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "Date: ", bold: true }),
+                                new TextRun(dateStr),
+                            ],
+                            spacing: { before: 200 },
+                        }),
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "Title: ", bold: true }),
+                                new TextRun(alertTitle),
+                            ],
+                        }),
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "Priority: ", bold: true }),
+                                new TextRun(priority),
+                            ],
+                        }),
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "Realtor Context: ", bold: true }),
+                                new TextRun(realtorContext),
+                            ],
+                        }),
+                        new Paragraph({
+                            children: [
+                                new TextRun({ text: "Client Message: ", bold: true }),
+                                new TextRun(msg.message_text),
+                            ],
+                            spacing: { after: referrals && referrals.trim() ? 100 : 400 },
+                        }),
+                    ];
+
+                    // Add referrals section if not empty
+                    if (referrals && referrals.trim()) {
+                        paragraphs.push(
+                            new Paragraph({
+                                children: [
+                                    new TextRun({ text: "Referrals:", bold: true }),
+                                ],
+                                spacing: { before: 100 },
+                            }),
+                        );
+                        // Split referrals by newline and add each as a separate paragraph
+                        const referralLines = referrals.split('\n').filter((line: string) => line.trim());
+                        referralLines.forEach((line: string) => {
+                            paragraphs.push(
+                                new Paragraph({
+                                    children: [
+                                        new TextRun({ text: line.trim() }),
+                                    ],
+                                    spacing: { before: 40 },
+                                }),
+                            );
+                        });
+                        // Add spacing after the last referral line
+                        paragraphs.push(
+                            new Paragraph({
+                                text: "",
+                                spacing: { after: 300 },
+                            }),
+                        );
+                    }
+
+                    // Add separator
+                    paragraphs.push(
+                        new Paragraph({
+                            text: "________________________________________________________________________________",
+                            spacing: { after: 200 },
+                        })
+                    );
+
+                    docSections.push(...paragraphs);
+                });
+            });
+
+            // Create the document
+            const doc = new Document({
+                sections: [{
+                    properties: {},
+                    children: docSections,
+                }],
+            });
+
+            // Pack and download
+            const blob = await Packer.toBlob(doc);
             const url = URL.createObjectURL(blob);
 
             // Create download link and trigger download
             const link = document.createElement('a');
             link.href = url;
-            link.download = `${property?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'property'}_report_${new Date().toISOString().split('T')[0]}.json`;
+            link.download = `${property?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'property'}_Realtor_Alert.docx`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -521,6 +655,9 @@ const Page = () => {
         propertyType: selectedProperty.propertyType,
         purchasePrice: selectedProperty.purchasePrice,
         purchaseDate: selectedProperty.purchaseDate,
+        city: selectedProperty.city,
+        state: selectedProperty.state,
+        zipCode: selectedProperty.zipCode,
     } : null;
 
     const handlePageChange = (page: number) => {

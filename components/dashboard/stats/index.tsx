@@ -9,7 +9,6 @@ interface DashboardStats {
   pendingMessages: number
   issuesIdentified: number
   upcomingClosings: number
-  propertyTrend?: { value: number; direction: "up" | "down" }
 }
 
 export default function DashboardStatsCard() {
@@ -56,8 +55,8 @@ export default function DashboardStatsCard() {
         const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
         const upcomingClosings = properties.filter((prop: PropertyResponse) => {
-          if (!prop.property_closing_date) return false
-          const closingDate = new Date(prop.property_closing_date)
+          if (!prop.purchase_date) return false
+          const closingDate = new Date(prop.purchase_date)
           return closingDate >= now && closingDate <= thirtyDaysFromNow
         }).length
 
@@ -113,8 +112,6 @@ export default function DashboardStatsCard() {
           pendingMessages,
           issuesIdentified,
           upcomingClosings,
-          // Calculate trend (placeholder - would need historical data)
-          propertyTrend: properties.length > 0 ? { value: 12, direction: "up" } : undefined,
         })
       } catch (err) {
         console.error('Error fetching dashboard stats:', err)
@@ -140,17 +137,13 @@ export default function DashboardStatsCard() {
       title: "Total Properties",
       value: isLoading ? "..." : stats.totalProperties.toString(),
       icon: <span className="text-2xl">🏠</span>,
-      trend: stats.propertyTrend ? {
-        value: stats.propertyTrend.value,
-        direction: stats.propertyTrend.direction,
-        color: stats.propertyTrend.direction === "up" ? "green" as const : "red" as const
-      } : undefined,
+      trend: undefined,
     },
     {
       title: "Pending SMS (180 days)",
       value: isLoading ? "..." : stats.pendingMessages.toString(),
       icon: <span className="text-2xl">🔍</span>,
-      trend: stats.pendingMessages > 0 ? { value: stats.pendingMessages, direction: "down" as const, color: "red" as const } : undefined,
+      trend: undefined,
     },
     {
       title: "Issues Identified",
