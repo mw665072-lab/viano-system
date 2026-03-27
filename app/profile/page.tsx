@@ -52,7 +52,7 @@ export default function ProfilePage() {
 
   const [preferences, setPreferences] = useState({
     email: true,
-    sms: false,
+    sms: true,
     weekly: true,
     marketing: false,
   });

@@ -109,9 +109,12 @@ export function PropertyList({
                   {property.status}
                 </Badge>
               </div>
-              <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+              <p className="text-[11px] font-medium text-gray-700 truncate mt-0.5">
+                {property.name}
+              </p>
+              <div className="flex items-center gap-3 mt-0.5 text-[10px] text-gray-400">
                 <span className="flex items-center gap-1 truncate">
-                  <MapPin className="w-3 h-3" />
+                  <MapPin className="w-2.5 h-2.5" />
                   {property.location}
                 </span>
               </div>

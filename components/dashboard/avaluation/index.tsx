@@ -24,6 +24,9 @@ interface DashboardProperty {
     closingDate?: string
     progress: number
     processId?: string // Added for fetching messages
+    city?: string
+    state?: string
+    zipCode?: string
 }
 
 // Status configuration with colors and messages
@@ -180,10 +183,13 @@ export function PropertyEvaluationDashboard() {
                     statusColor: statusConfig.color,
                     statusMessage: statusConfig.message,
                     clientName: prop.client_name,
-                    closingDate: prop.property_closing_date || undefined,
+                    closingDate: prop.purchase_date || undefined,
                     createdAt: process?.process_start || undefined, // Use process_start as activation date
                     progress: progress,
                     processId: process?.process_id,
+                    city: prop.city || undefined,
+                    state: prop.state || undefined,
+                    zipCode: prop.zip_code || undefined,
                 };
             });
 
