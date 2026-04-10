@@ -34,7 +34,7 @@ export default function Notifications() {
       // Fetch all user processes
       let processes: ProcessSummaryResponse[] = []
       try {
-        processes = await processAPI.getUserProcesses(userId)
+        processes = await processAPI.getUserProcesses()
       } catch (err) {
         console.log("Could not fetch processes")
         setNotifications([])

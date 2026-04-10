@@ -83,7 +83,7 @@ export default function ProfilePage() {
         }
 
         // 1. Fetch User Profile from API
-        const userData: UserResponse = await authAPI.getUser(userId);
+        const userData: UserResponse = await authAPI.getUser();
 
         setProfile({
           name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 'User',
@@ -96,7 +96,7 @@ export default function ProfilePage() {
         // 2. Fetch User Processes from API
         let processesData: ProcessSummaryResponse[] = [];
         try {
-          processesData = await processAPI.getUserProcesses(userId);
+          processesData = await processAPI.getUserProcesses();
         } catch (e) {
           console.log('No processes found or error fetching processes');
           processesData = [];
@@ -105,7 +105,7 @@ export default function ProfilePage() {
         // 3. Fetch User Properties to get property names
         let propertiesData: PropertyResponse[] = [];
         try {
-          propertiesData = await propertyAPI.getUserProperties(userId);
+          propertiesData = await propertyAPI.getUserProperties();
         } catch (e) {
           console.log('No properties found or error fetching properties');
           propertiesData = [];
@@ -159,7 +159,7 @@ export default function ProfilePage() {
 
         // 5. Fetch Billing Status
         try {
-          const billingData = await billingAPI.getStatus(userId);
+          const billingData = await billingAPI.getStatus();
           setBillingStatus(billingData);
         } catch (e) {
           console.log('Error fetching billing status:', e);
@@ -201,8 +201,8 @@ export default function ProfilePage() {
 
     try {
       // Fetch fresh processes data
-      const processesData = await processAPI.getUserProcesses(userId);
-      const propertiesData = await propertyAPI.getUserProperties(userId);
+      const processesData = await processAPI.getUserProcesses();
+      const propertiesData = await propertyAPI.getUserProperties();
 
       // Create a map of property_id to the MOST RECENT process record
       const latestProcessMap = new Map<string, ProcessSummaryResponse>();
@@ -321,7 +321,7 @@ export default function ProfilePage() {
 
     setIsBillingLoading(true);
     try {
-      const { checkout_url } = await billingAPI.createCheckoutSession(userId);
+      const { checkout_url } = await billingAPI.createCheckoutSession();
       window.location.href = checkout_url;
     } catch (err) {
       console.error('Failed to create checkout session:', err);
@@ -337,7 +337,7 @@ export default function ProfilePage() {
 
     setIsBillingLoading(true);
     try {
-      const { portal_url } = await billingAPI.getPortalLink(userId);
+      const { portal_url } = await billingAPI.getPortalLink();
       window.location.href = portal_url;
     } catch (err) {
       console.error('Failed to get portal link:', err);

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { processAPI, documentAPI, MessageResponse, getCurrentUserId } from "@/lib/api"
+import { processAPI, documentAPI, MessageResponse } from "@/lib/api"
 
 interface PropertyDetailData {
     id: string
@@ -120,15 +120,9 @@ export function PropertyDetailPanel({
     useEffect(() => {
         const fetchDocumentCount = async () => {
             setIsLoadingDocs(true)
-            const userId = getCurrentUserId()
-            if (!userId) {
-                setDocumentCount(0)
-                setIsLoadingDocs(false)
-                return
-            }
 
             try {
-                const docs = await documentAPI.getPropertyDocuments(userId, property.id)
+                const docs = await documentAPI.getPropertyDocuments(property.id)
                 if (Array.isArray(docs)) {
                     setDocumentCount(docs.length)
                 } else {

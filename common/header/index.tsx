@@ -73,7 +73,7 @@ export function PageHeader({
                     })
                 } else if (storedInfo.userId) {
                     try {
-                        const user = await authAPI.getUser(storedInfo.userId)
+                        const user = await authAPI.getUser()
                         const firstName = user.first_name || 'User'
                         const lastName = user.last_name || ''
                         const fullName = `${firstName} ${lastName}`.trim() || 'User'

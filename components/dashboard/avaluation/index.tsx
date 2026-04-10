@@ -145,13 +145,13 @@ export function PropertyEvaluationDashboard() {
                 return
             }
 
-            const apiProperties = await propertyAPI.getUserProperties(userId)
+            const apiProperties = await propertyAPI.getUserProperties()
             console.log('Dashboard: Received', apiProperties.length, 'properties from API')
 
             // Fetch all processes for the user to get status info
             let processes: ProcessSummaryResponse[] = [];
             try {
-                processes = await processAPI.getUserProcesses(userId);
+                processes = await processAPI.getUserProcesses();
             } catch (err) {
                 console.log('Could not fetch processes, using default status');
             }

@@ -42,7 +42,7 @@ export default function DashboardStatsCard() {
 
         // Fetch properties with timeout
         const properties = await Promise.race([
-          propertyAPI.getUserProperties(userId),
+          propertyAPI.getUserProperties(),
           new Promise<PropertyResponse[]>((_, reject) =>
             setTimeout(() => reject(new Error('Properties fetch timeout')), 8000)
           )
@@ -66,7 +66,7 @@ export default function DashboardStatsCard() {
 
         try {
           const processes = await Promise.race([
-            processAPI.getUserProcesses(userId),
+            processAPI.getUserProcesses(),
             new Promise<any[]>((_, reject) =>
               setTimeout(() => reject(new Error('Processes fetch timeout')), 5000)
             )

@@ -145,12 +145,12 @@ const Page = () => {
             }
 
             // Fetch properties
-            const apiProperties = await propertyAPI.getUserProperties(userId);
+            const apiProperties = await propertyAPI.getUserProperties();
 
             // Fetch all processes for the user to get status info
             let processes: ProcessSummaryResponse[] = [];
             try {
-                processes = await processAPI.getUserProcesses(userId);
+                processes = await processAPI.getUserProcesses();
             } catch (err) {
                 console.log('Could not fetch processes, using default status');
             }
@@ -516,7 +516,7 @@ const Page = () => {
 
         try {
             // Delete from backend API
-            await propertyAPI.delete(userId, propertyToDelete);
+            await propertyAPI.delete(propertyToDelete);
 
             // Remove from local state after successful API delete
             setProperties(prev => prev.filter(p => p.id !== propertyToDelete));
@@ -574,7 +574,7 @@ const Page = () => {
             // - Deletes all existing documents
             // - Uploads new documents
             // - Starts processing pipeline
-            await propertyAPI.resetAndReprocess(userId, selectedProperty.id, filesToUpload, docTypes);
+            await propertyAPI.resetAndReprocess(selectedProperty.id, filesToUpload, docTypes);
 
             // Refresh properties list
             await fetchPropertiesWithStatus();

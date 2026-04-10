@@ -187,10 +187,10 @@ export const authAPI = {
         }),
 
     /**
-     * Fetch user data from RDS
+     * Fetch user data from RDS (JWT-based)
      */
-    getUser: (userId: string) =>
-        apiRequest<UserResponse>(`/api/auth/user/${userId}`),
+    getUser: () =>
+        apiRequest<UserResponse>('/api/auth/user/me'),
 
     /**
      * Refresh the access token
@@ -215,29 +215,29 @@ export const propertyAPI = {
         }),
 
     /**
-     * Get all properties for a user
+     * Get all properties for the current user (JWT-based)
      */
-    getUserProperties: (userId: string) =>
-        apiRequest<PropertyResponse[]>(`/api/property/user/${userId}`),
+    getUserProperties: () =>
+        apiRequest<PropertyResponse[]>('/api/property/my-properties'),
 
     /**
-     * Get a specific property for a user by ID
+     * Get a specific property for the current user by ID (JWT-based)
      */
-    getProperty: (userId: string, propertyId: string) =>
-        apiRequest<PropertyResponse>(`/api/property/user/${userId}/property/${propertyId}`),
+    getProperty: (propertyId: string) =>
+        apiRequest<PropertyResponse>(`/api/property/my-properties/${propertyId}`),
 
     /**
-     * Delete a property for a user
+     * Delete a property for the current user (JWT-based)
      * Only the owner can delete their property
      * Cascades deletion to related documents, processes, and messages
      */
-    delete: (userId: string, propertyId: string) =>
-        apiRequest<string>(`/api/property/user/${userId}/property/${propertyId}`, {
+    delete: (propertyId: string) =>
+        apiRequest<string>(`/api/property/my-properties/${propertyId}`, {
             method: 'DELETE',
         }),
 
     /**
-     * Reset and reprocess a property
+     * Reset and reprocess a property (JWT-based)
      * This endpoint:
      * - Deletes all existing documents (from S3 and RDS)
      * - Deletes all related processes, messages, and engine results
@@ -246,7 +246,6 @@ export const propertyAPI = {
      * Returns immediately with process_id for tracking.
      */
     resetAndReprocess: async (
-        userId: string,
         propertyId: string,
         files: File[],
         docTypes: ('4point' | 'home_inspection')[]
@@ -261,7 +260,7 @@ export const propertyAPI = {
         docTypes.forEach(dt => params.append('doc_types', dt));
 
         const queryString = params.toString();
-        const url = `${API_BASE_URL}/api/property/user/${userId}/property/${propertyId}/reset-and-reprocess${queryString ? `?${queryString}` : ''}`;
+        const url = `${API_BASE_URL}/api/property/my-properties/${propertyId}/reset-and-reprocess${queryString ? `?${queryString}` : ''}`;
 
         const token = getAuthToken();
 
@@ -282,12 +281,11 @@ export const propertyAPI = {
     },
 
     /**
-     * Edit property documents (legacy - use resetAndReprocess for better handling)
+     * Edit property documents (legacy - use resetAndReprocess for better handling) (JWT-based)
      * - Remove existing documents by providing document IDs
      * - Upload new documents with their types
      */
     editDocuments: async (
-        userId: string,
         propertyId: string,
         options: {
             documentsToRemove?: string[];
@@ -312,7 +310,7 @@ export const propertyAPI = {
         }
 
         const queryString = params.toString();
-        const url = `${API_BASE_URL}/api/property/user/${userId}/property/${propertyId}/documents${queryString ? `?${queryString}` : ''}`;
+        const url = `${API_BASE_URL}/api/property/my-properties/${propertyId}/documents${queryString ? `?${queryString}` : ''}`;
 
         const token = getAuthToken();
 
@@ -336,46 +334,44 @@ export const propertyAPI = {
 // ============ BILLING APIs ============
 export const billingAPI = {
     /**
-     * Get full billing overview for a user
+     * Get full billing overview for the current user (JWT-based)
      */
-    getStatus: (userId: string) =>
-        apiRequest<BillingStatusResponse>(`/api/billing/status/${userId}`),
+    getStatus: () =>
+        apiRequest<BillingStatusResponse>('/api/billing/status'),
 
     /**
-     * Check if a user is allowed to add another property
+     * Check if the current user is allowed to add another property (JWT-based)
      */
-    canAddProperty: (userId: string) =>
-        apiRequest<{ allowed: boolean; reason: string; requires_subscription: boolean }>(`/api/billing/can-add-property/${userId}`),
+    canAddProperty: () =>
+        apiRequest<{ allowed: boolean; reason: string; requires_subscription: boolean }>('/api/billing/can-add-property'),
 
     /**
-     * Create a Stripe Checkout Session for a new subscription
+     * Create a Stripe Checkout Session for a new subscription (JWT-based)
      */
-    createCheckoutSession: (userId: string) =>
+    createCheckoutSession: () =>
         apiRequest<{ checkout_url: string }>('/api/billing/create-checkout-session', {
             method: 'POST',
-            body: JSON.stringify({ user_id: userId }),
         }),
 
     /**
-     * Cancel subscription at the end of the current billing period
+     * Cancel subscription at the end of the current billing period (JWT-based)
      */
-    cancel: (userId: string) =>
+    cancel: () =>
         apiRequest<any>('/api/billing/cancel', {
             method: 'POST',
-            body: JSON.stringify({ user_id: userId }),
         }),
 
     /**
-     * Get a Stripe Customer Portal URL
+     * Get a Stripe Customer Portal URL (JWT-based)
      */
-    getPortalLink: (userId: string) =>
-        apiRequest<{ portal_url: string }>(`/api/billing/portal/${userId}`),
+    getPortalLink: () =>
+        apiRequest<{ portal_url: string }>('/api/billing/portal'),
 };
 
 // ============ DOCUMENT APIs ============
 export const documentAPI = {
     /**
-     * Upload one or more PDF documents
+     * Upload one or more PDF documents (JWT-based)
      * - Validate file types and doc_types
      * - Verify property exists and belongs to user
      * - Upload to S3 with structure: {user_id}/{property_id}/{filename}
@@ -390,7 +386,6 @@ export const documentAPI = {
      * docTypes: ["4point", "home_inspection"]
      */
     upload: async (
-        userId: string,
         propertyId: string,
         files: File[],
         docTypes: ('4point' | 'home_inspection')[]
@@ -399,7 +394,7 @@ export const documentAPI = {
         files.forEach(file => formData.append('files', file));
 
         const docTypesParam = docTypes.map(dt => `doc_types=${encodeURIComponent(dt)}`).join('&');
-        const url = `${API_BASE_URL}/api/documents/upload/${userId}/${propertyId}?${docTypesParam}`;
+        const url = `${API_BASE_URL}/api/documents/upload/${propertyId}?${docTypesParam}`;
 
         const token = getAuthToken();
 
@@ -420,16 +415,16 @@ export const documentAPI = {
     },
 
     /**
-     * Get all documents for a property (secured by user_id)
+     * Get all documents for a property (JWT-based)
      */
-    getPropertyDocuments: (userId: string, propertyId: string) =>
-        apiRequest<DocumentResponse[]>(`/api/documents/property/${userId}/${propertyId}`),
+    getPropertyDocuments: (propertyId: string) =>
+        apiRequest<DocumentResponse[]>(`/api/documents/property/${propertyId}`),
 
     /**
-     * Delete a document from S3 and RDS
+     * Delete a document from S3 and RDS (JWT-based)
      */
-    delete: (userId: string, propertyId: string, documentId: string) =>
-        apiRequest<string>(`/api/documents/${userId}/${propertyId}/${documentId}`, {
+    delete: (propertyId: string, documentId: string) =>
+        apiRequest<string>(`/api/documents/${propertyId}/${documentId}`, {
             method: 'DELETE',
         }),
 };
@@ -472,10 +467,10 @@ export const processAPI = {
         apiRequest<EngineResultResponse[]>(`/api/process/engine-results/${processId}`),
 
     /**
-     * Get all processes for a user
+     * Get all processes for the current user (JWT-based)
      */
-    getUserProcesses: (userId: string) =>
-        apiRequest<ProcessSummaryResponse[]>(`/api/process/user/${userId}`),
+    getUserProcesses: () =>
+        apiRequest<ProcessSummaryResponse[]>('/api/process/my-processes'),
 
     /**
      * Delete a specific message by ID
@@ -596,7 +591,6 @@ export interface CreatePropertyRequest {
     property_type?: string | null;
     purchase_price?: number | null;
     purchase_date?: string | null;
-    user_id: string;
 }
 
 export interface PropertyResponse {
@@ -633,7 +627,6 @@ export interface DocumentResponse {
 
 // Process Types
 export interface StartProcessRequest {
-    user_id: string;
     property_id: string;
 }
 

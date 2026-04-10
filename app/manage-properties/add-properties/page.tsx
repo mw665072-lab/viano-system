@@ -57,7 +57,7 @@ const AddPropertyPage = () => {
             if (!userId) return;
 
             try {
-                const limit = await billingAPI.canAddProperty(userId);
+                const limit = await billingAPI.canAddProperty();
                 setCanAddProperty(limit);
             } catch (err) {
                 console.error('Error checking property limit:', err);
@@ -173,7 +173,6 @@ const AddPropertyPage = () => {
             const location = `${formData.city.trim()}, ${formData.state.trim()}`;
 
             const propertyData: CreatePropertyRequest = {
-                user_id: userId,
                 property_name: formData.address.trim(),
                 location: location,
                 address: formData.address.trim(),
@@ -213,7 +212,7 @@ const AddPropertyPage = () => {
                 setUploadProgress(`Uploading ${filesToUpload.length} document(s)...`);
 
                 try {
-                    await documentAPI.upload(userId, createdProperty.property_id, filesToUpload, docTypes);
+                    await documentAPI.upload(createdProperty.property_id, filesToUpload, docTypes);
                     console.log('Documents uploaded successfully');
                     setUploadProgress('Documents uploaded successfully!');
                 } catch (uploadError) {
@@ -235,7 +234,6 @@ const AddPropertyPage = () => {
 
                 try {
                     const processResult = await processAPI.start({
-                        user_id: userId,
                         property_id: createdProperty.property_id,
                     });
                     console.log('Process started:', processResult);
@@ -281,7 +279,7 @@ const AddPropertyPage = () => {
 
         setIsBillingLoading(true);
         try {
-            const { checkout_url } = await billingAPI.createCheckoutSession(userId);
+            const { checkout_url } = await billingAPI.createCheckoutSession();
             window.location.href = checkout_url;
         } catch (err) {
             console.error('Failed to create checkout session:', err);
