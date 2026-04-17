@@ -655,6 +655,8 @@ export interface MessageResponse {
     created_at: string | null;
     priority_level: number | null;
     priority: any;
+    trigger?: string | null;
+    trigger_date?: string | null;
     realtor_alert?: {
         title?: string;
         body?: {

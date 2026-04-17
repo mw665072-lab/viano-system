@@ -404,6 +404,12 @@ const Page = () => {
                         }),
                         new Paragraph({
                             children: [
+                                new TextRun({ text: "Trigger: ", bold: true }),
+                                new TextRun(msg.trigger || "N/A"),
+                            ],
+                        }),
+                        new Paragraph({
+                            children: [
                                 new TextRun({ text: "Priority: ", bold: true }),
                                 new TextRun(priority),
                             ],
