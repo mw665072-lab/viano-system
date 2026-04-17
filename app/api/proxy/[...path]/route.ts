@@ -67,6 +67,9 @@ async function handleProxy(
     }
   });
 
+  // Skip ngrok browser warning interstitial page
+  headers.set("ngrok-skip-browser-warning", "1");
+
   let body: BodyInit | undefined;
   const contentType = request.headers.get("content-type") || "";
 
