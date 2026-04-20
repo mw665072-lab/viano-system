@@ -24,19 +24,6 @@ function getApiBaseUrl(): string {
 
 const API_BASE_URL = getApiBaseUrl();
 
-/**
- * Build the API URL. On the client side, routes through the proxy to avoid CORS.
- * On the server side, uses the direct API URL.
- */
-function buildApiUrl(endpoint: string): string {
-    if (typeof window !== 'undefined') {
-        // Client-side: use proxy route (same origin)
-        return endpoint.replace(/^\/api\//, '/api/proxy/');
-    }
-    // Server-side: use direct API URL
-    return `${API_BASE_URL}${endpoint}`;
-}
-
 // Mutex and state for token refreshing
 let isRefreshing = false;
 let failedQueue: { resolve: (value: string | null) => void; reject: (reason?: any) => void }[] = [];
@@ -57,7 +44,7 @@ async function apiRequest<T>(
     endpoint: string,
     options: RequestInit = {}
 ): Promise<T> {
-    const url = buildApiUrl(endpoint);
+    const url = `${API_BASE_URL}${endpoint}`;
 
     // Get token from localStorage if available
     const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
@@ -116,7 +103,7 @@ async function apiRequest<T>(
             isRefreshing = true;
 
             try {
-                const refreshResponse = await fetch(buildApiUrl('/api/auth/refresh'), {
+                const refreshResponse = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ refresh_token: refreshToken }),
@@ -273,7 +260,7 @@ export const propertyAPI = {
         docTypes.forEach(dt => params.append('doc_types', dt));
 
         const queryString = params.toString();
-        const url = `${buildApiUrl(`/api/property/my-properties/${propertyId}/reset-and-reprocess`)}${queryString ? `?${queryString}` : ''}`;
+        const url = `${API_BASE_URL}/api/property/my-properties/${propertyId}/reset-and-reprocess${queryString ? `?${queryString}` : ''}`;
 
         const token = getAuthToken();
 
@@ -323,7 +310,7 @@ export const propertyAPI = {
         }
 
         const queryString = params.toString();
-        const url = `${buildApiUrl(`/api/property/my-properties/${propertyId}/documents`)}${queryString ? `?${queryString}` : ''}`;
+        const url = `${API_BASE_URL}/api/property/my-properties/${propertyId}/documents${queryString ? `?${queryString}` : ''}`;
 
         const token = getAuthToken();
 
@@ -407,7 +394,7 @@ export const documentAPI = {
         files.forEach(file => formData.append('files', file));
 
         const docTypesParam = docTypes.map(dt => `doc_types=${encodeURIComponent(dt)}`).join('&');
-        const url = `${buildApiUrl(`/api/documents/upload/${propertyId}`)}?${docTypesParam}`;
+        const url = `${API_BASE_URL}/api/documents/upload/${propertyId}?${docTypesParam}`;
 
         const token = getAuthToken();
 
@@ -508,7 +495,7 @@ export const processAPI = {
      * eventSource.onerror = () => eventSource.close();
      */
     statusStream: (processId: string): EventSource => {
-        const url = buildApiUrl(`/api/process/status-stream/${processId}`);
+        const url = `${API_BASE_URL}/api/process/status-stream/${processId}`;
         return new EventSource(url);
     },
 };
