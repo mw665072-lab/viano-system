@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Pencil, ChevronRight, Loader2 } from "lucide-react"
 import Image from "next/image"
-import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, getCurrentUserId } from "@/lib/api"
+import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, UpdateUserRequest, getCurrentUserId } from "@/lib/api"
 import { CreditCard, ExternalLink, ShieldCheck, Zap } from "lucide-react"
+import { Input } from "@/components/ui/input"
 
 interface ProfileData {
   name: string;
@@ -68,6 +69,16 @@ export default function ProfilePage() {
   const [allAudits, setAllAudits] = useState<AuditItem[]>([]);
   const [imageError, setImageError] = useState(false);
 
+  // Edit profile modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    first_name: '',
+    last_name: '',
+    mobile_number: '',
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -91,6 +102,13 @@ export default function ProfilePage() {
           email: userData.email || '',
           phone: userData.mobile_number || 'Not provided',
           avatar: ''
+        });
+
+        // Pre-fill edit form
+        setEditForm({
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
+          mobile_number: userData.mobile_number || '',
         });
 
         // 2. Fetch User Processes from API
@@ -347,6 +365,54 @@ export default function ProfilePage() {
     }
   };
 
+  const handleOpenEditModal = () => {
+    setSaveError(null);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSaveError(null);
+  };
+
+  const handleEditFormChange = (field: keyof typeof editForm, value: string) => {
+    setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      // Build payload with only non-empty values
+      const payload: UpdateUserRequest = {};
+      if (editForm.first_name.trim()) payload.first_name = editForm.first_name.trim();
+      if (editForm.last_name.trim()) payload.last_name = editForm.last_name.trim();
+      if (editForm.mobile_number.trim()) payload.mobile_number = editForm.mobile_number.trim();
+
+      const updatedUser = await authAPI.updateUser(payload);
+
+      // Update local profile state
+      setProfile(prev => ({
+        ...prev,
+        name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || 'User',
+        phone: updatedUser.mobile_number || 'Not provided',
+      }));
+
+      // Update localStorage name
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('userName', `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim());
+      }
+
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+      setSaveError(err instanceof Error ? err.message : 'Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -418,7 +484,10 @@ export default function ProfilePage() {
                           </div>
                         )}
                       </div>
-                      <button className="hidden sm:flex absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full items-center justify-center shadow-lg hover:bg-blue-700 transition-colors">
+                      <button
+                        onClick={handleOpenEditModal}
+                        className="hidden sm:flex absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full items-center justify-center shadow-lg hover:bg-blue-700 transition-colors"
+                      >
                         <Pencil className="w-4 h-4 text-white" />
                       </button>
                     </div>
@@ -642,6 +711,100 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={handleCloseEditModal}
+          />
+
+          {/* Modal Content */}
+          <Card className="relative w-full max-w-md bg-white shadow-2xl rounded-[24px] md:rounded-[32px] overflow-hidden">
+            <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Edit Profile</h2>
+                <p className="text-sm text-gray-500 mt-1">Update your personal information</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleCloseEditModal}
+                className="rounded-full hover:bg-gray-100"
+              >
+                <ArrowLeft className="w-6 h-6 text-gray-400 rotate-90 sm:rotate-0" />
+              </Button>
+            </div>
+
+            <div className="p-6 md:p-8 space-y-5">
+              {saveError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                  {saveError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name</label>
+                <Input
+                  type="text"
+                  value={editForm.first_name}
+                  onChange={(e) => handleEditFormChange('first_name', e.target.value)}
+                  placeholder="Enter first name"
+                  className="h-11 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name</label>
+                <Input
+                  type="text"
+                  value={editForm.last_name}
+                  onChange={(e) => handleEditFormChange('last_name', e.target.value)}
+                  placeholder="Enter last name"
+                  className="h-11 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
+                <Input
+                  type="tel"
+                  value={editForm.mobile_number}
+                  onChange={(e) => handleEditFormChange('mobile_number', e.target.value)}
+                  placeholder="Enter phone number"
+                  className="h-11 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+              <Button
+                onClick={handleCloseEditModal}
+                variant="outline"
+                className="flex-1 rounded-full h-11 border-gray-300 text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full h-11"
+              >
+                {isSaving ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </span>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Audit History Modal */}
       {isAuditModalOpen && (

@@ -145,25 +145,9 @@ const AddPropertyPage = () => {
             return false;
         }
 
-        // Document validation based on state
-        const stateNormalized = formData.state.trim().toLowerCase();
-        const isFlorida = stateNormalized === 'fl' || stateNormalized === 'florida';
-
-        // Rule 1: At least one document must be provided
+        // At least one document must be provided
         if (!fourPointFile && !homeInspectionFile) {
             setError('At least one document is required. Please upload a 4-Point or Home Inspection file.');
-            return false;
-        }
-
-        // Rule 2: Florida properties require a 4-Point document
-        if (isFlorida && !fourPointFile) {
-            setError('Properties in Florida require a 4-Point inspection document.');
-            return false;
-        }
-
-        // Rule 3: Non-Florida properties require a Home Inspection document
-        if (!isFlorida && !homeInspectionFile) {
-            setError('Properties outside Florida require a Home Inspection document.');
             return false;
         }
 

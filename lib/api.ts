@@ -193,6 +193,15 @@ export const authAPI = {
         apiRequest<UserResponse>('/api/auth/user/me'),
 
     /**
+     * Update user profile (JWT-based)
+     */
+    updateUser: (data: UpdateUserRequest) =>
+        apiRequest<UpdateUserResponse>('/api/auth/user/me', {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    /**
      * Refresh the access token
      */
     refresh: (refreshToken: string) =>
@@ -570,6 +579,21 @@ export interface UserResponse {
     last_login: string | null;
     role: string;
     stripe_customer_id?: string | null;
+}
+
+export interface UpdateUserRequest {
+    first_name?: string;
+    last_name?: string;
+    mobile_number?: string;
+}
+
+export interface UpdateUserResponse {
+    user_id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    mobile_number: string;
+    role: string;
 }
 
 // Property Types
