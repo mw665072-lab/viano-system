@@ -246,6 +246,16 @@ export const propertyAPI = {
         }),
 
     /**
+     * Update property details (JWT-based)
+     * Allows updating property fields including negotiated_wins
+     */
+    update: (propertyId: string, data: Partial<CreatePropertyRequest>) =>
+        apiRequest<PropertyResponse>(`/api/property/my-properties/${propertyId}`, {
+            method: 'PATCH',
+            body: JSON.stringify(data),
+        }),
+
+    /**
      * Reset and reprocess a property (JWT-based)
      * This endpoint:
      * - Deletes all existing documents (from S3 and RDS)

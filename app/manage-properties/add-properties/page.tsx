@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId } from '@/lib/api';
+import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
 
 const AddPropertyPage = () => {
     const router = useRouter();
@@ -568,13 +569,10 @@ const AddPropertyPage = () => {
                                 <label className="block text-sm font-medium text-[#374151] mb-2">
                                     Negotiated Wins
                                 </label>
-                                <textarea
-                                    name="negotiatedWins"
-                                    placeholder="Enter any negotiated wins or concessions..."
+                                <NegotiatedWinsForm
                                     value={formData.negotiatedWins}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, negotiatedWins: e.target.value }))}
+                                    onChange={(value) => setFormData(prev => ({ ...prev, negotiatedWins: value }))}
                                     disabled={isSubmitting}
-                                    className="w-full min-h-[100px] rounded-[8px] border border-[#D9D9D9] bg-white px-4 py-3 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#00346C] disabled:opacity-50"
                                 />
                                 <p className="text-xs text-[#9CA3AF] mt-1">Document any specific wins achieved during negotiation.</p>
                             </div>

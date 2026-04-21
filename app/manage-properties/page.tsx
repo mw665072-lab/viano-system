@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, EngineResultResponse, MessageResponse, getCurrentUserId } from '@/lib/api';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
+import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
 
 // All possible process statuses from the workflow
 type ProcessStatus = "pending" | "started" | "downloading" | "generating_messages" | "storing_messages" | "completed" | "failed";
@@ -42,6 +43,7 @@ interface Property {
     city?: string
     state?: string
     zipCode?: string
+    negotiatedWins?: string
 }
 
 interface PropertyDetail {
@@ -117,6 +119,7 @@ const Page = () => {
     const [isSavingEdit, setIsSavingEdit] = useState(false);
     const [editFourPointFile, setEditFourPointFile] = useState<File | null>(null);
     const [editHomeInspectionFile, setEditHomeInspectionFile] = useState<File | null>(null);
+    const [editNegotiatedWins, setEditNegotiatedWins] = useState<string>('');
 
     // Delete confirmation modal state
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -205,6 +208,7 @@ const Page = () => {
                     city: prop.city ?? undefined,
                     state: prop.state ?? undefined,
                     zipCode: prop.zip_code ?? undefined,
+                    negotiatedWins: prop.negotiated_wins ?? undefined,
                 };
             });
 
@@ -543,8 +547,11 @@ const Page = () => {
     const handleOpenEditModal = useCallback((property: Property) => {
         setEditFourPointFile(null);
         setEditHomeInspectionFile(null);
+        // Find the full property data to get negotiated_wins
+        const fullProperty = properties.find(p => p.id === property.id);
+        setEditNegotiatedWins(fullProperty?.negotiatedWins || '');
         setIsEditModalOpen(true);
-    }, []);
+    }, [properties]);
 
     const handleSavePropertyEdit = useCallback(async () => {
         if (!selectedProperty) return;
@@ -555,32 +562,36 @@ const Page = () => {
             return;
         }
 
-        // Check if any documents are being uploaded
-        const filesToUpload: File[] = [];
-        const docTypes: ('4point' | 'home_inspection')[] = [];
-
-        if (editFourPointFile) {
-            filesToUpload.push(editFourPointFile);
-            docTypes.push('4point');
-        }
-        if (editHomeInspectionFile) {
-            filesToUpload.push(editHomeInspectionFile);
-            docTypes.push('home_inspection');
-        }
-
-        if (filesToUpload.length === 0) {
-            showToast('Please upload at least one document.', 'error');
-            return;
-        }
-
         setIsSavingEdit(true);
 
         try {
-            // Use the new resetAndReprocess API which handles everything in one call:
-            // - Deletes all existing documents
-            // - Uploads new documents
-            // - Starts processing pipeline
-            await propertyAPI.resetAndReprocess(selectedProperty.id, filesToUpload, docTypes);
+            // Update negotiated wins if changed
+            if (editNegotiatedWins !== selectedProperty.negotiatedWins) {
+                await propertyAPI.update(selectedProperty.id, {
+                    negotiated_wins: editNegotiatedWins || null,
+                });
+            }
+
+            // Check if any documents are being uploaded
+            const filesToUpload: File[] = [];
+            const docTypes: ('4point' | 'home_inspection')[] = [];
+
+            if (editFourPointFile) {
+                filesToUpload.push(editFourPointFile);
+                docTypes.push('4point');
+            }
+            if (editHomeInspectionFile) {
+                filesToUpload.push(editHomeInspectionFile);
+                docTypes.push('home_inspection');
+            }
+
+            if (filesToUpload.length > 0) {
+                // Use the new resetAndReprocess API which handles everything in one call:
+                // - Deletes all existing documents
+                // - Uploads new documents
+                // - Starts processing pipeline
+                await propertyAPI.resetAndReprocess(selectedProperty.id, filesToUpload, docTypes);
+            }
 
             // Refresh properties list
             await fetchPropertiesWithStatus();
@@ -588,14 +599,20 @@ const Page = () => {
             setIsEditModalOpen(false);
             setEditFourPointFile(null);
             setEditHomeInspectionFile(null);
-            showToast('Property updated and processing restarted!', 'success');
+            setEditNegotiatedWins('');
+            
+            if (filesToUpload.length > 0) {
+                showToast('Property updated and processing restarted!', 'success');
+            } else {
+                showToast('Property updated successfully!', 'success');
+            }
         } catch (err) {
             console.error('Error updating property:', err);
             showToast(err instanceof Error ? err.message : 'Failed to update property. Please try again.', 'error');
         } finally {
             setIsSavingEdit(false);
         }
-    }, [selectedProperty, editFourPointFile, editHomeInspectionFile, fetchPropertiesWithStatus]);
+    }, [selectedProperty, editFourPointFile, editHomeInspectionFile, editNegotiatedWins, fetchPropertiesWithStatus]);
 
     // Filter properties based on search query and status
     const filteredProperties = useMemo(() => {
@@ -814,14 +831,27 @@ const Page = () => {
                                 )}
                             </div>
 
+                            {/* Negotiated Wins Section */}
+                            <div>
+                                <h3 className="font-semibold text-gray-900 mb-2">Negotiated Wins</h3>
+                                <p className="text-sm text-gray-600 mb-3">
+                                    Update the negotiated wins for this property
+                                </p>
+                                <NegotiatedWinsForm
+                                    value={editNegotiatedWins}
+                                    onChange={setEditNegotiatedWins}
+                                    disabled={isSavingEdit}
+                                />
+                            </div>
+
                             {/* Document Upload Section */}
                             <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Upload Documents</h3>
+                                <h3 className="font-semibold text-gray-900 mb-2">Upload Documents (Optional)</h3>
                                 <p className="text-sm text-gray-600 mb-4">
                                     {(editFourPointFile ? 1 : 0) + (editHomeInspectionFile ? 1 : 0)} document(s) selected
                                 </p>
                                 <p className="text-xs text-amber-600 mb-4">
-                                    Upload at least one document to update the property
+                                    Upload documents to restart the processing pipeline
                                 </p>
 
                                 {/* 4-Point File Upload */}
