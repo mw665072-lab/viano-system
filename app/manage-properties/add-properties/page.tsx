@@ -313,7 +313,7 @@ const AddPropertyPage = () => {
                             <Button
                                 onClick={handleUpgrade}
                                 disabled={isBillingLoading}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full h-12 font-bold"
+                                className="w-full rounded-full h-12 font-bold"
                             >
                                 {isBillingLoading ? (
                                     <span className="flex items-center gap-2">
@@ -366,8 +366,7 @@ const AddPropertyPage = () => {
                 <div className="p-4 md:pt-[41px] md:px-[56px]">
                     {/* Page Title */}
                     <h2
-                        className="text-lg md:text-[20px] font-semibold leading-tight md:leading-[30px] text-[#1E1E1E] mb-4 md:mb-[24px]"
-                        style={{ fontFamily: 'Manrope' }}
+                        className="text-lg md:text-[20px] font-semibold leading-tight md:leading-[30px] text-foreground mb-4 md:mb-[24px]"
                     >
                         Add New Property
                     </h2>
@@ -384,7 +383,7 @@ const AddPropertyPage = () => {
                     )}
 
                     {/* Form Container */}
-                    <form onSubmit={handleSubmit} className="w-full max-w-[838px] pb-10">
+                    <form onSubmit={handleSubmit} className="w-full pb-10">
                         <div
                             className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-4 md:gap-y-6"
                         >

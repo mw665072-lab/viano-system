@@ -53,9 +53,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
       <div className="flex-1 pl-6 pr-4 py-4 flex flex-col justify-between rotate-0 opacity-100">
         <div>
-          <p className="font-roboto font-medium text-[12px] leading-[100%] tracking-[0%] uppercase text-[#1E1E1E] mb-6">
-            Navigate
-          </p>
           <nav className="space-y-3">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -69,7 +66,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                     onClose?.();
                   }}
                   className={`w-[209px] h-[40px] flex items-center gap-[10px] px-4 py-2 rounded-[12px] text-sm font-medium transition-colors rotate-0 opacity-100 ${isActive
-                    ? "bg-[#D8E6FD] text-blue-600"
+                    ? "bg-primary/10 text-primary"
                     : "text-gray-700 hover:bg-gray-50"
                     }`}
                 >

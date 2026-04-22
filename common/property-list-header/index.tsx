@@ -27,7 +27,7 @@ function PropertyListHeader({
 }: PropertyListHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full p-4 rounded-xl gap-3 sm:gap-0">
-      <h1 className="text-lg sm:text-[20px] font-semibold leading-[30px] text-[#1E1E1E] w-full sm:w-auto mb-2 sm:mb-0" style={{ fontFamily: 'Manrope' }}>{title || "Property List"}</h1>
+      <h1 className="text-lg sm:text-xl font-semibold text-foreground w-full sm:w-auto mb-2 sm:mb-0">{title || "Property List"}</h1>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
         <div className="relative w-full sm:w-[254px]">
@@ -36,7 +36,7 @@ function PropertyListHeader({
             placeholder="Search properties..."
             value={searchQuery}
             onChange={(e) => onSearchChange?.(e.target.value)}
-            className="pr-10 h-9 bg-white border border-[#D9D9D9] rounded-full focus-visible:ring-1 focus-visible:ring-slate-300 py-2 px-3 sm:py-[9px] sm:px-[13px]"
+            className="pr-10 h-9 rounded-full py-2 px-3 sm:py-[9px] sm:px-[13px]"
           />
         </div>
 
@@ -44,7 +44,7 @@ function PropertyListHeader({
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="bg-white border border-[#D9D9D9] rounded-xl h-9 px-3 py-2 flex items-center gap-2.5 font-normal text-slate-600 hover:bg-slate-50 w-full sm:w-auto"
+              className="rounded-xl h-9 px-3 py-2 flex items-center gap-2.5 font-normal w-full sm:w-auto"
             >
               {statusFilter}
               <ChevronDown className="w-4 h-4 text-slate-400" />

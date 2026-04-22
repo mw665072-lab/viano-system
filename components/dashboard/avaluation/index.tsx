@@ -272,10 +272,10 @@ export function PropertyEvaluationDashboard() {
     };
 
     return (
-        <div className="rounded-[24px] md:rounded-[32px] opacity-100 rotate-0">
+        <div className="opacity-100 rotate-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-[29px]">
                 {/* Left Column - Property List */}
-                <div className="bg-white w-full lg:h-[calc(100vh-220px)] rounded-[24px] md:rounded-[32px] p-4 md:p-6 lg:p-[32px] flex flex-col opacity-100 rotate-0">
+                <div className="bg-white w-full lg:h-[calc(100vh-220px)] rounded-[32px] p-4 md:p-6 lg:p-[32px] flex flex-col opacity-100 rotate-0">
                     <div className="mb-6 md:mb-[32px] flex-shrink-0">
                         <div className="flex items-center justify-between">
                             <div>
@@ -294,7 +294,7 @@ export function PropertyEvaluationDashboard() {
                             <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
                                 <Link
                                     href="/manage-properties/add-properties"
-                                    className="group flex items-center justify-center gap-2 h-10 md:h-[52px] px-4 md:px-8 rounded-full bg-gradient-to-r from-[#00346C] to-[#0052A3] text-white text-sm md:text-base font-semibold shadow-lg hover:shadow-xl hover:from-[#002752] hover:to-[#00346C] transition-all duration-300 transform hover:scale-105 whitespace-nowrap"
+                                    className="group flex items-center justify-center gap-2 h-10 md:h-[52px] px-4 md:px-8 rounded-full bg-primary text-white text-sm md:text-base font-semibold shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 whitespace-nowrap"
                                 >
                                     <Plus className="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" />
                                     <span>Add a Property</span>
@@ -329,7 +329,7 @@ export function PropertyEvaluationDashboard() {
                 </div>
 
                 {/* Right Column - Property Detail */}
-                <div className="w-full lg:h-[calc(100vh-220px)] rounded-[24px] md:rounded-[32px] opacity-100 rotate-0 overflow-y-auto relative">
+                <div className="w-full lg:h-[calc(100vh-220px)] rounded-[32px] opacity-100 rotate-0 overflow-y-auto relative pb-6">
                     <PropertyDetail property={selectedProperty} />
                 </div>
             </div>

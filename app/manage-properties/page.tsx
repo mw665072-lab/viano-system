@@ -743,17 +743,8 @@ const Page = () => {
                     ? 'hidden lg:flex lg:w-1/2 border-r border-gray-200'
                     : 'w-full'
                     }`}>
-                    <div className="p-4 md:p-6 border-b border-gray-200">
-                        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-                            Property List
-                            {filteredProperties.length > 0 && (
-                                <span className="text-base font-normal text-gray-500 ml-2">
-                                    ({filteredProperties.length})
-                                </span>
-                            )}
-                        </h1>
-                    </div>
                     <PropertyListHeader
+                        title={`Property List (${filteredProperties.length})`}
                         searchQuery={searchQuery}
                         onSearchChange={handleSearchChange}
                         statusFilter={statusFilter}
@@ -783,7 +774,7 @@ const Page = () => {
                             />
                             {isDownloading && (
                                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                                 </div>
                             )}
                         </div>
@@ -799,7 +790,7 @@ const Page = () => {
                             />
                             {isDownloading && (
                                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                                 </div>
                             )}
                         </div>
@@ -883,7 +874,7 @@ const Page = () => {
                                             >
                                                 <X className="h-5 w-5" />
                                             </button>
-                                            <FileText className="h-6 w-6 text-blue-600 mb-2" />
+                                            <FileText className="h-6 w-6 text-primary mb-2" />
                                             <p className="text-sm font-medium text-gray-900">{editFourPointFile.name}</p>
                                         </div>
                                     )}
@@ -917,7 +908,7 @@ const Page = () => {
                                             >
                                                 <X className="h-5 w-5" />
                                             </button>
-                                            <FileText className="h-6 w-6 text-blue-600 mb-2" />
+                                            <FileText className="h-6 w-6 text-primary mb-2" />
                                             <p className="text-sm font-medium text-gray-900">{editHomeInspectionFile.name}</p>
                                         </div>
                                     )}
@@ -936,7 +927,7 @@ const Page = () => {
                             </Button>
                             <Button
                                 onClick={handleSavePropertyEdit}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                className="flex-1"
                                 disabled={isSavingEdit}
                             >
                                 {isSavingEdit ? (
