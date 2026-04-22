@@ -10,7 +10,7 @@ interface Property {
   name: string
   subtitle: string
   image?: string
-  status: "Pending" | "Completed" | "In Progress" | "Failed"
+  status: string
   statusColor: string
   clientName?: string
 }

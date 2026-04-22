@@ -7,8 +7,8 @@ import { PropertyDetail } from "../detail"
 import { propertyAPI, processAPI, PropertyResponse, ProcessSummaryResponse, getCurrentUserId } from "@/lib/api"
 import Link from "next/link"
 
-// Display status for UI
-type DisplayStatus = "Pending" | "Processing" | "Completed" | "Failed";
+// Display status for UI - now uses raw backend status strings
+type DisplayStatus = string;
 
 interface DashboardProperty {
     id: string
@@ -30,7 +30,8 @@ interface DashboardProperty {
 }
 
 // Status configuration with colors and messages
-const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: string; message: string; listStatus: "Pending" | "Completed" | "In Progress" | "Failed"; progress: number }> = {
+// displayStatus is the raw backend status shown to users
+const STATUS_CONFIG: Record<string, { displayStatus: string; color: string; message: string; listStatus: "Pending" | "Completed" | "In Progress" | "Failed"; progress: number }> = {
     pending: {
         displayStatus: "Pending",
         color: "bg-gray-100 text-gray-700",
@@ -39,28 +40,28 @@ const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: strin
         progress: 0
     },
     started: {
-        displayStatus: "Processing",
+        displayStatus: "Started",
         color: "bg-blue-100 text-blue-700",
         message: "Process started",
         listStatus: "In Progress",
         progress: 5
     },
     downloading: {
-        displayStatus: "Processing",
+        displayStatus: "Downloading",
         color: "bg-blue-100 text-blue-700",
         message: "Downloading documents...",
         listStatus: "In Progress",
         progress: 10
     },
     generating_messages: {
-        displayStatus: "Processing",
+        displayStatus: "Generating Messages",
         color: "bg-purple-100 text-purple-700",
         message: "Analyzing documents...",
         listStatus: "In Progress",
         progress: 50
     },
     storing_messages: {
-        displayStatus: "Processing",
+        displayStatus: "Storing Messages",
         color: "bg-blue-100 text-blue-700",
         message: "Saving messages...",
         listStatus: "In Progress",
@@ -81,21 +82,21 @@ const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: strin
         progress: 0
     },
     insufficient_credits: {
-        displayStatus: "Failed",
+        displayStatus: "Insufficient Credits",
         color: "bg-amber-100 text-amber-700",
         message: "AI credits exhausted",
         listStatus: "Failed",
         progress: 50
     },
     paused: {
-        displayStatus: "Processing",
+        displayStatus: "Paused",
         color: "bg-blue-100 text-blue-700",
         message: "Process paused",
         listStatus: "In Progress",
         progress: 50
     },
     in_progress: {
-        displayStatus: "Processing",
+        displayStatus: "In Progress",
         color: "bg-blue-100 text-blue-700",
         message: "Processing documents...",
         listStatus: "In Progress",
@@ -109,7 +110,7 @@ const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: strin
         progress: 30
     },
     error: {
-        displayStatus: "Failed",
+        displayStatus: "Error",
         color: "bg-red-100 text-red-700",
         message: "Analysis error",
         listStatus: "Failed",
@@ -263,7 +264,7 @@ export function PropertyEvaluationDashboard() {
     }, [properties, selectedProperty]);
 
     // Handler for property selection from list
-    const handleSelectProperty = (property: { id: string; status: "Pending" | "Completed" | "In Progress" | "Failed" }) => {
+    const handleSelectProperty = (property: { id: string; status: string }) => {
         const fullProperty = properties.find(p => p.id === property.id);
         if (fullProperty) {
             setSelectedProperty(fullProperty);

@@ -13,8 +13,8 @@ import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-f
 // All possible process statuses from the workflow
 type ProcessStatus = "pending" | "started" | "downloading" | "generating_messages" | "storing_messages" | "completed" | "failed";
 
-// Display status for UI (simplified for badges)
-type DisplayStatus = "Pending" | "Processing" | "Completed" | "Failed";
+// Display status for UI - shows raw backend status strings
+type DisplayStatus = string;
 
 interface Property {
     id: string
@@ -77,19 +77,20 @@ interface PropertyDetail {
 }
 
 // Status configuration with colors and messages
+// displayStatus is the raw backend status shown to users
 const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: string; message: string; progress: number }> = {
     pending: { displayStatus: "Pending", color: "bg-gray-100 text-gray-700", message: "Preparing to start...", progress: 0 },
-    started: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Process started", progress: 5 },
-    downloading: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Downloading documents...", progress: 10 },
-    generating_messages: { displayStatus: "Processing", color: "bg-purple-100 text-purple-700", message: "Analyzing documents...", progress: 50 },
-    storing_messages: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Saving messages...", progress: 90 },
+    started: { displayStatus: "Started", color: "bg-blue-100 text-blue-700", message: "Process started", progress: 5 },
+    downloading: { displayStatus: "Downloading", color: "bg-blue-100 text-blue-700", message: "Downloading documents...", progress: 10 },
+    generating_messages: { displayStatus: "Generating Messages", color: "bg-purple-100 text-purple-700", message: "Analyzing documents...", progress: 50 },
+    storing_messages: { displayStatus: "Storing Messages", color: "bg-blue-100 text-blue-700", message: "Saving messages...", progress: 90 },
     completed: { displayStatus: "Completed", color: "bg-emerald-100 text-emerald-700", message: "Process completed!", progress: 100 },
     failed: { displayStatus: "Failed", color: "bg-red-100 text-red-700", message: "Process failed", progress: 0 },
-    insufficient_credits: { displayStatus: "Failed", color: "bg-amber-100 text-amber-700", message: "AI credits exhausted", progress: 50 },
-    paused: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Process paused", progress: 50 },
-    in_progress: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Processing documents...", progress: 30 },
+    insufficient_credits: { displayStatus: "Insufficient Credits", color: "bg-amber-100 text-amber-700", message: "AI credits exhausted", progress: 50 },
+    paused: { displayStatus: "Paused", color: "bg-blue-100 text-blue-700", message: "Process paused", progress: 50 },
+    in_progress: { displayStatus: "In Progress", color: "bg-blue-100 text-blue-700", message: "Processing documents...", progress: 30 },
     processing: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Processing documents...", progress: 30 },
-    error: { displayStatus: "Failed", color: "bg-red-100 text-red-700", message: "Analysis error", progress: 0 },
+    error: { displayStatus: "Error", color: "bg-red-100 text-red-700", message: "Analysis error", progress: 0 },
 };
 
 // Helper function to get status config

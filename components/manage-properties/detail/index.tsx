@@ -14,7 +14,7 @@ interface PropertyDetailData {
     type: string
     client: string
     closingDays: number
-    status: "Pending" | "Completed" | "Processing" | "Failed"
+    status: string
     documentsSubmitted: number
     documentsTotal: number
     aiAnalysisProgress: number

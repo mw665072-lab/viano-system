@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Plus, Bell, Menu } from "lucide-react"
+import { ArrowLeft, Plus, Menu } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { getStoredUserInfo, authAPI } from "@/lib/api"
@@ -174,14 +174,6 @@ export function PageHeader({
                 </div>
             </Button>
 
-            <Button
-                onClick={() => router.push('/notifications')}
-                variant="ghost"
-                size="icon"
-                className="relative h-10 w-10 rounded-full hover:bg-gray-50 border border-gray-200"
-            >
-                <Bell className="h-5 w-5 text-[#FFC107]" />
-            </Button>
         </div>
     )
 

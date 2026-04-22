@@ -39,11 +39,6 @@ const Layout = ({ children }: LayoutProps) => {
         console.log("Add new property clicked");
     };
 
-    const handleMarkAll = () => {
-        // Logic to mark all notifications as read
-        console.log("Mark all as read clicked");
-    };
-
     return (
         <div className="flex flex-col h-screen">
             <div className="flex flex-1 overflow-hidden">
@@ -81,17 +76,6 @@ const Layout = ({ children }: LayoutProps) => {
                             title="Profile"
                             showBack={true}
                             onBack={() => router.back()}
-                            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-                        />
-                    ) : pathname === "/notifications" || pathname?.startsWith("/notifications/") ? (
-                        <PageHeader
-                            title="Notifications"
-                            showBack={true}
-                            onBack={() => router.back()}
-                            actionLabel="Mark All as Read"
-                            onAction={handleMarkAll}
-                            actionIcon={null}
-                            actionVariant="secondary"
                             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
                     ) : pathname === "/manage-properties/add-properties" ? (

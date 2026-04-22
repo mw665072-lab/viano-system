@@ -13,7 +13,7 @@ interface Property {
   type?: string
   value?: string
   closingDate?: string
-  status: "Pending" | "Completed" | "Processing" | "Failed"
+  status: string
   statusColor: string
   clientName?: string
 }
