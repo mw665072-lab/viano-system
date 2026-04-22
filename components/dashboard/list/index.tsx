@@ -1,16 +1,16 @@
 "use client"
 
 import Image from "next/image"
-import { Badge } from "@/components/ui/badge"
+import { StatusBadge } from "@/components/ui/status-badge"
 import { Card } from "@/components/ui/card"
-import { Home, MapPin } from "lucide-react"
+import { Home, MapPin, Loader2 } from "lucide-react"
 
 interface Property {
   id: string
   name: string
   subtitle: string
   image?: string
-  status: "Pending" | "Completed" | "In Progress" | "Failed"
+  status: string
   statusColor: string
   clientName?: string
 }
@@ -26,7 +26,7 @@ export function PropertyList({ properties, selectedProperty, onSelectProperty, i
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <div className="w-8 h-8 border-4 border-[#00346C] border-t-transparent rounded-full animate-spin"></div>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
         <p className="mt-4 text-sm text-gray-500">Loading properties...</p>
       </div>
     );
@@ -76,11 +76,7 @@ export function PropertyList({ properties, selectedProperty, onSelectProperty, i
                 {property.subtitle}
               </p>
             </div>
-            <Badge
-              className={`flex-shrink-0 ${property.statusColor} min-w-[70px] md:w-[97px] h-7 md:h-[33px] rounded-full gap-1 md:gap-[10px] px-2 md:px-3 py-1 md:py-2 flex items-center justify-center border-0 font-medium text-[10px] md:text-sm`}
-            >
-              {property.status}
-            </Badge>
+            <StatusBadge status={property.status} className="flex-shrink-0 min-w-[70px] md:w-[97px] h-7 md:h-[33px] gap-1 md:gap-[10px] px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-sm" />
           </div>
         </Card>
       ))}

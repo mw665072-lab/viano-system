@@ -161,14 +161,8 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {/* Forgot Password & Remember Me */}
-              <div className="flex items-center justify-between text-xs text-slate-600">
-                <Link
-                  href="#"
-                  className="font-medium text-slate-700 underline decoration-slate-400 underline-offset-2 hover:text-blue-900 transition-colors"
-                >
-                  Forgot Password?
-                </Link>
+              {/* Remember Me */}
+              <div className="flex items-center justify-end text-xs text-slate-600">
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -184,7 +178,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-[#003366] py-3 text-sm font-semibold text-white transition-all hover:bg-blue-900 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98]"
+                className="group mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-semibold text-white transition-all hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98]"
               >
                 {isLoading ? (
                   <>

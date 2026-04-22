@@ -1,8 +1,8 @@
 "use client"
 
 import Image from "next/image"
-import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, Home, MapPin, Calendar, User } from "lucide-react"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { ChevronLeft, ChevronRight, Home, MapPin, Calendar, User, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface Property {
@@ -13,7 +13,7 @@ interface Property {
   type?: string
   value?: string
   closingDate?: string
-  status: "Pending" | "Completed" | "Processing" | "Failed"
+  status: string
   statusColor: string
   clientName?: string
 }
@@ -28,21 +28,6 @@ interface PropertyListProps {
   isLoading?: boolean
 }
 
-// Get status badge styles
-function getStatusBadgeStyle(status: string): string {
-  switch (status) {
-    case "Completed":
-      return "bg-emerald-100 text-emerald-700"
-    case "Processing":
-      return "bg-blue-100 text-blue-700"
-    case "Failed":
-      return "bg-red-100 text-red-700"
-    case "Pending":
-    default:
-      return "bg-amber-100 text-amber-700"
-  }
-}
-
 export function PropertyList({
   properties,
   selectedPropertyId,
@@ -55,7 +40,7 @@ export function PropertyList({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-8">
-        <div className="w-8 h-8 border-3 border-[#00346C] border-t-transparent rounded-full animate-spin"></div>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
         <p className="mt-3 text-sm text-gray-500">Loading properties...</p>
       </div>
     );
@@ -76,13 +61,13 @@ export function PropertyList({
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* Property List - Compact Cards */}
-      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+      <div className="flex-1 overflow-y-auto space-y-3 p-2">
         {properties.map((property) => (
           <div
             key={property.id}
             onClick={() => onSelectProperty?.(property)}
-            className={`cursor-pointer transition-all duration-150 rounded-xl p-2.5 border flex items-center gap-3 ${selectedPropertyId === property.id
-              ? "bg-blue-50 border-blue-400 shadow-sm"
+            className={`cursor-pointer transition-all duration-150 rounded-xl p-3 border flex items-center gap-3 ${selectedPropertyId === property.id
+              ? "bg-primary/5 border-primary/30 shadow-sm"
               : "bg-white hover:bg-gray-50 border-gray-100"
               }`}
           >
@@ -105,9 +90,7 @@ export function PropertyList({
                 <h3 className="text-sm font-semibold text-gray-900 truncate">
                   {property.clientName || 'No Client'}
                 </h3>
-                <Badge className={`${getStatusBadgeStyle(property.status)} text-[10px] px-2 py-0.5 rounded-full font-medium`}>
-                  {property.status}
-                </Badge>
+                <StatusBadge status={property.status} className="text-[10px] px-2 py-0.5" />
               </div>
               <p className="text-[11px] font-medium text-gray-700 truncate mt-0.5">
                 {property.name}
@@ -120,14 +103,14 @@ export function PropertyList({
               </div>
             </div>
 
-            <ChevronRight className={`w-4 h-4 flex-shrink-0 ${selectedPropertyId === property.id ? "text-blue-500" : "text-gray-300"}`} />
+            <ChevronRight className={`w-4 h-4 flex-shrink-0 ${selectedPropertyId === property.id ? "text-primary" : "text-gray-300"}`} />
           </div>
         ))}
       </div>
 
       {/* Compact Pagination */}
       <div className="flex items-center justify-between pt-4 pb-4 mt-auto border-t border-gray-100">
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-muted-foreground">
           Page {currentPage} of {totalPages}
         </span>
         <div className="flex items-center gap-1">
@@ -146,7 +129,7 @@ export function PropertyList({
               variant={currentPage === pageNum ? "default" : "ghost"}
               size="sm"
               onClick={() => onPageChange?.(pageNum)}
-              className={`h-7 w-7 p-0 text-xs ${currentPage === pageNum ? "bg-[#1E3A8A]" : ""}`}
+              className={`h-7 w-7 p-0 text-xs ${currentPage === pageNum ? "bg-primary" : ""}`}
             >
               {pageNum}
             </Button>

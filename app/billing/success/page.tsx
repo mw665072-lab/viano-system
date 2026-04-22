@@ -57,7 +57,7 @@ const BillingSuccessContent = () => {
                 <div className="space-y-4">
                     <Button 
                         onClick={() => router.push('/dashboard')}
-                        className="w-full h-14 bg-[#00346C] hover:bg-[#002855] text-white rounded-2xl font-semibold shadow-lg shadow-blue-900/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                        className="w-full h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl font-semibold shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                     >
                         Go to Dashboard
                         <ArrowRight className="w-5 h-5" />
@@ -94,7 +94,7 @@ const BillingSuccessPage = () => {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         }>
             <BillingSuccessContent />

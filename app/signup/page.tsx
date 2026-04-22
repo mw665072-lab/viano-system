@@ -437,7 +437,7 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={isLoading || success}
-                className="group mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#003366] py-2.5 text-sm font-semibold text-white transition-all hover:bg-blue-900 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98]"
+                className="group mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-primary py-2.5 text-sm font-semibold text-white transition-all hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98]"
               >
                 {isLoading ? (
                   <>

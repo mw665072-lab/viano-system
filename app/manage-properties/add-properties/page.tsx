@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId } from '@/lib/api';
+import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
 
 const AddPropertyPage = () => {
     const router = useRouter();
@@ -57,7 +58,7 @@ const AddPropertyPage = () => {
             if (!userId) return;
 
             try {
-                const limit = await billingAPI.canAddProperty(userId);
+                const limit = await billingAPI.canAddProperty();
                 setCanAddProperty(limit);
             } catch (err) {
                 console.error('Error checking property limit:', err);
@@ -145,6 +146,12 @@ const AddPropertyPage = () => {
             return false;
         }
 
+        // At least one document must be provided
+        if (!fourPointFile && !homeInspectionFile) {
+            setError('At least one document is required. Please upload a 4-Point or Home Inspection file.');
+            return false;
+        }
+
         return true;
     };
 
@@ -173,7 +180,6 @@ const AddPropertyPage = () => {
             const location = `${formData.city.trim()}, ${formData.state.trim()}`;
 
             const propertyData: CreatePropertyRequest = {
-                user_id: userId,
                 property_name: formData.address.trim(),
                 location: location,
                 address: formData.address.trim(),
@@ -213,7 +219,7 @@ const AddPropertyPage = () => {
                 setUploadProgress(`Uploading ${filesToUpload.length} document(s)...`);
 
                 try {
-                    await documentAPI.upload(userId, createdProperty.property_id, filesToUpload, docTypes);
+                    await documentAPI.upload(createdProperty.property_id, filesToUpload, docTypes);
                     console.log('Documents uploaded successfully');
                     setUploadProgress('Documents uploaded successfully!');
                 } catch (uploadError) {
@@ -235,7 +241,6 @@ const AddPropertyPage = () => {
 
                 try {
                     const processResult = await processAPI.start({
-                        user_id: userId,
                         property_id: createdProperty.property_id,
                     });
                     console.log('Process started:', processResult);
@@ -281,7 +286,7 @@ const AddPropertyPage = () => {
 
         setIsBillingLoading(true);
         try {
-            const { checkout_url } = await billingAPI.createCheckoutSession(userId);
+            const { checkout_url } = await billingAPI.createCheckoutSession();
             window.location.href = checkout_url;
         } catch (err) {
             console.error('Failed to create checkout session:', err);
@@ -308,7 +313,7 @@ const AddPropertyPage = () => {
                             <Button
                                 onClick={handleUpgrade}
                                 disabled={isBillingLoading}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full h-12 font-bold"
+                                className="w-full rounded-full h-12 font-bold"
                             >
                                 {isBillingLoading ? (
                                     <span className="flex items-center gap-2">
@@ -361,8 +366,7 @@ const AddPropertyPage = () => {
                 <div className="p-4 md:pt-[41px] md:px-[56px]">
                     {/* Page Title */}
                     <h2
-                        className="text-lg md:text-[20px] font-semibold leading-tight md:leading-[30px] text-[#1E1E1E] mb-4 md:mb-[24px]"
-                        style={{ fontFamily: 'Manrope' }}
+                        className="text-lg md:text-[20px] font-semibold leading-tight md:leading-[30px] text-foreground mb-4 md:mb-[24px]"
                     >
                         Add New Property
                     </h2>
@@ -379,7 +383,7 @@ const AddPropertyPage = () => {
                     )}
 
                     {/* Form Container */}
-                    <form onSubmit={handleSubmit} className="w-full max-w-[838px] pb-10">
+                    <form onSubmit={handleSubmit} className="w-full pb-10">
                         <div
                             className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-4 md:gap-y-6"
                         >
@@ -564,13 +568,10 @@ const AddPropertyPage = () => {
                                 <label className="block text-sm font-medium text-[#374151] mb-2">
                                     Negotiated Wins
                                 </label>
-                                <textarea
-                                    name="negotiatedWins"
-                                    placeholder="Enter any negotiated wins or concessions..."
+                                <NegotiatedWinsForm
                                     value={formData.negotiatedWins}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, negotiatedWins: e.target.value }))}
+                                    onChange={(value) => setFormData(prev => ({ ...prev, negotiatedWins: value }))}
                                     disabled={isSubmitting}
-                                    className="w-full min-h-[100px] rounded-[8px] border border-[#D9D9D9] bg-white px-4 py-3 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#00346C] disabled:opacity-50"
                                 />
                                 <p className="text-xs text-[#9CA3AF] mt-1">Document any specific wins achieved during negotiation.</p>
                             </div>

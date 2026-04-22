@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { processAPI, documentAPI, MessageResponse, getCurrentUserId } from "@/lib/api"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { processAPI, documentAPI, MessageResponse } from "@/lib/api"
 
 interface PropertyDetailData {
     id: string
@@ -14,7 +14,7 @@ interface PropertyDetailData {
     type: string
     client: string
     closingDays: number
-    status: "Pending" | "Completed" | "Processing" | "Failed"
+    status: string
     documentsSubmitted: number
     documentsTotal: number
     aiAnalysisProgress: number
@@ -120,15 +120,9 @@ export function PropertyDetailPanel({
     useEffect(() => {
         const fetchDocumentCount = async () => {
             setIsLoadingDocs(true)
-            const userId = getCurrentUserId()
-            if (!userId) {
-                setDocumentCount(0)
-                setIsLoadingDocs(false)
-                return
-            }
 
             try {
-                const docs = await documentAPI.getPropertyDocuments(userId, property.id)
+                const docs = await documentAPI.getPropertyDocuments(property.id)
                 if (Array.isArray(docs)) {
                     setDocumentCount(docs.length)
                 } else {
@@ -171,18 +165,7 @@ export function PropertyDetailPanel({
                             {property.client}
                         </h2>
                     </div>
-                    <Badge
-                        className={`rounded-full px-3 py-1 text-[10px] md:text-xs font-bold uppercase tracking-tight ${property.status === "Completed"
-                            ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                            : property.status === "Failed"
-                                ? "bg-red-50 text-red-600 border border-red-200"
-                                : property.status === "Processing"
-                                    ? "bg-blue-50 text-blue-600 border border-blue-200"
-                                    : "bg-amber-50 text-amber-600 border border-amber-200"
-                            }`}
-                    >
-                        {property.statusMessage || (property.status === "Completed" ? "Complete" : "Pending")}
-                    </Badge>
+                    <StatusBadge status={property.status} className="text-[10px] md:text-xs font-bold uppercase tracking-tight" />
                 </div>
             </div>
 
@@ -257,7 +240,7 @@ export function PropertyDetailPanel({
                     {/* Property Specs Section */}
                     {(property.yearBuilt || property.squareFootage || property.propertyType) && (
                         <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
-                            <h3 className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-3">
+                            <h3 className="text-[10px] font-bold text-primary uppercase tracking-wider mb-3">
                                 Property Specifications
                             </h3>
                             <div className="grid grid-cols-2 gap-y-3">

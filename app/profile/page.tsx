@@ -3,11 +3,12 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { StatusBadge } from "@/components/ui/status-badge"
 import { ArrowLeft, Pencil, ChevronRight, Loader2 } from "lucide-react"
 import Image from "next/image"
-import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, getCurrentUserId } from "@/lib/api"
+import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, UpdateUserRequest, getCurrentUserId } from "@/lib/api"
 import { CreditCard, ExternalLink, ShieldCheck, Zap } from "lucide-react"
+import { Input } from "@/components/ui/input"
 
 interface ProfileData {
   name: string;
@@ -48,13 +49,6 @@ export default function ProfilePage() {
     avatar: ""
   });
 
-  const [preferences, setPreferences] = useState({
-    email: true,
-    sms: true,
-    weekly: true,
-    marketing: false,
-  });
-
   const [audits, setAudits] = useState<AuditItem[]>([]);
 
   const [stats, setStats] = useState<StatItem[]>([
@@ -67,6 +61,16 @@ export default function ProfilePage() {
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
   const [allAudits, setAllAudits] = useState<AuditItem[]>([]);
   const [imageError, setImageError] = useState(false);
+
+  // Edit profile modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    first_name: '',
+    last_name: '',
+    mobile_number: '',
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,7 +87,7 @@ export default function ProfilePage() {
         }
 
         // 1. Fetch User Profile from API
-        const userData: UserResponse = await authAPI.getUser(userId);
+        const userData: UserResponse = await authAPI.getUser();
 
         setProfile({
           name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 'User',
@@ -93,10 +97,17 @@ export default function ProfilePage() {
           avatar: ''
         });
 
+        // Pre-fill edit form
+        setEditForm({
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
+          mobile_number: userData.mobile_number || '',
+        });
+
         // 2. Fetch User Processes from API
         let processesData: ProcessSummaryResponse[] = [];
         try {
-          processesData = await processAPI.getUserProcesses(userId);
+          processesData = await processAPI.getUserProcesses();
         } catch (e) {
           console.log('No processes found or error fetching processes');
           processesData = [];
@@ -105,7 +116,7 @@ export default function ProfilePage() {
         // 3. Fetch User Properties to get property names
         let propertiesData: PropertyResponse[] = [];
         try {
-          propertiesData = await propertyAPI.getUserProperties(userId);
+          propertiesData = await propertyAPI.getUserProperties();
         } catch (e) {
           console.log('No properties found or error fetching properties');
           propertiesData = [];
@@ -159,7 +170,7 @@ export default function ProfilePage() {
 
         // 5. Fetch Billing Status
         try {
-          const billingData = await billingAPI.getStatus(userId);
+          const billingData = await billingAPI.getStatus();
           setBillingStatus(billingData);
         } catch (e) {
           console.log('Error fetching billing status:', e);
@@ -201,8 +212,8 @@ export default function ProfilePage() {
 
     try {
       // Fetch fresh processes data
-      const processesData = await processAPI.getUserProcesses(userId);
-      const propertiesData = await propertyAPI.getUserProperties(userId);
+      const processesData = await processAPI.getUserProcesses();
+      const propertiesData = await propertyAPI.getUserProperties();
 
       // Create a map of property_id to the MOST RECENT process record
       const latestProcessMap = new Map<string, ProcessSummaryResponse>();
@@ -266,62 +277,13 @@ export default function ProfilePage() {
     return () => clearInterval(pollInterval);
   }, [refreshProfileData]);
 
-  const togglePreference = async (key: keyof typeof preferences) => {
-    // Optimistic UI update
-    setPreferences((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  }
-
-  const preferenceItems = [
-    { label: "Email Notifications", key: "email" as const },
-    { label: "SMS Notifications", key: "sms" as const },
-    { label: "Weekly Reports", key: "weekly" as const },
-    { label: "Marketing Emails", key: "marketing" as const },
-  ]
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "completed":
-        return "bg-green-50 text-green-700 border-green-200"
-      case "pending":
-        return "bg-amber-50 text-amber-700 border-amber-200"
-      case "in_progress":
-      case "processing":
-        return "bg-blue-50 text-blue-700 border-blue-200"
-      case "failed":
-      case "error":
-        return "bg-red-50 text-red-700 border-red-200"
-      default:
-        return "bg-gray-100 text-gray-700"
-    }
-  }
-
-  const getStatusLabel = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "completed": return "Completed";
-      case "pending": return "Pending";
-      case "in_progress": return "Processing"; // Map to Processing for consistency
-      case "processing": return "Processing";
-      case "paused": return "Paused";
-      case "failed": return "Failed";
-      case "error": return "Error";
-      case "active": return "Active";
-      case "past_due": return "Past Due";
-      case "canceled": return "Canceled";
-      case "insufficient_credits": return "Credits Exhausted";
-      default: return status;
-    }
-  }
-
   const handleUpgrade = async () => {
     const userId = getCurrentUserId();
     if (!userId) return;
 
     setIsBillingLoading(true);
     try {
-      const { checkout_url } = await billingAPI.createCheckoutSession(userId);
+      const { checkout_url } = await billingAPI.createCheckoutSession();
       window.location.href = checkout_url;
     } catch (err) {
       console.error('Failed to create checkout session:', err);
@@ -337,7 +299,7 @@ export default function ProfilePage() {
 
     setIsBillingLoading(true);
     try {
-      const { portal_url } = await billingAPI.getPortalLink(userId);
+      const { portal_url } = await billingAPI.getPortalLink();
       window.location.href = portal_url;
     } catch (err) {
       console.error('Failed to get portal link:', err);
@@ -347,12 +309,60 @@ export default function ProfilePage() {
     }
   };
 
+  const handleOpenEditModal = () => {
+    setSaveError(null);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSaveError(null);
+  };
+
+  const handleEditFormChange = (field: keyof typeof editForm, value: string) => {
+    setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      // Build payload with only non-empty values
+      const payload: UpdateUserRequest = {};
+      if (editForm.first_name.trim()) payload.first_name = editForm.first_name.trim();
+      if (editForm.last_name.trim()) payload.last_name = editForm.last_name.trim();
+      if (editForm.mobile_number.trim()) payload.mobile_number = editForm.mobile_number.trim();
+
+      const updatedUser = await authAPI.updateUser(payload);
+
+      // Update local profile state
+      setProfile(prev => ({
+        ...prev,
+        name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || 'User',
+        phone: updatedUser.mobile_number || 'Not provided',
+      }));
+
+      // Update localStorage name
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('userName', `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim());
+      }
+
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+      setSaveError(err instanceof Error ? err.message : 'Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <p className="text-gray-600">Loading profile...</p>
         </div>
       </div>
@@ -362,12 +372,11 @@ export default function ProfilePage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md text-center">
           <p className="text-red-700 font-medium mb-4">{error}</p>
           <Button
             onClick={() => window.location.href = '/login'}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             Go to Login
           </Button>
@@ -377,7 +386,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-background">
       {/* Main Content Area with curved background */}
       <div className="relative">
         {/* Background Container */}
@@ -394,11 +403,9 @@ export default function ProfilePage() {
           <div className="px-4 sm:px-6 lg:px-10 pb-8">
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Left Column */}
-              <div className="flex-1 flex flex-col gap-6 lg:max-w-[753px]">
+              <div className="flex-1 flex flex-col gap-6">
                 {/* Profile Info Container */}
-                <Card
-                  className="bg-white shadow-sm border-0 rounded-[24px] md:rounded-[32px] p-5 md:p-8"
-                >
+                <Card className="p-5 md:p-8">
                   <div className="flex flex-col sm:flex-row gap-6">
                     {/* Profile Image */}
                     <div className="relative flex-shrink-0 mx-auto sm:mx-0">
@@ -418,7 +425,10 @@ export default function ProfilePage() {
                           </div>
                         )}
                       </div>
-                      <button className="hidden sm:flex absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full items-center justify-center shadow-lg hover:bg-blue-700 transition-colors">
+                      <button
+                        onClick={handleOpenEditModal}
+                        className="hidden sm:flex absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+                      >
                         <Pencil className="w-4 h-4 text-white" />
                       </button>
                     </div>
@@ -444,9 +454,7 @@ export default function ProfilePage() {
                 </Card>
 
                 {/* Audit History Container */}
-                <Card
-                  className="bg-white shadow-sm border-0 rounded-[24px] md:rounded-[32px] p-5 md:p-8"
-                >
+                <Card className="p-5 md:p-8">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-gray-900">Audit History</h2>
                     <button
@@ -480,11 +488,7 @@ export default function ProfilePage() {
                             <p className="text-xs text-gray-400 mt-0.5">{audit.date}</p>
                           </div>
 
-                          <Badge
-                            className={`${getStatusColor(audit.status)} text-xs capitalize rounded-md px-3 py-1 font-medium border`}
-                          >
-                            {getStatusLabel(audit.status)}
-                          </Badge>
+                          <StatusBadge status={audit.status} className="text-xs capitalize rounded-md px-3 py-1" />
                         </div>
                       ))}
                     </div>
@@ -495,9 +499,7 @@ export default function ProfilePage() {
               {/* Right Column */}
               <div className="w-full lg:w-[326px] flex flex-col gap-6">
                 {/* Quick Stats Container */}
-                <Card
-                  className="bg-white shadow-sm border-0 rounded-[24px] md:rounded-[32px] p-6"
-                >
+                <Card className="p-6">
                   <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Stats</h2>
 
                   <div className="space-y-6">
@@ -523,9 +525,7 @@ export default function ProfilePage() {
                 </Card>
 
                 {/* Subscription & Billing Container */}
-                <Card
-                  className="bg-white shadow-sm border-0 rounded-[24px] md:rounded-[32px] p-6"
-                >
+                <Card className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-gray-900">Subscription</h2>
                     <CreditCard className="w-5 h-5 text-gray-400" />
@@ -559,7 +559,8 @@ export default function ProfilePage() {
                       <Button
                         onClick={handleManageBilling}
                         disabled={isBillingLoading}
-                        className="w-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-full h-11 flex items-center gap-2 group"
+                        variant="outline"
+                        className="w-full rounded-full h-11 flex items-center gap-2 group"
                       >
                         {isBillingLoading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -598,7 +599,7 @@ export default function ProfilePage() {
                       <Button
                         onClick={handleUpgrade}
                         disabled={isBillingLoading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full h-11 font-bold shadow-md shadow-blue-100 mt-2"
+                        className="w-full rounded-full h-11 font-bold shadow-md mt-2"
                       >
                         {isBillingLoading ? (
                           <span className="flex items-center gap-2">
@@ -613,47 +614,118 @@ export default function ProfilePage() {
                   )}
                 </Card>
 
-                {/* Preferences Container */}
-                <Card
-                  className="bg-white shadow-sm border-0 rounded-[24px] md:rounded-[32px] p-6"
-                >
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">Preferences</h2>
 
-                  <div className="space-y-5">
-                    {preferenceItems.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <p className="text-sm text-gray-700">{item.label}</p>
-                        <button
-                          onClick={() => togglePreference(item.key)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences[item.key] ? "bg-blue-600" : "bg-gray-300"
-                            }`}
-                        >
-                          <span
-                            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${preferences[item.key] ? "translate-x-5" : "translate-x-0.5"
-                              }`}
-                          />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Edit Profile Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={handleCloseEditModal}
+          />
+
+          {/* Modal Content */}
+          <Card className="relative w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Edit Profile</h2>
+                <p className="text-sm text-gray-500 mt-1">Update your personal information</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleCloseEditModal}
+                className="rounded-full hover:bg-gray-100"
+              >
+                <ArrowLeft className="w-6 h-6 text-gray-400 rotate-90 sm:rotate-0" />
+              </Button>
+            </div>
+
+            <div className="p-6 md:p-8 space-y-5">
+              {saveError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                  {saveError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name</label>
+                <Input
+                  type="text"
+                  value={editForm.first_name}
+                  onChange={(e) => handleEditFormChange('first_name', e.target.value)}
+                  placeholder="Enter first name"
+                  className="h-11 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name</label>
+                <Input
+                  type="text"
+                  value={editForm.last_name}
+                  onChange={(e) => handleEditFormChange('last_name', e.target.value)}
+                  placeholder="Enter last name"
+                  className="h-11 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
+                <Input
+                  type="tel"
+                  value={editForm.mobile_number}
+                  onChange={(e) => handleEditFormChange('mobile_number', e.target.value)}
+                  placeholder="Enter phone number"
+                  className="h-11 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+              <Button
+                onClick={handleCloseEditModal}
+                variant="outline"
+                className="flex-1 rounded-full h-11"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+                className="flex-1 rounded-full h-11"
+              >
+                {isSaving ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </span>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {/* Audit History Modal */}
       {isAuditModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           {/* Overlay */}
           <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setIsAuditModalOpen(false)}
           />
 
           {/* Modal Content */}
-          <Card className="relative w-full max-w-2xl bg-white shadow-2xl rounded-[24px] md:rounded-[32px] overflow-hidden flex flex-col max-h-[90vh]">
+          <Card className="relative w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Full Audit History</h2>
@@ -690,11 +762,7 @@ export default function ProfilePage() {
                       <p className="text-xs text-gray-400 mt-0.5">{audit.date}</p>
                     </div>
 
-                    <Badge
-                      className={`${getStatusColor(audit.status)} text-xs capitalize rounded-md px-3 py-1 font-medium border`}
-                    >
-                      {getStatusLabel(audit.status)}
-                    </Badge>
+                    <StatusBadge status={audit.status} className="text-xs capitalize rounded-md px-3 py-1" />
                   </div>
                 ))
               )}
@@ -703,7 +771,7 @@ export default function ProfilePage() {
             <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end sticky bottom-0">
               <Button
                 onClick={() => setIsAuditModalOpen(false)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 rounded-full"
+                className="px-8 rounded-full"
               >
                 Close
               </Button>

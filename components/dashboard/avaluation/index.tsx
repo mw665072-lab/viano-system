@@ -7,8 +7,8 @@ import { PropertyDetail } from "../detail"
 import { propertyAPI, processAPI, PropertyResponse, ProcessSummaryResponse, getCurrentUserId } from "@/lib/api"
 import Link from "next/link"
 
-// Display status for UI
-type DisplayStatus = "Pending" | "Processing" | "Completed" | "Failed";
+// Display status for UI - now uses raw backend status strings
+type DisplayStatus = string;
 
 interface DashboardProperty {
     id: string
@@ -30,7 +30,8 @@ interface DashboardProperty {
 }
 
 // Status configuration with colors and messages
-const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: string; message: string; listStatus: "Pending" | "Completed" | "In Progress" | "Failed"; progress: number }> = {
+// displayStatus is the raw backend status shown to users
+const STATUS_CONFIG: Record<string, { displayStatus: string; color: string; message: string; listStatus: "Pending" | "Completed" | "In Progress" | "Failed"; progress: number }> = {
     pending: {
         displayStatus: "Pending",
         color: "bg-gray-100 text-gray-700",
@@ -39,28 +40,28 @@ const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: strin
         progress: 0
     },
     started: {
-        displayStatus: "Processing",
+        displayStatus: "Started",
         color: "bg-blue-100 text-blue-700",
         message: "Process started",
         listStatus: "In Progress",
         progress: 5
     },
     downloading: {
-        displayStatus: "Processing",
+        displayStatus: "Downloading",
         color: "bg-blue-100 text-blue-700",
         message: "Downloading documents...",
         listStatus: "In Progress",
         progress: 10
     },
     generating_messages: {
-        displayStatus: "Processing",
+        displayStatus: "Generating Messages",
         color: "bg-purple-100 text-purple-700",
         message: "Analyzing documents...",
         listStatus: "In Progress",
         progress: 50
     },
     storing_messages: {
-        displayStatus: "Processing",
+        displayStatus: "Storing Messages",
         color: "bg-blue-100 text-blue-700",
         message: "Saving messages...",
         listStatus: "In Progress",
@@ -81,21 +82,21 @@ const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: strin
         progress: 0
     },
     insufficient_credits: {
-        displayStatus: "Failed",
+        displayStatus: "Insufficient Credits",
         color: "bg-amber-100 text-amber-700",
         message: "AI credits exhausted",
         listStatus: "Failed",
         progress: 50
     },
     paused: {
-        displayStatus: "Processing",
+        displayStatus: "Paused",
         color: "bg-blue-100 text-blue-700",
         message: "Process paused",
         listStatus: "In Progress",
         progress: 50
     },
     in_progress: {
-        displayStatus: "Processing",
+        displayStatus: "In Progress",
         color: "bg-blue-100 text-blue-700",
         message: "Processing documents...",
         listStatus: "In Progress",
@@ -109,7 +110,7 @@ const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: strin
         progress: 30
     },
     error: {
-        displayStatus: "Failed",
+        displayStatus: "Error",
         color: "bg-red-100 text-red-700",
         message: "Analysis error",
         listStatus: "Failed",
@@ -145,13 +146,13 @@ export function PropertyEvaluationDashboard() {
                 return
             }
 
-            const apiProperties = await propertyAPI.getUserProperties(userId)
+            const apiProperties = await propertyAPI.getUserProperties()
             console.log('Dashboard: Received', apiProperties.length, 'properties from API')
 
             // Fetch all processes for the user to get status info
             let processes: ProcessSummaryResponse[] = [];
             try {
-                processes = await processAPI.getUserProcesses(userId);
+                processes = await processAPI.getUserProcesses();
             } catch (err) {
                 console.log('Could not fetch processes, using default status');
             }
@@ -263,7 +264,7 @@ export function PropertyEvaluationDashboard() {
     }, [properties, selectedProperty]);
 
     // Handler for property selection from list
-    const handleSelectProperty = (property: { id: string; status: "Pending" | "Completed" | "In Progress" | "Failed" }) => {
+    const handleSelectProperty = (property: { id: string; status: string }) => {
         const fullProperty = properties.find(p => p.id === property.id);
         if (fullProperty) {
             setSelectedProperty(fullProperty);
@@ -271,10 +272,10 @@ export function PropertyEvaluationDashboard() {
     };
 
     return (
-        <div className="rounded-[24px] md:rounded-[32px] opacity-100 rotate-0">
+        <div className="opacity-100 rotate-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-[29px]">
                 {/* Left Column - Property List */}
-                <div className="bg-white w-full lg:h-[calc(100vh-220px)] rounded-[24px] md:rounded-[32px] p-4 md:p-6 lg:p-[32px] flex flex-col opacity-100 rotate-0">
+                <div className="bg-white w-full lg:h-[calc(100vh-220px)] rounded-[32px] p-4 md:p-6 lg:p-[32px] flex flex-col opacity-100 rotate-0">
                     <div className="mb-6 md:mb-[32px] flex-shrink-0">
                         <div className="flex items-center justify-between">
                             <div>
@@ -293,7 +294,7 @@ export function PropertyEvaluationDashboard() {
                             <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
                                 <Link
                                     href="/manage-properties/add-properties"
-                                    className="group flex items-center justify-center gap-2 h-10 md:h-[52px] px-4 md:px-8 rounded-full bg-gradient-to-r from-[#00346C] to-[#0052A3] text-white text-sm md:text-base font-semibold shadow-lg hover:shadow-xl hover:from-[#002752] hover:to-[#00346C] transition-all duration-300 transform hover:scale-105 whitespace-nowrap"
+                                    className="group flex items-center justify-center gap-2 h-10 md:h-[52px] px-4 md:px-8 rounded-full bg-primary text-white text-sm md:text-base font-semibold shadow-lg hover:shadow-xl hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 whitespace-nowrap"
                                 >
                                     <Plus className="w-5 h-5 transition-transform group-hover:rotate-90 duration-300" />
                                     <span>Add a Property</span>
@@ -328,7 +329,7 @@ export function PropertyEvaluationDashboard() {
                 </div>
 
                 {/* Right Column - Property Detail */}
-                <div className="w-full lg:h-[calc(100vh-220px)] rounded-[24px] md:rounded-[32px] opacity-100 rotate-0 overflow-y-auto relative">
+                <div className="w-full lg:h-[calc(100vh-220px)] rounded-[32px] opacity-100 rotate-0 overflow-y-auto relative pb-6">
                     <PropertyDetail property={selectedProperty} />
                 </div>
             </div>

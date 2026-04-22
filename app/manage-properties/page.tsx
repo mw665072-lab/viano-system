@@ -8,12 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, EngineResultResponse, MessageResponse, getCurrentUserId } from '@/lib/api';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
+import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
 
 // All possible process statuses from the workflow
 type ProcessStatus = "pending" | "started" | "downloading" | "generating_messages" | "storing_messages" | "completed" | "failed";
 
-// Display status for UI (simplified for badges)
-type DisplayStatus = "Pending" | "Processing" | "Completed" | "Failed";
+// Display status for UI - shows raw backend status strings
+type DisplayStatus = string;
 
 interface Property {
     id: string
@@ -42,6 +43,7 @@ interface Property {
     city?: string
     state?: string
     zipCode?: string
+    negotiatedWins?: string
 }
 
 interface PropertyDetail {
@@ -75,19 +77,20 @@ interface PropertyDetail {
 }
 
 // Status configuration with colors and messages
+// displayStatus is the raw backend status shown to users
 const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: string; message: string; progress: number }> = {
     pending: { displayStatus: "Pending", color: "bg-gray-100 text-gray-700", message: "Preparing to start...", progress: 0 },
-    started: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Process started", progress: 5 },
-    downloading: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Downloading documents...", progress: 10 },
-    generating_messages: { displayStatus: "Processing", color: "bg-purple-100 text-purple-700", message: "Analyzing documents...", progress: 50 },
-    storing_messages: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Saving messages...", progress: 90 },
+    started: { displayStatus: "Started", color: "bg-blue-100 text-blue-700", message: "Process started", progress: 5 },
+    downloading: { displayStatus: "Downloading", color: "bg-blue-100 text-blue-700", message: "Downloading documents...", progress: 10 },
+    generating_messages: { displayStatus: "Generating Messages", color: "bg-purple-100 text-purple-700", message: "Analyzing documents...", progress: 50 },
+    storing_messages: { displayStatus: "Storing Messages", color: "bg-blue-100 text-blue-700", message: "Saving messages...", progress: 90 },
     completed: { displayStatus: "Completed", color: "bg-emerald-100 text-emerald-700", message: "Process completed!", progress: 100 },
     failed: { displayStatus: "Failed", color: "bg-red-100 text-red-700", message: "Process failed", progress: 0 },
-    insufficient_credits: { displayStatus: "Failed", color: "bg-amber-100 text-amber-700", message: "AI credits exhausted", progress: 50 },
-    paused: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Process paused", progress: 50 },
-    in_progress: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Processing documents...", progress: 30 },
+    insufficient_credits: { displayStatus: "Insufficient Credits", color: "bg-amber-100 text-amber-700", message: "AI credits exhausted", progress: 50 },
+    paused: { displayStatus: "Paused", color: "bg-blue-100 text-blue-700", message: "Process paused", progress: 50 },
+    in_progress: { displayStatus: "In Progress", color: "bg-blue-100 text-blue-700", message: "Processing documents...", progress: 30 },
     processing: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Processing documents...", progress: 30 },
-    error: { displayStatus: "Failed", color: "bg-red-100 text-red-700", message: "Analysis error", progress: 0 },
+    error: { displayStatus: "Error", color: "bg-red-100 text-red-700", message: "Analysis error", progress: 0 },
 };
 
 // Helper function to get status config
@@ -117,6 +120,7 @@ const Page = () => {
     const [isSavingEdit, setIsSavingEdit] = useState(false);
     const [editFourPointFile, setEditFourPointFile] = useState<File | null>(null);
     const [editHomeInspectionFile, setEditHomeInspectionFile] = useState<File | null>(null);
+    const [editNegotiatedWins, setEditNegotiatedWins] = useState<string>('');
 
     // Delete confirmation modal state
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -145,12 +149,12 @@ const Page = () => {
             }
 
             // Fetch properties
-            const apiProperties = await propertyAPI.getUserProperties(userId);
+            const apiProperties = await propertyAPI.getUserProperties();
 
             // Fetch all processes for the user to get status info
             let processes: ProcessSummaryResponse[] = [];
             try {
-                processes = await processAPI.getUserProcesses(userId);
+                processes = await processAPI.getUserProcesses();
             } catch (err) {
                 console.log('Could not fetch processes, using default status');
             }
@@ -205,6 +209,7 @@ const Page = () => {
                     city: prop.city ?? undefined,
                     state: prop.state ?? undefined,
                     zipCode: prop.zip_code ?? undefined,
+                    negotiatedWins: prop.negotiated_wins ?? undefined,
                 };
             });
 
@@ -404,6 +409,12 @@ const Page = () => {
                         }),
                         new Paragraph({
                             children: [
+                                new TextRun({ text: "Trigger: ", bold: true }),
+                                new TextRun(msg.trigger || "N/A"),
+                            ],
+                        }),
+                        new Paragraph({
+                            children: [
                                 new TextRun({ text: "Priority: ", bold: true }),
                                 new TextRun(priority),
                             ],
@@ -516,7 +527,7 @@ const Page = () => {
 
         try {
             // Delete from backend API
-            await propertyAPI.delete(userId, propertyToDelete);
+            await propertyAPI.delete(propertyToDelete);
 
             // Remove from local state after successful API delete
             setProperties(prev => prev.filter(p => p.id !== propertyToDelete));
@@ -537,8 +548,11 @@ const Page = () => {
     const handleOpenEditModal = useCallback((property: Property) => {
         setEditFourPointFile(null);
         setEditHomeInspectionFile(null);
+        // Find the full property data to get negotiated_wins
+        const fullProperty = properties.find(p => p.id === property.id);
+        setEditNegotiatedWins(fullProperty?.negotiatedWins || '');
         setIsEditModalOpen(true);
-    }, []);
+    }, [properties]);
 
     const handleSavePropertyEdit = useCallback(async () => {
         if (!selectedProperty) return;
@@ -549,32 +563,36 @@ const Page = () => {
             return;
         }
 
-        // Check if any documents are being uploaded
-        const filesToUpload: File[] = [];
-        const docTypes: ('4point' | 'home_inspection')[] = [];
-
-        if (editFourPointFile) {
-            filesToUpload.push(editFourPointFile);
-            docTypes.push('4point');
-        }
-        if (editHomeInspectionFile) {
-            filesToUpload.push(editHomeInspectionFile);
-            docTypes.push('home_inspection');
-        }
-
-        if (filesToUpload.length === 0) {
-            showToast('Please upload at least one document.', 'error');
-            return;
-        }
-
         setIsSavingEdit(true);
 
         try {
-            // Use the new resetAndReprocess API which handles everything in one call:
-            // - Deletes all existing documents
-            // - Uploads new documents
-            // - Starts processing pipeline
-            await propertyAPI.resetAndReprocess(userId, selectedProperty.id, filesToUpload, docTypes);
+            // Update negotiated wins if changed
+            if (editNegotiatedWins !== selectedProperty.negotiatedWins) {
+                await propertyAPI.update(selectedProperty.id, {
+                    negotiated_wins: editNegotiatedWins || null,
+                });
+            }
+
+            // Check if any documents are being uploaded
+            const filesToUpload: File[] = [];
+            const docTypes: ('4point' | 'home_inspection')[] = [];
+
+            if (editFourPointFile) {
+                filesToUpload.push(editFourPointFile);
+                docTypes.push('4point');
+            }
+            if (editHomeInspectionFile) {
+                filesToUpload.push(editHomeInspectionFile);
+                docTypes.push('home_inspection');
+            }
+
+            if (filesToUpload.length > 0) {
+                // Use the new resetAndReprocess API which handles everything in one call:
+                // - Deletes all existing documents
+                // - Uploads new documents
+                // - Starts processing pipeline
+                await propertyAPI.resetAndReprocess(selectedProperty.id, filesToUpload, docTypes);
+            }
 
             // Refresh properties list
             await fetchPropertiesWithStatus();
@@ -582,14 +600,20 @@ const Page = () => {
             setIsEditModalOpen(false);
             setEditFourPointFile(null);
             setEditHomeInspectionFile(null);
-            showToast('Property updated and processing restarted!', 'success');
+            setEditNegotiatedWins('');
+            
+            if (filesToUpload.length > 0) {
+                showToast('Property updated and processing restarted!', 'success');
+            } else {
+                showToast('Property updated successfully!', 'success');
+            }
         } catch (err) {
             console.error('Error updating property:', err);
             showToast(err instanceof Error ? err.message : 'Failed to update property. Please try again.', 'error');
         } finally {
             setIsSavingEdit(false);
         }
-    }, [selectedProperty, editFourPointFile, editHomeInspectionFile, fetchPropertiesWithStatus]);
+    }, [selectedProperty, editFourPointFile, editHomeInspectionFile, editNegotiatedWins, fetchPropertiesWithStatus]);
 
     // Filter properties based on search query and status
     const filteredProperties = useMemo(() => {
@@ -719,17 +743,8 @@ const Page = () => {
                     ? 'hidden lg:flex lg:w-1/2 border-r border-gray-200'
                     : 'w-full'
                     }`}>
-                    <div className="p-4 md:p-6 border-b border-gray-200">
-                        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-                            Property List
-                            {filteredProperties.length > 0 && (
-                                <span className="text-base font-normal text-gray-500 ml-2">
-                                    ({filteredProperties.length})
-                                </span>
-                            )}
-                        </h1>
-                    </div>
                     <PropertyListHeader
+                        title={`Property List (${filteredProperties.length})`}
                         searchQuery={searchQuery}
                         onSearchChange={handleSearchChange}
                         statusFilter={statusFilter}
@@ -759,7 +774,7 @@ const Page = () => {
                             />
                             {isDownloading && (
                                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                                 </div>
                             )}
                         </div>
@@ -775,7 +790,7 @@ const Page = () => {
                             />
                             {isDownloading && (
                                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                                 </div>
                             )}
                         </div>
@@ -808,14 +823,27 @@ const Page = () => {
                                 )}
                             </div>
 
+                            {/* Negotiated Wins Section */}
+                            <div>
+                                <h3 className="font-semibold text-gray-900 mb-2">Negotiated Wins</h3>
+                                <p className="text-sm text-gray-600 mb-3">
+                                    Update the negotiated wins for this property
+                                </p>
+                                <NegotiatedWinsForm
+                                    value={editNegotiatedWins}
+                                    onChange={setEditNegotiatedWins}
+                                    disabled={isSavingEdit}
+                                />
+                            </div>
+
                             {/* Document Upload Section */}
                             <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Upload Documents</h3>
+                                <h3 className="font-semibold text-gray-900 mb-2">Upload Documents (Optional)</h3>
                                 <p className="text-sm text-gray-600 mb-4">
                                     {(editFourPointFile ? 1 : 0) + (editHomeInspectionFile ? 1 : 0)} document(s) selected
                                 </p>
                                 <p className="text-xs text-amber-600 mb-4">
-                                    Upload at least one document to update the property
+                                    Upload documents to restart the processing pipeline
                                 </p>
 
                                 {/* 4-Point File Upload */}
@@ -846,7 +874,7 @@ const Page = () => {
                                             >
                                                 <X className="h-5 w-5" />
                                             </button>
-                                            <FileText className="h-6 w-6 text-blue-600 mb-2" />
+                                            <FileText className="h-6 w-6 text-primary mb-2" />
                                             <p className="text-sm font-medium text-gray-900">{editFourPointFile.name}</p>
                                         </div>
                                     )}
@@ -880,7 +908,7 @@ const Page = () => {
                                             >
                                                 <X className="h-5 w-5" />
                                             </button>
-                                            <FileText className="h-6 w-6 text-blue-600 mb-2" />
+                                            <FileText className="h-6 w-6 text-primary mb-2" />
                                             <p className="text-sm font-medium text-gray-900">{editHomeInspectionFile.name}</p>
                                         </div>
                                     )}
@@ -899,7 +927,7 @@ const Page = () => {
                             </Button>
                             <Button
                                 onClick={handleSavePropertyEdit}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                className="flex-1"
                                 disabled={isSavingEdit}
                             >
                                 {isSavingEdit ? (

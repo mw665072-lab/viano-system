@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -50,7 +50,7 @@ export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
         } else if (storedInfo.userId) {
           // If we have userId but not name, fetch from API
           try {
-            const user = await authAPI.getUser(storedInfo.userId);
+            const user = await authAPI.getUser();
             const firstName = user.first_name || 'User';
             const lastName = user.last_name || '';
             const fullName = `${firstName} ${lastName}`.trim() || 'User';
@@ -134,14 +134,6 @@ export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
                 </Avatar>
               </Button>
 
-              <Button
-                onClick={() => router.push('/notifications')}
-                variant="ghost"
-                size="icon"
-                className="relative h-9 w-9 rounded-full hover:bg-gray-50"
-              >
-                <Bell className="h-5 w-5 text-gray-500" />
-              </Button>
             </div>
           </div>
         </div>
@@ -175,14 +167,6 @@ export default function WelcomeHeader({ onToggleSidebar }: NavbarProps) {
               </div>
             </Button>
 
-            <Button
-              onClick={() => router.push('/notifications')}
-              variant="ghost"
-              size="icon"
-              className="relative h-10 w-10 rounded-full hover:bg-gray-50 border border-gray-200"
-            >
-              <Bell className="h-5 w-5 text-[#FFC107]" />
-            </Button>
           </div>
         </div>
       </div>
