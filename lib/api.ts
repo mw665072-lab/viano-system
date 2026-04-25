@@ -300,6 +300,43 @@ export const propertyAPI = {
     },
 
     /**
+     * Upload a PDF and extract property data (PDF-first flow)
+     * Creates a draft property with extracted data
+     */
+    uploadAndExtract: async (file: File): Promise<UploadAndExtractResponse> => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const url = `${API_BASE_URL}/api/property/upload-and-extract`;
+        const token = getAuthToken();
+
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ detail: 'Failed to upload and extract PDF' }));
+            throw new Error(error.detail || 'Failed to upload and extract PDF');
+        }
+
+        return response.json();
+    },
+
+    /**
+     * Confirm a draft property with edited data and optional negotiated wins
+     * Starts the processing pipeline automatically
+     */
+    confirm: (propertyId: string, data: ConfirmPropertyRequest) =>
+        apiRequest<ConfirmPropertyResponse>(`/api/property/my-properties/${propertyId}/confirm`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    /**
      * Edit property documents (legacy - use resetAndReprocess for better handling) (JWT-based)
      * - Remove existing documents by providing document IDs
      * - Upload new documents with their types
@@ -647,6 +684,57 @@ export interface PropertyResponse {
     purchase_price: number | null;
     purchase_date: string | null;
     user_id: string;
+    is_draft?: boolean;
+}
+
+// PDF-First Flow Types
+export interface ExtractedPropertyData {
+    client_name: string;
+    address: string;
+    city: string;
+    state: string;
+    zip_code: string;
+    inspection_date: string;
+}
+
+export interface UploadedDocument {
+    document_id: string;
+    doc_name: string;
+    doc_type: string;
+    s3_path: string;
+}
+
+export interface UploadAndExtractResponse {
+    success: boolean;
+    property_id: string;
+    is_draft: boolean;
+    extracted: ExtractedPropertyData;
+    document: UploadedDocument;
+}
+
+export interface ConfirmPropertyRequest {
+    client_name: string;
+    address: string;
+    city: string;
+    state: string;
+    zip_code: string;
+    inspection_date: string;
+    negotiated_wins?: string | null;
+    year_built?: number | null;
+    square_footage?: number | null;
+    bedrooms?: number | null;
+    bathrooms?: number | null;
+    lot_size?: number | null;
+    property_type?: string | null;
+    purchase_price?: number | null;
+    purchase_date?: string | null;
+}
+
+export interface ConfirmPropertyResponse {
+    success: boolean;
+    process_id: string;
+    status: string;
+    property_id: string;
 }
 
 // Document Types

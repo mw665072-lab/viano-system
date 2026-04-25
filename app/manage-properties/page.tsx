@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import { useRouter } from 'next/navigation';
 import PropertyListHeader from '@/common/property-list-header';
 import { PropertyList } from '@/components/manage-properties/list';
 import { PropertyDetailPanel } from '@/components/manage-properties/detail';
@@ -44,6 +45,7 @@ interface Property {
     state?: string
     zipCode?: string
     negotiatedWins?: string
+    isDraft?: boolean
 }
 
 interface PropertyDetail {
@@ -74,6 +76,7 @@ interface PropertyDetail {
     city?: string
     state?: string
     zipCode?: string
+    isDraft?: boolean
 }
 
 // Status configuration with colors and messages
@@ -91,6 +94,7 @@ const STATUS_CONFIG: Record<string, { displayStatus: DisplayStatus; color: strin
     in_progress: { displayStatus: "In Progress", color: "bg-blue-100 text-blue-700", message: "Processing documents...", progress: 30 },
     processing: { displayStatus: "Processing", color: "bg-blue-100 text-blue-700", message: "Processing documents...", progress: 30 },
     error: { displayStatus: "Error", color: "bg-red-100 text-red-700", message: "Analysis error", progress: 0 },
+    draft: { displayStatus: "Draft", color: "bg-amber-100 text-amber-700", message: "Waiting for confirmation", progress: 0 },
 };
 
 // Helper function to get status config
@@ -105,6 +109,7 @@ function getStatusConfig(processStatus: string | undefined) {
 
 
 const Page = () => {
+    const router = useRouter();
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
     const [properties, setProperties] = useState<Property[]>([]);
@@ -182,6 +187,22 @@ const Page = () => {
                     documentsSubmitted = 2; // Assume both uploaded if process exists
                 }
 
+                // Handle draft properties
+                const isDraft = prop.is_draft === true;
+                let propStatus = statusConfig.displayStatus;
+                let propDetailedStatus = process?.status || "pending";
+                let propStatusColor = statusConfig.color;
+                let propStatusMessage = statusConfig.message;
+                let propProgress = progress;
+
+                if (isDraft) {
+                    propStatus = "Draft";
+                    propDetailedStatus = "draft";
+                    propStatusColor = "bg-amber-100 text-amber-700";
+                    propStatusMessage = "Waiting for confirmation";
+                    propProgress = 0;
+                }
+
                 return {
                     id: prop.property_id,
                     name: prop.address || prop.property_name,
@@ -190,14 +211,14 @@ const Page = () => {
                     type: undefined,
                     closingDate: prop.purchase_date ? new Date(prop.purchase_date).toLocaleDateString() : undefined,
                     createdAt: process?.process_start ? new Date(process.process_start).toLocaleDateString() : undefined, // Map from process_start
-                    status: statusConfig.displayStatus,
-                    detailedStatus: process?.status || "pending",
-                    statusColor: statusConfig.color,
-                    statusMessage: statusConfig.message,
+                    status: propStatus,
+                    detailedStatus: propDetailedStatus,
+                    statusColor: propStatusColor,
+                    statusMessage: propStatusMessage,
                     clientName: prop.client_name,
                     processId: process?.process_id,
-                    progress: progress,
-                    documentsSubmitted: documentsSubmitted,
+                    progress: propProgress,
+                    documentsSubmitted: isDraft ? 1 : documentsSubmitted,
                     yearBuilt: prop.year_built ?? undefined,
                     squareFootage: prop.square_footage ?? undefined,
                     bedrooms: prop.bedrooms ?? undefined,
@@ -210,6 +231,7 @@ const Page = () => {
                     state: prop.state ?? undefined,
                     zipCode: prop.zip_code ?? undefined,
                     negotiatedWins: prop.negotiated_wins ?? undefined,
+                    isDraft: isDraft,
                 };
             });
 
@@ -682,6 +704,7 @@ const Page = () => {
         city: selectedProperty.city,
         state: selectedProperty.state,
         zipCode: selectedProperty.zipCode,
+        isDraft: selectedProperty.isDraft,
     } : null;
 
     const handlePageChange = (page: number) => {
@@ -691,9 +714,15 @@ const Page = () => {
     const handleSelectProperty = (property: { id: string }) => {
         // Find the full property from our state
         const fullProperty = properties.find(p => p.id === property.id);
-        if (fullProperty) {
-            setSelectedProperty(fullProperty);
+        if (!fullProperty) return;
+
+        // If draft, navigate to add-properties page to continue setup
+        if (fullProperty.isDraft) {
+            router.push(`/manage-properties/add-properties?draft=${fullProperty.id}`);
+            return;
         }
+
+        setSelectedProperty(fullProperty);
     };
 
     const handleCloseDetail = () => {
@@ -754,6 +783,7 @@ const Page = () => {
                         properties={listProperties}
                         isLoading={isLoading}
                         onSelectProperty={handleSelectProperty}
+                        onDeleteProperty={openDeleteModal}
                         currentPage={currentPage}
                         totalPages={totalPages}
                         onPageChange={handlePageChange}
@@ -771,6 +801,7 @@ const Page = () => {
                                 onEdit={() => handleOpenEditModal(selectedProperty)}
                                 onDownload={() => handleDownload(selectedProperty.id)}
                                 onDelete={() => openDeleteModal(selectedProperty.id)}
+                                onContinueSetup={() => router.push(`/manage-properties/add-properties?draft=${selectedProperty.id}`)}
                             />
                             {isDownloading && (
                                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
@@ -787,6 +818,7 @@ const Page = () => {
                                 onEdit={() => handleOpenEditModal(selectedProperty)}
                                 onDownload={() => handleDownload(selectedProperty.id)}
                                 onDelete={() => openDeleteModal(selectedProperty.id)}
+                                onContinueSetup={() => router.push(`/manage-properties/add-properties?draft=${selectedProperty.id}`)}
                             />
                             {isDownloading && (
                                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
