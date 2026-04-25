@@ -34,6 +34,7 @@ interface PropertyDetailData {
     city?: string
     state?: string
     zipCode?: string
+    isDraft?: boolean
 }
 
 interface PropertyDetailPanelProps {
@@ -42,6 +43,7 @@ interface PropertyDetailPanelProps {
     onEdit?: () => void
     onDownload?: () => void
     onDelete?: () => void
+    onContinueSetup?: () => void
 }
 
 // Helper to get tier label and color from priority_level
@@ -65,6 +67,7 @@ export function PropertyDetailPanel({
     onEdit,
     onDownload,
     onDelete,
+    onContinueSetup,
 }: PropertyDetailPanelProps) {
     const [messages, setMessages] = useState<MessageResponse[]>([])
     const [messageCount, setMessageCount] = useState<number>(property.totalIssues)
@@ -188,24 +191,38 @@ export function PropertyDetailPanel({
                 <div className="p-6 lg:p-8 space-y-6">
                     {/* Action Buttons Row */}
                     <div className="flex flex-wrap gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={onEdit}
-                            className="flex items-center gap-2 rounded-lg border-gray-200 text-[#0C1D38] hover:bg-gray-50 h-9 text-xs font-semibold px-4"
-                        >
-                            <Pencil className="w-4 h-4" />
-                            Edit
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={onDownload}
-                            className="flex items-center gap-2 rounded-lg border-gray-200 text-[#0C1D38] hover:bg-gray-50 h-9 text-xs font-semibold px-4 whitespace-nowrap"
-                        >
-                            <Download className="w-4 h-4" />
-                            Download Report
-                        </Button>
+                        {property.isDraft ? (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={onContinueSetup}
+                                className="flex items-center gap-2 rounded-lg border-amber-200 text-amber-700 hover:bg-amber-50 h-9 text-xs font-semibold px-4"
+                            >
+                                <Pencil className="w-4 h-4" />
+                                Continue Setup
+                            </Button>
+                        ) : (
+                            <>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={onEdit}
+                                    className="flex items-center gap-2 rounded-lg border-gray-200 text-[#0C1D38] hover:bg-gray-50 h-9 text-xs font-semibold px-4"
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                    Edit
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={onDownload}
+                                    className="flex items-center gap-2 rounded-lg border-gray-200 text-[#0C1D38] hover:bg-gray-50 h-9 text-xs font-semibold px-4 whitespace-nowrap"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Download Report
+                                </Button>
+                            </>
+                        )}
                         <Button
                             variant="outline"
                             size="sm"

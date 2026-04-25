@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { StatusBadge } from "@/components/ui/status-badge"
-import { ChevronLeft, ChevronRight, Home, MapPin, Calendar, User, Loader2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Home, MapPin, Calendar, User, Loader2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface Property {
@@ -16,12 +16,14 @@ interface Property {
   status: string
   statusColor: string
   clientName?: string
+  isDraft?: boolean
 }
 
 interface PropertyListProps {
   properties: Property[]
   selectedPropertyId?: string | null
   onSelectProperty?: (property: Property) => void
+  onDeleteProperty?: (propertyId: string) => void
   currentPage?: number
   totalPages?: number
   onPageChange?: (page: number) => void
@@ -32,6 +34,7 @@ export function PropertyList({
   properties,
   selectedPropertyId,
   onSelectProperty,
+  onDeleteProperty,
   currentPage = 1,
   totalPages = 1,
   onPageChange,
@@ -90,7 +93,14 @@ export function PropertyList({
                 <h3 className="text-sm font-semibold text-gray-900 truncate">
                   {property.clientName || 'No Client'}
                 </h3>
-                <StatusBadge status={property.status} className="text-[10px] px-2 py-0.5" />
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {property.isDraft && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                      Draft
+                    </span>
+                  )}
+                  <StatusBadge status={property.status} className="text-[10px] px-2 py-0.5" />
+                </div>
               </div>
               <p className="text-[11px] font-medium text-gray-700 truncate mt-0.5">
                 {property.name}
@@ -103,7 +113,21 @@ export function PropertyList({
               </div>
             </div>
 
-            <ChevronRight className={`w-4 h-4 flex-shrink-0 ${selectedPropertyId === property.id ? "text-primary" : "text-gray-300"}`} />
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {property.isDraft && onDeleteProperty && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteProperty(property.id);
+                  }}
+                  className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete draft"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <ChevronRight className={`w-4 h-4 ${selectedPropertyId === property.id ? "text-primary" : "text-gray-300"}`} />
+            </div>
           </div>
         ))}
       </div>
