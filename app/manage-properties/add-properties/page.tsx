@@ -23,6 +23,7 @@ const AddPropertyPage = () => {
 
     // PDF-first flow state
     const [pdfFile, setPdfFile] = useState<File | null>(null);
+    const [pdfDocType, setPdfDocType] = useState<'4point' | 'home_inspection'>('home_inspection');
     const [isExtracting, setIsExtracting] = useState(false);
     const [draftPropertyId, setDraftPropertyId] = useState<string | null>(draftId);
     const [extractedData, setExtractedData] = useState<UploadAndExtractResponse | null>(null);
@@ -235,7 +236,7 @@ const AddPropertyPage = () => {
         setError(null);
 
         try {
-            const result = await propertyAPI.uploadAndExtract(pdfFile);
+            const result = await propertyAPI.uploadAndExtract(pdfFile, pdfDocType);
             setExtractedData(result);
             setDraftPropertyId(result.property_id);
 
@@ -608,8 +609,34 @@ const AddPropertyPage = () => {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Property Document</h3>
                 <p className="text-sm text-gray-500 max-w-md mx-auto">
-                    Upload a PDF document (4-Point or Home Inspection) and we will automatically extract the property details for you.
+                    Select the document type and upload a PDF. We will automatically extract the property details for you.
                 </p>
+            </div>
+
+            {/* Document Type Selector */}
+            <div className="grid grid-cols-2 gap-3">
+                <button
+                    type="button"
+                    onClick={() => setPdfDocType('4point')}
+                    className={`py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all ${
+                        pdfDocType === '4point'
+                            ? 'border-[#00346C] bg-blue-50 text-[#00346C]'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                >
+                    4-Point Inspection
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setPdfDocType('home_inspection')}
+                    className={`py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all ${
+                        pdfDocType === 'home_inspection'
+                            ? 'border-[#00346C] bg-blue-50 text-[#00346C]'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                >
+                    Home Inspection
+                </button>
             </div>
 
             <input
@@ -630,7 +657,9 @@ const AddPropertyPage = () => {
                 >
                     <Upload className="w-10 h-10 text-[#00346C]" />
                     <span className="text-base font-medium text-[#00346C]">Click to Upload PDF</span>
-                    <span className="text-xs text-[#9CA3AF]">4-Point or Home Inspection report</span>
+                    <span className="text-xs text-[#9CA3AF]">
+                        {pdfDocType === '4point' ? '4-Point Inspection report' : 'Home Inspection report'}
+                    </span>
                 </button>
             ) : (
                 <div className="w-full rounded-[16px] border-2 border-solid border-[#10B981] bg-[#F0FDF4] p-6 relative">
@@ -916,6 +945,7 @@ const AddPropertyPage = () => {
                 onClick={() => {
                     setPdfStep(1);
                     setPdfFile(null);
+                    setPdfDocType('home_inspection');
                     setSecondDocFile(null);
                     setExtractedData(null);
                     setDraftPropertyId(null);

@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 export interface NegotiatedWin {
   item: string;
   value: string;
-  category?: 'new_major_update' | 'repairs_made' | 'cash_credit';
-  system_type?: 'hvac' | 'roof' | 'roof_tile_metal' | 'water_heater' | 'water_heater_tankless' | 'pool_equipment' | 'electrical';
+  category?: 'new_major_update' | 'repairs_made' | 'seller_credit';
+  system_type?: 'hvac' | 'roof_shingle' | 'roof_tile_metal' | 'water_heater' | 'water_heater_tankless' | 'pool_equipment' | 'electrical' | 'plumbing' | 'appliances';
   unit_name?: string;
   notes?: string;
 }
@@ -21,20 +21,22 @@ interface NegotiatedWinsFormProps {
 
 const CATEGORY_OPTIONS = [
   { value: '', label: 'Select Category' },
-  { value: 'new_major_update', label: 'New / Major Update' },
+  { value: 'new_major_update', label: 'Major/New Update' },
   { value: 'repairs_made', label: 'Repairs Made' },
-  { value: 'cash_credit', label: 'Cash Credit' },
+  { value: 'seller_credit', label: 'Seller Credit' },
 ];
 
 const SYSTEM_TYPE_OPTIONS = [
   { value: '', label: 'Select System Type' },
   { value: 'hvac', label: 'HVAC' },
-  { value: 'roof', label: 'Roof' },
-  { value: 'roof_tile_metal', label: 'Roof Tile Metal' },
-  { value: 'water_heater', label: 'Water Heater' },
-  { value: 'water_heater_tankless', label: 'Water Heater Tankless' },
+  { value: 'roof_shingle', label: 'Roof (Shingle)' },
+  { value: 'roof_tile_metal', label: 'Roof (Tile/Metal)' },
+  { value: 'water_heater', label: 'Water Heater (Tank)' },
+  { value: 'water_heater_tankless', label: 'Water Heater (Tankless)' },
   { value: 'pool_equipment', label: 'Pool Equipment' },
   { value: 'electrical', label: 'Electrical' },
+  { value: 'plumbing', label: 'Plumbing' },
+  { value: 'appliances', label: 'Appliances' },
 ];
 
 const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange, disabled = false }) => {
@@ -187,13 +189,13 @@ const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange
                 ))}
               </select>
               {win.category !== 'new_major_update' && (
-                <p className="text-xs text-[#9CA3AF] mt-1">Only available for "New / Major Update"</p>
+                <p className="text-xs text-[#9CA3AF] mt-1">Only available for "Major/New Update"</p>
               )}
             </div>
           </div>
 
-          {/* Row 2.5: Unit Name (conditional - only for HVAC and Water Heater) */}
-          {win.category === 'new_major_update' && 
+          {/* Row 2.5: Unit Name (conditional - only for HVAC and Water Heater Tank) */}
+          {win.category === 'new_major_update' &&
            (win.system_type === 'hvac' || win.system_type === 'water_heater') && (
             <div>
               <label className="block text-xs font-medium text-[#374151] mb-1">
