@@ -303,11 +303,11 @@ export const propertyAPI = {
      * Upload a PDF and extract property data (PDF-first flow)
      * Creates a draft property with extracted data
      */
-    uploadAndExtract: async (file: File): Promise<UploadAndExtractResponse> => {
+    uploadAndExtract: async (file: File, docType: '4point' | 'home_inspection' = 'home_inspection'): Promise<UploadAndExtractResponse> => {
         const formData = new FormData();
         formData.append('file', file);
 
-        const url = `${API_BASE_URL}/api/property/upload-and-extract`;
+        const url = `${API_BASE_URL}/api/property/upload-and-extract?doc_type=${encodeURIComponent(docType)}`;
         const token = getAuthToken();
 
         const response = await fetch(url, {
