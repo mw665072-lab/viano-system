@@ -462,64 +462,105 @@ export default function LandingPage() {
                         </p>
                     </div>
 
-                    <div className="pricing-card-outer reveal-hidden scale-only delay-200">
-                        <div className="pricing-card">
-                            <div className="trending-badge">Trending</div>
-                            <h3 className="card-product-title">Property Intelligence</h3>
-                            <div className="card-price">
-                                <span className="price-amount">$6/mo</span>
-                                <span className="price-unit">Per Client</span>
+                    <div className="pricing-cards-wrapper">
+                        {/* Free Trial Card */}
+                        <div className="pricing-card-outer free-trial-outer reveal-hidden scale-only delay-100">
+                            <div className="pricing-card free-trial-card">
+                                <div className="free-badge">Free</div>
+                                <h3 className="card-product-title">Free Trial</h3>
+                                <div className="card-price">
+                                    <span className="price-amount">2</span>
+                                    <span className="price-unit">Free Properties</span>
+                                </div>
+                                <p className="card-subtitle">Get started with 2 properties at no cost. No credit card required.</p>
+
+                                <hr className="card-divider" />
+
+                                <div className="card-features">
+                                    <div className="card-feature">
+                                        <span className="check-icon">✓</span>
+                                        2 properties tracked free forever
+                                    </div>
+                                    <div className="card-feature">
+                                        <span className="check-icon">✓</span>
+                                        Full property intelligence features
+                                    </div>
+                                    <div className="card-feature">
+                                        <span className="check-icon">✓</span>
+                                        SMS alerts & follow-up reminders
+                                    </div>
+                                    <div className="card-feature">
+                                        <span className="check-icon">✓</span>
+                                        Upgrade anytime to track more clients
+                                    </div>
+                                </div>
+
+                                <Link href="/signup">
+                                    <button className="start-trial-btn free-trial-btn">Get Started Free</button>
+                                </Link>
                             </div>
-                            <p className="card-subtitle">Only pay for the clients you choose to manage.</p>
+                        </div>
 
-                            <hr className="card-divider" />
+                        {/* Paid Plan Card */}
+                        <div className="pricing-card-outer reveal-hidden scale-only delay-200">
+                            <div className="pricing-card">
+                                <div className="trending-badge">Trending</div>
+                                <h3 className="card-product-title">Property Intelligence</h3>
+                                <div className="card-price">
+                                    <span className="price-amount">$6/mo</span>
+                                    <span className="price-unit">Per Client</span>
+                                </div>
+                                <p className="card-subtitle">Only pay for the clients you choose to manage.</p>
 
-                            <div className="card-features">
-                                <div className="card-feature">
-                                    <span className="check-icon">✓</span>
-                                    Ten-year personalized client timeline
-                                </div>
-                                <div className="card-feature">
-                                    <span className="check-icon">✓</span>
-                                    Property-aware follow-ups & system insights
-                                </div>
-                                <div className="card-feature">
-                                    <span className="check-icon">✓</span>
-                                    Client reactivation & referral momentum
-                                </div>
-                                <div className="card-feature">
-                                    <span className="check-icon">✓</span>
-                                    SMS alerts sent directly to you.
-                                </div>
-                            </div>
+                                <hr className="card-divider" />
 
-                            <div className="pricing-actions">
-                                <div className="custom-dropdown" ref={pricingDropdownRef}>
-                                    <button
-                                        className="dropdown-toggle"
-                                        onClick={() => setPricingDropdownOpen(!pricingDropdownOpen)}
-                                    >
-                                        {selectedClients}
-                                        <ChevronDown size={18} />
-                                    </button>
-                                    {pricingDropdownOpen && (
-                                        <div className="dropdown-menu">
-                                            <div className="dropdown-item" onClick={() => { setSelectedClients("1 Client - Free For 60 Days"); setPricingDropdownOpen(false); }}>
-                                                1 Client - Free For 60 Days
-                                            </div>
-                                            <div className="dropdown-item" onClick={() => { setSelectedClients("3 Clients — $24 / Month"); setPricingDropdownOpen(false); }}>
-                                                3 Clients — $24 / Month
-                                            </div>
-                                            <div className="dropdown-item" onClick={() => { setSelectedClients("6 Clients — $48 / Month"); setPricingDropdownOpen(false); }}>
-                                                6 Clients — $48 / Month
-                                            </div>
-                                            <div className="dropdown-item" onClick={() => { setSelectedClients("12 Clients — $96 / Month"); setPricingDropdownOpen(false); }}>
-                                                12 Clients — $96 / Month
-                                            </div>
-                                        </div>
-                                    )}
+                                <div className="card-features">
+                                    <div className="card-feature">
+                                        <span className="check-icon">✓</span>
+                                        Ten-year personalized client timeline
+                                    </div>
+                                    <div className="card-feature">
+                                        <span className="check-icon">✓</span>
+                                        Property-aware follow-ups & system insights
+                                    </div>
+                                    <div className="card-feature">
+                                        <span className="check-icon">✓</span>
+                                        Client reactivation & referral momentum
+                                    </div>
+                                    <div className="card-feature">
+                                        <span className="check-icon">✓</span>
+                                        SMS alerts sent directly to you.
+                                    </div>
                                 </div>
-                                <button className="start-trial-btn">Start Your Free Trial</button>
+
+                                <div className="pricing-actions">
+                                    <div className="custom-dropdown" ref={pricingDropdownRef}>
+                                        <button
+                                            className="dropdown-toggle"
+                                            onClick={() => setPricingDropdownOpen(!pricingDropdownOpen)}
+                                        >
+                                            {selectedClients}
+                                            <ChevronDown size={18} />
+                                        </button>
+                                        {pricingDropdownOpen && (
+                                            <div className="dropdown-menu">
+                                                <div className="dropdown-item" onClick={() => { setSelectedClients("1 Client - Free For 60 Days"); setPricingDropdownOpen(false); }}>
+                                                    1 Client - Free For 60 Days
+                                                </div>
+                                                <div className="dropdown-item" onClick={() => { setSelectedClients("3 Clients — $24 / Month"); setPricingDropdownOpen(false); }}>
+                                                    3 Clients — $24 / Month
+                                                </div>
+                                                <div className="dropdown-item" onClick={() => { setSelectedClients("6 Clients — $48 / Month"); setPricingDropdownOpen(false); }}>
+                                                    6 Clients — $48 / Month
+                                                </div>
+                                                <div className="dropdown-item" onClick={() => { setSelectedClients("12 Clients — $96 / Month"); setPricingDropdownOpen(false); }}>
+                                                    12 Clients — $96 / Month
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button className="start-trial-btn">Start Your Free Trial</button>
+                                </div>
                             </div>
                         </div>
                     </div>
