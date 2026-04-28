@@ -826,6 +826,16 @@ body {
     letter-spacing: -0.01em;
 }
 
+.pricing-cards-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    gap: 32px;
+    width: 100%;
+    max-width: 1200px;
+}
+
 .pricing-card-outer {
     background: #121E31;
     padding: 2px;
@@ -834,6 +844,55 @@ body {
     max-width: 540px;
     position: relative;
     box-shadow: 0 0 50px rgba(59, 130, 246, 0.2);
+    flex: 1;
+}
+
+/* Free Trial Card Styles - Same as paid card */
+.free-trial-outer {
+    background: #121E31;
+    box-shadow: 0 0 50px rgba(59, 130, 246, 0.2);
+}
+
+.free-trial-outer::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 42px;
+    padding: 2px;
+    background: linear-gradient(180deg, #3B82F6 0%, rgba(59, 130, 246, 0.05) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.free-badge {
+    background: #3B82F6;
+    color: white;
+    padding: 6px 18px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 24px;
+}
+
+.free-trial-btn {
+    width: 100%;
+    padding: 18px;
+    background: #F3F4F6;
+    color: #111827;
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.free-trial-btn:hover {
+    background: #FFFFFF;
+    transform: translateY(-2px);
 }
 
 .pricing-card-outer::after {
@@ -1796,8 +1855,12 @@ body {
         font-size: 48px;
     }
 
+    .pricing-cards-wrapper {
+        gap: 40px;
+    }
+
     .pricing-card-outer {
-        max-width: 580px;
+        max-width: 520px;
     }
 
     /* Teams Section - Full viewport height */
@@ -1971,8 +2034,12 @@ body {
         font-size: 44px;
     }
 
+    .pricing-cards-wrapper {
+        gap: 32px;
+    }
+
     .pricing-card-outer {
-        max-width: 540px;
+        max-width: 480px;
     }
 
     /* Teams Section - Full viewport height */
@@ -2234,8 +2301,12 @@ body {
         max-width: 600px;
     }
 
+    .pricing-cards-wrapper {
+        gap: 28px;
+    }
+
     .pricing-card-outer {
-        max-width: 500px;
+        max-width: 440px;
     }
 
     .pricing-card {
@@ -2613,8 +2684,12 @@ body {
         margin-bottom: 40px;
     }
 
+    .pricing-cards-wrapper {
+        gap: 24px;
+    }
+
     .pricing-card-outer {
-        max-width: 460px;
+        max-width: 420px;
     }
 
     .pricing-card {
@@ -3072,8 +3147,12 @@ body {
         font-size: 42px;
     }
 
+    .pricing-cards-wrapper {
+        gap: 24px;
+    }
+
     .pricing-card-outer {
-        max-width: 450px;
+        max-width: 420px;
     }
 
     /* Teams Section */
@@ -3419,6 +3498,12 @@ body {
     .data-section,
     .landing-footer {
         padding: 40px 40px !important;
+    }
+
+    .pricing-cards-wrapper {
+        flex-direction: column !important;
+        gap: 24px !important;
+        align-items: center !important;
     }
 
     .final-cta-section {
@@ -4010,9 +4095,16 @@ body {
         max-width: 100%;
     }
 
+    .pricing-cards-wrapper {
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+    }
+
     .pricing-card-outer {
         max-width: 100%;
         padding: 3px;
+        width: 100%;
     }
 
     .pricing-card {
