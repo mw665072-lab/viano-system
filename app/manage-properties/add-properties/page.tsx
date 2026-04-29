@@ -78,9 +78,15 @@ const AddPropertyPage = () => {
     const [isCheckingLimit, setIsCheckingLimit] = useState(true);
     const [isBillingLoading, setIsBillingLoading] = useState(false);
 
-    // Check property limit on mount
+    // Check property limit on mount (skip if loading an existing draft)
     useEffect(() => {
         const checkLimit = async () => {
+            // Skip limit check when confirming an existing draft
+            if (draftId) {
+                setIsCheckingLimit(false);
+                return;
+            }
+
             const userId = getCurrentUserId();
             if (!userId) return;
 
@@ -94,7 +100,7 @@ const AddPropertyPage = () => {
             }
         };
         checkLimit();
-    }, []);
+    }, [draftId]);
 
     // Handle draft query param - load existing draft property
     useEffect(() => {

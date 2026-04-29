@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, EngineResultResponse, MessageResponse, getCurrentUserId } from '@/lib/api';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
-import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
+
 
 // All possible process statuses from the workflow
 type ProcessStatus = "pending" | "started" | "downloading" | "generating_messages" | "storing_messages" | "completed" | "failed";
@@ -125,7 +125,7 @@ const Page = () => {
     const [isSavingEdit, setIsSavingEdit] = useState(false);
     const [editFourPointFile, setEditFourPointFile] = useState<File | null>(null);
     const [editHomeInspectionFile, setEditHomeInspectionFile] = useState<File | null>(null);
-    const [editNegotiatedWins, setEditNegotiatedWins] = useState<string>('');
+
 
     // Delete confirmation modal state
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -570,9 +570,6 @@ const Page = () => {
     const handleOpenEditModal = useCallback((property: Property) => {
         setEditFourPointFile(null);
         setEditHomeInspectionFile(null);
-        // Find the full property data to get negotiated_wins
-        const fullProperty = properties.find(p => p.id === property.id);
-        setEditNegotiatedWins(fullProperty?.negotiatedWins || '');
         setIsEditModalOpen(true);
     }, [properties]);
 
@@ -588,13 +585,6 @@ const Page = () => {
         setIsSavingEdit(true);
 
         try {
-            // Update negotiated wins if changed
-            if (editNegotiatedWins !== selectedProperty.negotiatedWins) {
-                await propertyAPI.update(selectedProperty.id, {
-                    negotiated_wins: editNegotiatedWins || null,
-                });
-            }
-
             // Check if any documents are being uploaded
             const filesToUpload: File[] = [];
             const docTypes: ('4point' | 'home_inspection')[] = [];
@@ -622,7 +612,6 @@ const Page = () => {
             setIsEditModalOpen(false);
             setEditFourPointFile(null);
             setEditHomeInspectionFile(null);
-            setEditNegotiatedWins('');
             
             if (filesToUpload.length > 0) {
                 showToast('Property updated and processing restarted!', 'success');
@@ -635,7 +624,7 @@ const Page = () => {
         } finally {
             setIsSavingEdit(false);
         }
-    }, [selectedProperty, editFourPointFile, editHomeInspectionFile, editNegotiatedWins, fetchPropertiesWithStatus]);
+    }, [selectedProperty, editFourPointFile, editHomeInspectionFile, fetchPropertiesWithStatus]);
 
     // Filter properties based on search query and status
     const filteredProperties = useMemo(() => {
@@ -853,19 +842,6 @@ const Page = () => {
                                 {selectedProperty.clientName && (
                                     <p className="text-sm text-gray-600 mt-1">Client: {selectedProperty.clientName}</p>
                                 )}
-                            </div>
-
-                            {/* Negotiated Wins Section */}
-                            <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Negotiated Wins</h3>
-                                <p className="text-sm text-gray-600 mb-3">
-                                    Update the negotiated wins for this property
-                                </p>
-                                <NegotiatedWinsForm
-                                    value={editNegotiatedWins}
-                                    onChange={setEditNegotiatedWins}
-                                    disabled={isSavingEdit}
-                                />
                             </div>
 
                             {/* Document Upload Section */}
