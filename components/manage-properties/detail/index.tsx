@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info, MessageSquare } from "lucide-react"
+import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info, MessageSquare, Calendar, History, Wrench } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
-import { processAPI, documentAPI, MessageResponse } from "@/lib/api"
+import { processAPI, documentAPI, MessageResponse, systemsAPI, SystemResponse } from "@/lib/api"
+import { ResetModal } from "./reset-modal"
+import { HistoryModal } from "./history-modal"
 
 interface PropertyDetailData {
     id: string
@@ -44,6 +46,7 @@ interface PropertyDetailPanelProps {
     onDownload?: () => void
     onDelete?: () => void
     onContinueSetup?: () => void
+    onShowToast?: (message: string, type: 'success' | 'error') => void
 }
 
 // Helper to get tier label and color from priority_level
@@ -68,6 +71,7 @@ export function PropertyDetailPanel({
     onDownload,
     onDelete,
     onContinueSetup,
+    onShowToast,
 }: PropertyDetailPanelProps) {
     const [messages, setMessages] = useState<MessageResponse[]>([])
     const [messageCount, setMessageCount] = useState<number>(property.totalIssues)
@@ -76,6 +80,13 @@ export function PropertyDetailPanel({
     // Document count state - initialize to the count from props for immediate display
     const [documentCount, setDocumentCount] = useState<number>(property.documentsSubmitted)
     const [isLoadingDocs, setIsLoadingDocs] = useState(true)
+
+    // Systems state
+    const [systems, setSystems] = useState<SystemResponse[]>([])
+    const [isLoadingSystems, setIsLoadingSystems] = useState(false)
+    const [showResetModal, setShowResetModal] = useState(false)
+    const [showHistoryModal, setShowHistoryModal] = useState(false)
+    const [selectedSystem, setSelectedSystem] = useState<SystemResponse | null>(null)
 
     // Helper: resolve effective priority from realtor_alert.priority (string) first
     const getEffectivePriority = (m: MessageResponse): number => {
@@ -141,6 +152,71 @@ export function PropertyDetailPanel({
 
         fetchDocumentCount()
     }, [property.id, property.processId])
+
+    // Fetch systems when property changes
+    useEffect(() => {
+        const fetchSystems = async () => {
+            if (!property.id || property.isDraft) {
+                setSystems([])
+                return
+            }
+
+            setIsLoadingSystems(true)
+            try {
+                const data = await systemsAPI.getSystems(property.id)
+                setSystems(data)
+            } catch (err) {
+                console.error('Error fetching systems:', err)
+                setSystems([])
+            } finally {
+                setIsLoadingSystems(false)
+            }
+        }
+
+        fetchSystems()
+    }, [property.id, property.isDraft])
+
+    const handleOpenResetModal = (system: SystemResponse) => {
+        setSelectedSystem(system)
+        setShowResetModal(true)
+    }
+
+    const handleOpenHistoryModal = (system: SystemResponse) => {
+        setSelectedSystem(system)
+        setShowHistoryModal(true)
+    }
+
+    const handleResetSuccess = (alertCount: number) => {
+        setShowResetModal(false)
+        if (onShowToast) {
+            onShowToast(`${alertCount} alert${alertCount !== 1 ? 's' : ''} rescheduled`, 'success')
+        }
+        // Refresh systems list
+        if (property.id && !property.isDraft) {
+            systemsAPI.getSystems(property.id)
+                .then(setSystems)
+                .catch(err => console.error('Error refreshing systems:', err))
+        }
+    }
+
+    const formatSystemType = (type: string) => {
+        return type
+            .split('_')
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ')
+    }
+
+    const getAlertTierColor = (tier: string | null) => {
+        if (tier === 'Tier 2') return 'bg-red-100 text-red-700 border-red-200'
+        if (tier === 'Tier 1') return 'bg-amber-100 text-amber-700 border-amber-200'
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200'
+    }
+
+    const getAlertTierLabel = (tier: string | null) => {
+        if (tier === 'Tier 2') return 'Tier 2'
+        if (tier === 'Tier 1') return 'Tier 1'
+        return 'Healthy'
+    }
 
     // Calculate tier breakdown
     const tierBreakdown = {
@@ -347,6 +423,119 @@ export function PropertyDetailPanel({
                         </div>
                     </div>
 
+                    {/* Property Systems Section */}
+                    {!property.isDraft && (
+                        <div className="mt-2 p-5 bg-white rounded-[28px] border border-gray-100/80 shadow-[0_4px_20px_rgb(0,0,0,0.03)] relative overflow-hidden group">
+                            <div className="absolute -top-12 -right-12 w-24 h-24 bg-emerald-50/50 rounded-full blur-2xl group-hover:bg-emerald-100/50 transition-colors duration-700" />
+
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md shadow-emerald-100">
+                                            <Wrench className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xs font-bold text-[#0C1D38] uppercase tracking-wider">Property Systems</h3>
+                                            <p className="text-[9px] text-[#64748B] font-bold mt-0.5 uppercase tracking-tight opacity-60">Age & Lifespan Tracking</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
+                                        {isLoadingSystems ? '...' : `${systems.length} system${systems.length !== 1 ? 's' : ''}`}
+                                    </span>
+                                </div>
+
+                                {isLoadingSystems ? (
+                                    <div className="flex items-center justify-center py-8">
+                                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                ) : systems.length === 0 ? (
+                                    <div className="text-center py-6">
+                                        <p className="text-xs text-gray-500">No systems data available for this property.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {systems.map((system) => {
+                                            const progressPercent = Math.min(100, Math.max(0, system.percentage_used))
+                                            const progressColor = system.alert_tier === 'Tier 2'
+                                                ? 'bg-red-500'
+                                                : system.alert_tier === 'Tier 1'
+                                                    ? 'bg-amber-500'
+                                                    : 'bg-emerald-500'
+
+                                            return (
+                                                <div
+                                                    key={system.system_id}
+                                                    className="bg-gray-50 rounded-2xl border border-gray-100 p-4 transition-all duration-300 hover:shadow-sm"
+                                                >
+                                                    {/* Header row */}
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <div className="min-w-0 flex-1">
+                                                            <h4 className="text-sm font-bold text-[#0C1D38] truncate">
+                                                                {formatSystemType(system.system_type)}
+                                                                {system.brand && (
+                                                                    <span className="text-[#64748B] font-medium"> — {system.brand}</span>
+                                                                )}
+                                                            </h4>
+                                                        </div>
+                                                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ml-2 shrink-0 ${getAlertTierColor(system.alert_tier)}`}>
+                                                            {getAlertTierLabel(system.alert_tier)}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Age & Lifespan */}
+                                                    <div className="mb-3">
+                                                        <div className="flex items-center justify-between mb-1.5">
+                                                            <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
+                                                                Lifespan Used
+                                                            </span>
+                                                            <span className="text-xs font-bold text-[#0C1D38]">
+                                                                {system.current_age.toFixed(1)} yrs
+                                                                <span className="text-[#64748B] font-medium"> / {system.lifespan_max} yrs</span>
+                                                            </span>
+                                                        </div>
+                                                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={`h-full ${progressColor} rounded-full transition-all duration-500`}
+                                                                style={{ width: `${progressPercent}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Actions */}
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            {system.replacement_history.length > 0 && (
+                                                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
+                                                                    {system.replacement_history.length} replacement{system.replacement_history.length !== 1 ? 's' : ''}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => handleOpenHistoryModal(system)}
+                                                                className="flex items-center gap-1.5 text-[10px] font-bold text-[#64748B] hover:text-blue-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-blue-50"
+                                                            >
+                                                                <History className="w-3.5 h-3.5" />
+                                                                History
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleOpenResetModal(system)}
+                                                                className="flex items-center gap-1.5 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors px-3 py-1.5 rounded-lg"
+                                                            >
+                                                                <Calendar className="w-3.5 h-3.5" />
+                                                                Log Replacement
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Issues Summary Section - Restored Original Visuals */}
                     {/* Issues Summary Section */}
                     <div className="mt-2 p-5 bg-white rounded-[28px] border border-gray-100/80 shadow-[0_4px_20px_rgb(0,0,0,0.03)] relative overflow-hidden group">
@@ -449,6 +638,25 @@ export function PropertyDetailPanel({
                     </div>
                 </div>
             </div>
+
+            {/* Reset Modal */}
+            {showResetModal && selectedSystem && property.id && (
+                <ResetModal
+                    propertyId={property.id}
+                    system={selectedSystem}
+                    onClose={() => setShowResetModal(false)}
+                    onSuccess={handleResetSuccess}
+                />
+            )}
+
+            {/* History Modal */}
+            {showHistoryModal && selectedSystem && property.id && (
+                <HistoryModal
+                    propertyId={property.id}
+                    system={selectedSystem}
+                    onClose={() => setShowHistoryModal(false)}
+                />
+            )}
         </div>
     );
 }

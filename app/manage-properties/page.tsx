@@ -791,6 +791,7 @@ const Page = () => {
                                 onDownload={() => handleDownload(selectedProperty.id)}
                                 onDelete={() => openDeleteModal(selectedProperty.id)}
                                 onContinueSetup={() => router.push(`/manage-properties/add-properties?draft=${selectedProperty.id}`)}
+                                onShowToast={showToast}
                             />
                             {isDownloading && (
                                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
@@ -808,6 +809,7 @@ const Page = () => {
                                 onDownload={() => handleDownload(selectedProperty.id)}
                                 onDelete={() => openDeleteModal(selectedProperty.id)}
                                 onContinueSetup={() => router.push(`/manage-properties/add-properties?draft=${selectedProperty.id}`)}
+                                onShowToast={showToast}
                             />
                             {isDownloading && (
                                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
