@@ -4,11 +4,12 @@ import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
-import { ArrowLeft, Pencil, ChevronRight, Loader2 } from "lucide-react"
+import { ArrowLeft, Pencil, ChevronRight, Loader2, CheckCircle, XCircle, Mail, Smartphone } from "lucide-react"
 import Image from "next/image"
 import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, UpdateUserRequest, getCurrentUserId } from "@/lib/api"
 import { CreditCard, ExternalLink, ShieldCheck, Zap } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { OTPInput } from "@/components/ui/otp-input"
 
 interface ProfileData {
   name: string;
@@ -16,6 +17,8 @@ interface ProfileData {
   email: string;
   phone: string;
   avatar: string;
+  emailVerified: boolean;
+  phoneVerified: boolean;
 }
 
 interface AuditItem {
@@ -46,7 +49,9 @@ export default function ProfilePage() {
     role: "Property Evaluation Specialist",
     email: "",
     phone: "",
-    avatar: ""
+    avatar: "",
+    emailVerified: false,
+    phoneVerified: false,
   });
 
   const [audits, setAudits] = useState<AuditItem[]>([]);
@@ -72,6 +77,48 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // OTP verification modal state
+  const [otpModal, setOtpModal] = useState<{
+    open: boolean;
+    type: 'email' | 'phone' | 'phone_update' | null;
+    otp: string;
+    isSending: boolean;
+    isVerifying: boolean;
+    error: string | null;
+    resent: boolean;
+    resendTimer: number;
+  }>({
+    open: false,
+    type: null,
+    otp: '',
+    isSending: false,
+    isVerifying: false,
+    error: null,
+    resent: false,
+    resendTimer: 0,
+  });
+
+  // Phone update OTP state
+  const [phoneUpdateOtpModal, setPhoneUpdateOtpModal] = useState<{
+    open: boolean;
+    otp: string;
+    isSending: boolean;
+    isVerifying: boolean;
+    error: string | null;
+    resent: boolean;
+    resendTimer: number;
+    newPhone: string;
+  }>({
+    open: false,
+    otp: '',
+    isSending: false,
+    isVerifying: false,
+    error: null,
+    resent: false,
+    resendTimer: 0,
+    newPhone: '',
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -94,7 +141,9 @@ export default function ProfilePage() {
           role: userData.role || 'Property Evaluation Specialist',
           email: userData.email || '',
           phone: userData.mobile_number || 'Not provided',
-          avatar: ''
+          avatar: '',
+          emailVerified: userData.email_verified || false,
+          phoneVerified: userData.phone_verified || false,
         });
 
         // Pre-fill edit form
@@ -328,11 +377,48 @@ export default function ProfilePage() {
     setSaveError(null);
 
     try {
-      // Build payload with only non-empty values
+      // Check if phone number changed
+      const originalPhone = profile.phone === 'Not provided' ? '' : profile.phone;
+      const newPhone = editForm.mobile_number.trim();
+      const phoneChanged = newPhone !== originalPhone;
+
+      if (phoneChanged && newPhone) {
+        // Close edit modal and open phone update OTP flow
+        setIsEditModalOpen(false);
+        setPhoneUpdateOtpModal({
+          open: true,
+          otp: '',
+          isSending: true,
+          isVerifying: false,
+          error: null,
+          resent: false,
+          resendTimer: 0,
+          newPhone,
+        });
+
+        // Request OTP for phone update
+        try {
+          await authAPI.requestPhoneUpdateOTP({ new_phone: newPhone, otp: '' });
+          setPhoneUpdateOtpModal(prev => ({
+            ...prev,
+            isSending: false,
+            resendTimer: 60,
+          }));
+        } catch (err) {
+          setPhoneUpdateOtpModal(prev => ({
+            ...prev,
+            isSending: false,
+            error: err instanceof Error ? err.message : 'Failed to send OTP',
+          }));
+        }
+        setIsSaving(false);
+        return;
+      }
+
+      // Build payload with only non-empty values (name changes only)
       const payload: UpdateUserRequest = {};
       if (editForm.first_name.trim()) payload.first_name = editForm.first_name.trim();
       if (editForm.last_name.trim()) payload.last_name = editForm.last_name.trim();
-      if (editForm.mobile_number.trim()) payload.mobile_number = editForm.mobile_number.trim();
 
       const updatedUser = await authAPI.updateUser(payload);
 
@@ -340,7 +426,6 @@ export default function ProfilePage() {
       setProfile(prev => ({
         ...prev,
         name: `${updatedUser.first_name || ''} ${updatedUser.last_name || ''}`.trim() || 'User',
-        phone: updatedUser.mobile_number || 'Not provided',
       }));
 
       // Update localStorage name
@@ -354,6 +439,210 @@ export default function ProfilePage() {
       setSaveError(err instanceof Error ? err.message : 'Failed to update profile');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Phone update OTP resend timer
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (phoneUpdateOtpModal.resendTimer > 0) {
+      interval = setInterval(() => {
+        setPhoneUpdateOtpModal(prev => ({ ...prev, resendTimer: prev.resendTimer - 1 }));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [phoneUpdateOtpModal.resendTimer]);
+
+  const closePhoneUpdateOtpModal = () => {
+    setPhoneUpdateOtpModal({
+      open: false,
+      otp: '',
+      isSending: false,
+      isVerifying: false,
+      error: null,
+      resent: false,
+      resendTimer: 0,
+      newPhone: '',
+    });
+  };
+
+  const handleResendPhoneUpdateOtp = async () => {
+    if (phoneUpdateOtpModal.resendTimer > 0) return;
+
+    setPhoneUpdateOtpModal(prev => ({ ...prev, isSending: true, error: null, resent: false }));
+
+    try {
+      await authAPI.requestPhoneUpdateOTP({ new_phone: phoneUpdateOtpModal.newPhone, otp: '' });
+      setPhoneUpdateOtpModal(prev => ({
+        ...prev,
+        isSending: false,
+        resent: true,
+        resendTimer: 60,
+      }));
+    } catch (err) {
+      setPhoneUpdateOtpModal(prev => ({
+        ...prev,
+        isSending: false,
+        error: err instanceof Error ? err.message : 'Failed to resend OTP',
+      }));
+    }
+  };
+
+  const handleConfirmPhoneUpdate = async () => {
+    if (phoneUpdateOtpModal.otp.length !== 6) return;
+
+    setPhoneUpdateOtpModal(prev => ({ ...prev, isVerifying: true, error: null }));
+
+    try {
+      const result = await authAPI.confirmPhoneUpdate({
+        new_phone: phoneUpdateOtpModal.newPhone,
+        otp: phoneUpdateOtpModal.otp,
+      });
+
+      // Update profile with new phone
+      setProfile(prev => ({
+        ...prev,
+        name: `${result.user.first_name || ''} ${result.user.last_name || ''}`.trim() || 'User',
+        phone: result.user.mobile_number || 'Not provided',
+        phoneVerified: result.user.phone_verified || false,
+      }));
+
+      // Update localStorage name
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('userName', `${result.user.first_name || ''} ${result.user.last_name || ''}`.trim());
+      }
+
+      closePhoneUpdateOtpModal();
+    } catch (err) {
+      setPhoneUpdateOtpModal(prev => ({
+        ...prev,
+        isVerifying: false,
+        error: err instanceof Error ? err.message : 'Failed to update phone number',
+      }));
+    }
+  };
+
+  // --- OTP Verification Logic ---
+
+  // Resend countdown timer
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (otpModal.resendTimer > 0) {
+      interval = setInterval(() => {
+        setOtpModal(prev => ({ ...prev, resendTimer: prev.resendTimer - 1 }));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpModal.resendTimer]);
+
+  const openOtpModal = async (type: 'email' | 'phone') => {
+    setOtpModal({
+      open: true,
+      type,
+      otp: '',
+      isSending: true,
+      isVerifying: false,
+      error: null,
+      resent: false,
+      resendTimer: 0,
+    });
+
+    try {
+      if (type === 'email') {
+        await authAPI.sendEmailOTP();
+      } else {
+        await authAPI.sendPhoneOTP();
+      }
+      setOtpModal(prev => ({
+        ...prev,
+        isSending: false,
+        resendTimer: 60,
+      }));
+    } catch (err) {
+      setOtpModal(prev => ({
+        ...prev,
+        isSending: false,
+        error: err instanceof Error ? err.message : `Failed to send ${type} verification code`,
+      }));
+    }
+  };
+
+  const closeOtpModal = () => {
+    setOtpModal({
+      open: false,
+      type: null,
+      otp: '',
+      isSending: false,
+      isVerifying: false,
+      error: null,
+      resent: false,
+      resendTimer: 0,
+    });
+  };
+
+  const handleResendOtp = async () => {
+    if (otpModal.resendTimer > 0 || !otpModal.type) return;
+
+    setOtpModal(prev => ({ ...prev, isSending: true, error: null, resent: false }));
+
+    try {
+      if (otpModal.type === 'email') {
+        await authAPI.sendEmailOTP();
+      } else {
+        await authAPI.sendPhoneOTP();
+      }
+      setOtpModal(prev => ({
+        ...prev,
+        isSending: false,
+        resent: true,
+        resendTimer: 60,
+      }));
+    } catch (err) {
+      setOtpModal(prev => ({
+        ...prev,
+        isSending: false,
+        error: err instanceof Error ? err.message : 'Failed to resend code',
+      }));
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpModal.type || otpModal.otp.length !== 6) return;
+
+    setOtpModal(prev => ({ ...prev, isVerifying: true, error: null }));
+
+    try {
+      if (otpModal.type === 'email') {
+        const result = await authAPI.verifyEmailOTP({ code: otpModal.otp });
+        if (result.email_verified) {
+          setProfile(prev => ({ ...prev, emailVerified: true }));
+          closeOtpModal();
+        } else {
+          setOtpModal(prev => ({
+            ...prev,
+            isVerifying: false,
+            error: result.message || 'Invalid verification code',
+          }));
+        }
+      } else {
+        const result = await authAPI.verifyPhoneOTP({ code: otpModal.otp });
+        if (result.phone_verified) {
+          setProfile(prev => ({ ...prev, phoneVerified: true }));
+          closeOtpModal();
+        } else {
+          setOtpModal(prev => ({
+            ...prev,
+            isVerifying: false,
+            error: result.message || 'Invalid verification code',
+          }));
+        }
+      }
+    } catch (err) {
+      setOtpModal(prev => ({
+        ...prev,
+        isVerifying: false,
+        error: err instanceof Error ? err.message : 'Verification failed',
+      }));
     }
   };
 
@@ -441,11 +730,43 @@ export default function ProfilePage() {
                       {/* Contact Grid */}
                       <div className="grid grid-cols-1 gap-4 mt-6">
                         <div>
-                          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">EMAIL</p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">EMAIL</p>
+                            {profile.emailVerified ? (
+                              <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                                <CheckCircle size={12} />
+                                Verified
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => openOtpModal('email')}
+                                className="flex items-center gap-1 text-xs text-primary font-medium hover:underline"
+                              >
+                                <Mail size={12} />
+                                Verify
+                              </button>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-900 mt-1 break-all">{profile.email}</p>
                         </div>
                         <div>
-                          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">PHONE</p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">PHONE</p>
+                            {profile.phoneVerified ? (
+                              <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                                <CheckCircle size={12} />
+                                Verified
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => openOtpModal('phone')}
+                                className="flex items-center gap-1 text-xs text-primary font-medium hover:underline"
+                              >
+                                <Smartphone size={12} />
+                                Verify
+                              </button>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-900 mt-1">{profile.phone}</p>
                         </div>
                       </div>
@@ -708,6 +1029,206 @@ export default function ProfilePage() {
                   </span>
                 ) : (
                   'Save Changes'
+                )}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* OTP Verification Modal */}
+      {otpModal.open && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={closeOtpModal}
+          />
+          <Card className="relative w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Verify {otpModal.type === 'email' ? 'Email' : 'Phone Number'}
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Enter the 6-digit code sent to your {otpModal.type === 'email' ? 'email' : 'phone number'}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeOtpModal}
+                className="rounded-full hover:bg-gray-100"
+              >
+                <ArrowLeft className="w-6 h-6 text-gray-400 rotate-90 sm:rotate-0" />
+              </Button>
+            </div>
+
+            <div className="p-6 md:p-8 space-y-5">
+              {otpModal.isSending && (
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-600 py-4">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Sending verification code...
+                </div>
+              )}
+
+              {!otpModal.isSending && otpModal.resent && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 flex items-center gap-2">
+                  <CheckCircle size={16} />
+                  A new code has been sent.
+                </div>
+              )}
+
+              {!otpModal.isSending && otpModal.error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
+                  <XCircle size={16} />
+                  {otpModal.error}
+                </div>
+              )}
+
+              {!otpModal.isSending && (
+                <>
+                  <OTPInput
+                    value={otpModal.otp}
+                    onChange={(val) => setOtpModal(prev => ({ ...prev, otp: val }))}
+                    disabled={otpModal.isVerifying}
+                  />
+
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={otpModal.resendTimer > 0 || otpModal.isVerifying}
+                      className="text-sm text-primary font-medium hover:underline disabled:text-gray-400 disabled:no-underline"
+                    >
+                      {otpModal.resendTimer > 0
+                        ? `Resend code in ${otpModal.resendTimer}s`
+                        : 'Resend code'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+              <Button
+                onClick={closeOtpModal}
+                variant="outline"
+                className="flex-1 rounded-full h-11"
+                disabled={otpModal.isVerifying}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleVerifyOtp}
+                disabled={otpModal.isVerifying || otpModal.otp.length !== 6 || otpModal.isSending}
+                className="flex-1 rounded-full h-11"
+              >
+                {otpModal.isVerifying ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Verifying...
+                  </span>
+                ) : (
+                  'Verify'
+                )}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Phone Update OTP Modal */}
+      {phoneUpdateOtpModal.open && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={closePhoneUpdateOtpModal}
+          />
+          <Card className="relative w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Update Phone Number</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Enter the 6-digit code sent to {phoneUpdateOtpModal.newPhone}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closePhoneUpdateOtpModal}
+                className="rounded-full hover:bg-gray-100"
+              >
+                <ArrowLeft className="w-6 h-6 text-gray-400 rotate-90 sm:rotate-0" />
+              </Button>
+            </div>
+
+            <div className="p-6 md:p-8 space-y-5">
+              {phoneUpdateOtpModal.isSending && (
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-600 py-4">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Sending verification code...
+                </div>
+              )}
+
+              {!phoneUpdateOtpModal.isSending && phoneUpdateOtpModal.resent && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 flex items-center gap-2">
+                  <CheckCircle size={16} />
+                  A new code has been sent.
+                </div>
+              )}
+
+              {!phoneUpdateOtpModal.isSending && phoneUpdateOtpModal.error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
+                  <XCircle size={16} />
+                  {phoneUpdateOtpModal.error}
+                </div>
+              )}
+
+              {!phoneUpdateOtpModal.isSending && (
+                <>
+                  <OTPInput
+                    value={phoneUpdateOtpModal.otp}
+                    onChange={(val) => setPhoneUpdateOtpModal(prev => ({ ...prev, otp: val }))}
+                    disabled={phoneUpdateOtpModal.isVerifying}
+                  />
+
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleResendPhoneUpdateOtp}
+                      disabled={phoneUpdateOtpModal.resendTimer > 0 || phoneUpdateOtpModal.isVerifying}
+                      className="text-sm text-primary font-medium hover:underline disabled:text-gray-400 disabled:no-underline"
+                    >
+                      {phoneUpdateOtpModal.resendTimer > 0
+                        ? `Resend code in ${phoneUpdateOtpModal.resendTimer}s`
+                        : 'Resend code'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+              <Button
+                onClick={closePhoneUpdateOtpModal}
+                variant="outline"
+                className="flex-1 rounded-full h-11"
+                disabled={phoneUpdateOtpModal.isVerifying}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmPhoneUpdate}
+                disabled={phoneUpdateOtpModal.isVerifying || phoneUpdateOtpModal.otp.length !== 6 || phoneUpdateOtpModal.isSending}
+                className="flex-1 rounded-full h-11"
+              >
+                {phoneUpdateOtpModal.isVerifying ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Verifying...
+                  </span>
+                ) : (
+                  'Confirm Update'
                 )}
               </Button>
             </div>

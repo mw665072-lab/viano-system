@@ -209,6 +209,67 @@ export const authAPI = {
             method: 'POST',
             body: JSON.stringify({ refresh_token: refreshToken }),
         }),
+
+    /**
+     * Send OTP to email or phone before registration (no auth required)
+     */
+    sendPreRegisterOTP: (data: PreRegisterSendOTPRequest) =>
+        apiRequest<PreRegisterSendOTPResponse>('/api/auth/otp/preregister/send', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    /**
+     * Send email OTP for post-login verification (Bearer auth)
+     */
+    sendEmailOTP: () =>
+        apiRequest<PreRegisterSendOTPResponse>('/api/auth/otp/email/send', {
+            method: 'POST',
+        }),
+
+    /**
+     * Verify email OTP (Bearer auth)
+     */
+    verifyEmailOTP: (data: VerifyEmailOTPRequest) =>
+        apiRequest<VerifyEmailOTPResponse>('/api/auth/otp/email/verify', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    /**
+     * Send phone OTP for post-login verification (Bearer auth)
+     */
+    sendPhoneOTP: () =>
+        apiRequest<PreRegisterSendOTPResponse>('/api/auth/otp/phone/send', {
+            method: 'POST',
+        }),
+
+    /**
+     * Verify phone OTP (Bearer auth)
+     */
+    verifyPhoneOTP: (data: VerifyPhoneOTPRequest) =>
+        apiRequest<VerifyPhoneOTPResponse>('/api/auth/otp/phone/verify', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    /**
+     * Request OTP for phone number update (Bearer auth)
+     */
+    requestPhoneUpdateOTP: (data: UpdatePhoneRequest) =>
+        apiRequest<PreRegisterSendOTPResponse>('/api/auth/user/me/phone/update/request-otp', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    /**
+     * Confirm phone number update with OTP (Bearer auth)
+     */
+    confirmPhoneUpdate: (data: UpdatePhoneRequest) =>
+        apiRequest<UpdatePhoneResponse>('/api/auth/user/me/phone/update', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
 };
 
 // ============ PROPERTY APIs ============
@@ -617,6 +678,8 @@ export interface SignUpRequest {
     first_name: string;
     last_name: string;
     mobile_number: string;
+    phone_otp: string;
+    email_otp?: string;
 }
 
 export interface SignUpResponse {
@@ -650,6 +713,8 @@ export interface UserResponse {
     last_login: string | null;
     role: string;
     stripe_customer_id?: string | null;
+    email_verified?: boolean;
+    phone_verified?: boolean;
 }
 
 export interface UpdateUserRequest {
@@ -665,6 +730,48 @@ export interface UpdateUserResponse {
     last_name: string;
     mobile_number: string;
     role: string;
+}
+
+// OTP Types
+export interface PreRegisterSendOTPRequest {
+    email?: string;
+    phone?: string;
+}
+
+export interface PreRegisterSendOTPResponse {
+    success: boolean;
+    message: string;
+}
+
+export interface VerifyEmailOTPRequest {
+    code: string;
+}
+
+export interface VerifyEmailOTPResponse {
+    success: boolean;
+    message: string;
+    email_verified: boolean;
+}
+
+export interface VerifyPhoneOTPRequest {
+    code: string;
+}
+
+export interface VerifyPhoneOTPResponse {
+    success: boolean;
+    message: string;
+    phone_verified: boolean;
+}
+
+export interface UpdatePhoneRequest {
+    new_phone: string;
+    otp: string;
+}
+
+export interface UpdatePhoneResponse {
+    success: boolean;
+    message: string;
+    user: UserResponse;
 }
 
 // Property Types
