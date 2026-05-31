@@ -387,6 +387,30 @@ export const propertyAPI = {
     },
 };
 
+// ============ SYSTEMS APIs ============
+export const systemsAPI = {
+    /**
+     * Get all systems for a property with ages and alert tiers
+     */
+    getSystems: (propertyId: string) =>
+        apiRequest<SystemResponse[]>(`/api/property/my-properties/${propertyId}/systems`),
+
+    /**
+     * Reset a system's age after replacement
+     */
+    resetSystemAge: (propertyId: string, systemId: string, data: ResetSystemRequest) =>
+        apiRequest<ResetSystemResponse>(`/api/property/my-properties/${propertyId}/systems/${systemId}/reset`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    /**
+     * Get replacement history for a system
+     */
+    getReplacementHistory: (propertyId: string, systemId: string) =>
+        apiRequest<ReplacementEventResponse[]>(`/api/property/my-properties/${propertyId}/systems/${systemId}/history`),
+};
+
 // ============ BILLING APIs ============
 export const billingAPI = {
     /**
@@ -795,6 +819,47 @@ export interface EngineResultResponse {
     doc_id: string;
     status: string;
     json_result_preview: string;
+}
+
+// Systems Types
+export interface ReplacementEventResponse {
+    event_id: string;
+    replacement_date: string;
+    previous_age_at_inspection: number;
+    new_age_at_inspection: number;
+    event_type: 'full_replacement' | 'age_adjustment';
+    notes: string | null;
+    created_at: string;
+}
+
+export interface SystemResponse {
+    system_id: string;
+    system_type: string;
+    name: string | null;
+    brand: string | null;
+    age_at_inspection: number;
+    current_age: number;
+    lifespan_min: number;
+    lifespan_max: number;
+    alert_tier: string | null;
+    percentage_used: number;
+    replacement_history: ReplacementEventResponse[];
+}
+
+export interface ResetSystemRequest {
+    replacement_date?: string;
+    notes?: string;
+    event_type?: 'full_replacement' | 'age_adjustment';
+}
+
+export interface ResetSystemResponse {
+    success: boolean;
+    system_id: string;
+    new_age_at_inspection: number;
+    previous_age_at_inspection: number;
+    replacement_date: string;
+    new_alert_count: number;
+    process_id: string;
 }
 
 // Billing Types
