@@ -7,6 +7,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Bulk Property Upload** feature for uploading multiple PDF inspection reports at once.
+  - New "Bulk Upload" tab in Add Properties page alongside "Upload PDF" and "Manual Entry".
+  - Quota checking on mount with display of remaining uploads (e.g., "You can upload 12 more properties").
+  - Multi-file selection with PDF validation and per-file document type selector (4-Point / Home Inspection).
+  - Expandable review accordion for each draft showing extracted property details (address, client, city, state, ZIP, inspection date).
+  - Per-draft editing: add Negotiated Wins and upload optional second document before confirming.
+  - Checkbox selection for individual drafts with "Select All / Deselect All" toggle.
+  - Bulk confirm selected properties or confirm individually with one click.
+  - Remove selected drafts from the list before confirmation.
+  - Results summary showing successful drafts, extraction failures, and draft creation failures with counts.
+  - Confirmed properties section with link to view in Properties list.
+  - New API methods: `propertyAPI.getBulkUploadQuota()` and `propertyAPI.bulkUploadAndExtract()`.
+  - New types: `BulkUploadQuotaResponse`, `BulkUploadItem`, `BulkUploadFailedItem`, `BulkUploadResponse`.
+  - New component: `components/manage-properties/bulk-upload/index.tsx`.
 - OTP-based email and phone verification across signup, profile, and phone update flows.
   - Signup: New 3-step wizard (Account Info -> OTP Verification -> Password). Phone OTP is required; email OTP is optional and gracefully falls back to phone-only when the email channel is unavailable.
   - Profile: Verification status badges next to email and phone. "Verify" buttons open OTP modals with 6-digit input, resend countdown timer, and inline error handling.

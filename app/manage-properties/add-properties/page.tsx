@@ -8,8 +8,9 @@ import { Card } from '@/components/ui/card';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId, UploadAndExtractResponse } from '@/lib/api';
 import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
+import BulkUpload from '@/components/manage-properties/bulk-upload';
 
-type FlowType = 'pdf' | 'manual';
+type FlowType = 'pdf' | 'manual' | 'bulk';
 type PdfStep = 1 | 2;
 
 const AddPropertyPage = () => {
@@ -1230,7 +1231,7 @@ const AddPropertyPage = () => {
                     </h2>
 
                     {/* Flow Selector Tabs */}
-                    <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-xl max-w-md">
+                    <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-xl max-w-lg">
                         <button
                             type="button"
                             onClick={() => setActiveFlow('pdf')}
@@ -1242,6 +1243,18 @@ const AddPropertyPage = () => {
                         >
                             <FileUp className="w-4 h-4" />
                             Upload PDF
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveFlow('bulk')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                                activeFlow === 'bulk'
+                                    ? 'bg-white text-[#00346C] shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                        >
+                            <Upload className="w-4 h-4" />
+                            Bulk Upload
                         </button>
                         <button
                             type="button"
@@ -1271,6 +1284,8 @@ const AddPropertyPage = () => {
                     {/* Form Content */}
                     {activeFlow === 'pdf' ? (
                         pdfStep === 1 ? renderPdfUploadStep() : renderPdfReviewStep()
+                    ) : activeFlow === 'bulk' ? (
+                        <BulkUpload onNavigateToDraft={(draftId) => router.push(`/manage-properties/add-properties?draft=${draftId}`)} />
                     ) : (
                         renderManualForm()
                     )}

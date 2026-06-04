@@ -446,6 +446,46 @@ export const propertyAPI = {
 
         return response.json();
     },
+
+    /**
+     * Get bulk upload quota for the current user
+     * Returns how many more properties can be added based on subscription tier
+     */
+    getBulkUploadQuota: () =>
+        apiRequest<BulkUploadQuotaResponse>('/api/property/bulk-upload/quota'),
+
+    /**
+     * Bulk upload and extract multiple PDFs
+     * Creates draft properties for each successfully extracted PDF
+     */
+    bulkUploadAndExtract: async (
+        items: Array<{ file: File; docType: '4point' | 'home_inspection' }>
+    ): Promise<BulkUploadResponse> => {
+        const formData = new FormData();
+        items.forEach(item => formData.append('files', item.file));
+
+        // Send doc_types as comma-separated string (e.g., "4point,home_inspection")
+        const docTypes = items.map(i => i.docType);
+        formData.append('doc_types', docTypes.join(','));
+
+        const url = `${API_BASE_URL}/api/property/bulk-upload-and-extract`;
+        const token = getAuthToken();
+
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ detail: 'Bulk upload failed' }));
+            throw new Error(error.detail || 'Bulk upload failed');
+        }
+
+        return response.json();
+    },
 };
 
 // ============ SYSTEMS APIs ============
@@ -985,6 +1025,43 @@ export interface BillingStatusResponse {
     has_subscription: boolean;
     subscription: SubscriptionResponse | null;
     monthly_cost: number;
+}
+
+// Bulk Upload Types
+export interface BulkUploadQuotaResponse {
+    remaining: number;
+    current_count: number;
+    max_allowed: number;
+    can_bulk_upload: boolean;
+}
+
+export interface BulkUploadItem {
+    filename: string;  // Backend returns 'filename' not 'file_name'
+    property_id: string | null;
+    extracted: {  // Backend returns 'extracted' not 'extracted_data'
+        client_name: string;
+        address: string;
+        city: string;
+        state: string;
+        zip_code: string;
+        inspection_date: string;
+    } | null;
+    doc_type?: string;
+    document_id?: string | null;
+    error?: string | null;
+}
+
+export interface BulkUploadFailedItem {
+    filename: string;
+    error: string;
+}
+
+export interface BulkUploadResponse {
+    success: boolean;
+    quota_remaining: number;
+    successful: BulkUploadItem[];
+    failed_extraction: BulkUploadFailedItem[];
+    failed_draft_creation: BulkUploadFailedItem[];
 }
 
 // Validation Error (from API)
