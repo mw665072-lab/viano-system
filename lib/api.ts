@@ -448,6 +448,14 @@ export const propertyAPI = {
     },
 
     /**
+     * Get CMA (Comparative Market Analysis) estimate for a property
+     * Calls Rentcast API to get price estimate based on property address
+     * Returns 404 if property not found, 503 if Rentcast is down
+     */
+    getCMA: (propertyId: string) =>
+        apiRequest<CMAResponse>(`/api/property/my-properties/${propertyId}/cma`),
+
+    /**
      * Get bulk upload quota for the current user
      * Returns how many more properties can be added based on subscription tier
      */
@@ -1000,6 +1008,15 @@ export interface BillingStatusResponse {
     has_subscription: boolean;
     subscription: SubscriptionResponse | null;
     monthly_cost: number;
+}
+
+// CMA Types
+export interface CMAResponse {
+    price: number;
+    low: number;
+    high: number;
+    formatted: string;
+    address: string;
 }
 
 // Bulk Upload Types

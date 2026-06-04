@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info, MessageSquare, Calendar, History, Wrench } from "lucide-react"
+import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info, MessageSquare, Calendar, History, Wrench, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
-import { processAPI, documentAPI, MessageResponse, systemsAPI, SystemResponse } from "@/lib/api"
+import { processAPI, documentAPI, MessageResponse, systemsAPI, SystemResponse, propertyAPI, CMAResponse } from "@/lib/api"
 import { ResetModal } from "./reset-modal"
 import { HistoryModal } from "./history-modal"
 
@@ -79,6 +79,11 @@ export function PropertyDetailPanel({
     const [showResetModal, setShowResetModal] = useState(false)
     const [showHistoryModal, setShowHistoryModal] = useState(false)
     const [selectedSystem, setSelectedSystem] = useState<SystemResponse | null>(null)
+
+    // CMA state
+    const [cmaData, setCmaData] = useState<CMAResponse | null>(null)
+    const [isLoadingCMA, setIsLoadingCMA] = useState(false)
+    const [cmaError, setCmaError] = useState<string | null>(null)
 
     // Helper: resolve effective priority from realtor_alert.priority (string) first
     const getEffectivePriority = (m: MessageResponse): number => {
@@ -166,6 +171,38 @@ export function PropertyDetailPanel({
         }
 
         fetchSystems()
+    }, [property.id, property.isDraft])
+
+    // Fetch CMA when property changes
+    useEffect(() => {
+        const fetchCMA = async () => {
+            if (!property.id || property.isDraft) {
+                setCmaData(null)
+                setCmaError(null)
+                return
+            }
+
+            setIsLoadingCMA(true)
+            setCmaError(null)
+            try {
+                const data = await propertyAPI.getCMA(property.id)
+                setCmaData(data)
+            } catch (err) {
+                console.error('Error fetching CMA:', err)
+                const message = err instanceof Error ? err.message : 'Failed to load CMA estimate'
+                // Don't show error for 404 (property not found) - just hide the section
+                // For 503 (Rentcast down), show a subtle message
+                if (message.includes('503') || message.toLowerCase().includes('rentcast') || message.toLowerCase().includes('unavailable')) {
+                    setCmaError('CMA service temporarily unavailable')
+                } else {
+                    setCmaData(null)
+                }
+            } finally {
+                setIsLoadingCMA(false)
+            }
+        }
+
+        fetchCMA()
     }, [property.id, property.isDraft])
 
     const handleOpenResetModal = (system: SystemResponse) => {
@@ -314,6 +351,62 @@ export function PropertyDetailPanel({
                             {property.zipCode && ` ${property.zipCode}`}
                         </p>
                     </div>
+
+                    {/* CMA Estimate Section */}
+                    {!property.isDraft && (
+                        <div className="mt-2 p-5 bg-white rounded-[28px] border border-gray-100/80 shadow-[0_4px_20px_rgb(0,0,0,0.03)] relative overflow-hidden group">
+                            <div className="absolute -top-12 -right-12 w-24 h-24 bg-violet-50/50 rounded-full blur-2xl group-hover:bg-violet-100/50 transition-colors duration-700" />
+
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md shadow-violet-100">
+                                            <TrendingUp className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xs font-bold text-[#0C1D38] uppercase tracking-wider">CMA Estimate</h3>
+                                            <p className="text-[9px] text-[#64748B] font-bold mt-0.5 uppercase tracking-tight opacity-60">Comparative Market Analysis</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {isLoadingCMA ? (
+                                    <div className="flex items-center justify-center py-6">
+                                        <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                ) : cmaError ? (
+                                    <div className="text-center py-4">
+                                        <p className="text-xs text-gray-400">{cmaError}</p>
+                                    </div>
+                                ) : cmaData ? (
+                                    <div className="space-y-3">
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-3xl font-black text-[#0C1D38] tracking-tight">
+                                                {cmaData.formatted}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-4 text-xs text-[#64748B]">
+                                            <span>
+                                                <span className="font-semibold text-[#0C1D38]">Midpoint: </span>
+                                                ${cmaData.price.toLocaleString()}
+                                            </span>
+                                            <span className="text-gray-300">|</span>
+                                            <span>
+                                                Low: ${cmaData.low.toLocaleString()}
+                                            </span>
+                                            <span className="text-gray-300">|</span>
+                                            <span>
+                                                High: ${cmaData.high.toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-[#64748B] opacity-60 truncate">
+                                            {cmaData.address}
+                                        </p>
+                                    </div>
+                                ) : null}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="flex items-center justify-between pb-2 border-b border-gray-50 px-1">
                         <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Viano Activated:</span>
