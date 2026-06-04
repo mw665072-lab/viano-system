@@ -184,7 +184,7 @@ export function PropertyEvaluationDashboard() {
                     statusColor: statusConfig.color,
                     statusMessage: statusConfig.message,
                     clientName: prop.client_name,
-                    closingDate: prop.purchase_date || undefined,
+                    closingDate: undefined,
                     createdAt: process?.process_start || undefined, // Use process_start as activation date
                     progress: progress,
                     processId: process?.process_id,

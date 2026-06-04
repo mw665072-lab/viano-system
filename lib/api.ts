@@ -821,18 +821,9 @@ export interface CreatePropertyRequest {
     address: string;
     zip_code?: string | null;
     client_name: string;
-    inspection_date?: string | null;
     negotiated_wins?: string | null;
     city?: string | null;
     state?: string | null;
-    year_built?: number | null;
-    square_footage?: number | null;
-    bedrooms?: number | null;
-    bathrooms?: number | null;
-    lot_size?: number | null;
-    property_type?: string | null;
-    purchase_price?: number | null;
-    purchase_date?: string | null;
 }
 
 export interface PropertyResponse {
@@ -846,14 +837,6 @@ export interface PropertyResponse {
     negotiated_wins: string | null;
     city: string | null;
     state: string | null;
-    year_built: number | null;
-    square_footage: number | null;
-    bedrooms: number | null;
-    bathrooms: number | null;
-    lot_size: number | null;
-    property_type: string | null;
-    purchase_price: number | null;
-    purchase_date: string | null;
     user_id: string;
     is_draft?: boolean;
 }
@@ -884,21 +867,13 @@ export interface UploadAndExtractResponse {
 }
 
 export interface ConfirmPropertyRequest {
-    client_name: string;
-    address: string;
-    city: string;
-    state: string;
-    zip_code: string;
-    inspection_date: string;
+    client_name?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    inspection_date?: string;
     negotiated_wins?: string | null;
-    year_built?: number | null;
-    square_footage?: number | null;
-    bedrooms?: number | null;
-    bathrooms?: number | null;
-    lot_size?: number | null;
-    property_type?: string | null;
-    purchase_price?: number | null;
-    purchase_date?: string | null;
 }
 
 export interface ConfirmPropertyResponse {

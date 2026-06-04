@@ -50,15 +50,8 @@ export default function DashboardStatsCard() {
 
         if (!isMounted) return
 
-        // Calculate upcoming closings (properties with closing date within 30 days)
-        const now = new Date()
-        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
-
-        const upcomingClosings = properties.filter((prop: PropertyResponse) => {
-          if (!prop.purchase_date) return false
-          const closingDate = new Date(prop.purchase_date)
-          return closingDate >= now && closingDate <= thirtyDaysFromNow
-        }).length
+        // Upcoming closings no longer available (purchase_date removed from schema)
+        const upcomingClosings = 0
 
         // Try to fetch process data for pending messages and issues
         let pendingMessages = 0

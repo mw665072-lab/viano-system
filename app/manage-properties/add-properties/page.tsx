@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
-import { Upload, Loader2, X, AlertCircle, CheckCircle, FileText, AlertTriangle, ShieldAlert, FileUp, ArrowLeft, Eye, ChevronDown } from 'lucide-react';
+import { Upload, Loader2, X, AlertCircle, CheckCircle, FileText, AlertTriangle, ShieldAlert, FileUp, ArrowLeft, Eye } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -29,7 +29,6 @@ const AddPropertyPage = () => {
     const [draftPropertyId, setDraftPropertyId] = useState<string | null>(draftId);
     const [extractedData, setExtractedData] = useState<UploadAndExtractResponse | null>(null);
     const [confirmProgress, setConfirmProgress] = useState<string>('');
-    const [specsOpen, setSpecsOpen] = useState(false);
 
     // Second document upload for PDF flow (optional)
     const [secondDocFile, setSecondDocFile] = useState<File | null>(null);
@@ -45,14 +44,6 @@ const AddPropertyPage = () => {
         zipCode: '',
         clientName: '',
         inspectionDate: '',
-        yearBuilt: '',
-        squareFootage: '',
-        bedrooms: '',
-        bathrooms: '',
-        lotSize: '',
-        propertyType: '',
-        purchasePrice: '',
-        purchaseDate: '',
         negotiatedWins: '',
     });
 
@@ -130,14 +121,6 @@ const AddPropertyPage = () => {
                         zipCode: property.zip_code || '',
                         clientName: property.client_name || '',
                         inspectionDate: property.inspection_date ? property.inspection_date.split('T')[0] : '',
-                        yearBuilt: property.year_built ? String(property.year_built) : '',
-                        squareFootage: property.square_footage ? String(property.square_footage) : '',
-                        bedrooms: property.bedrooms ? String(property.bedrooms) : '',
-                        bathrooms: property.bathrooms ? String(property.bathrooms) : '',
-                        lotSize: property.lot_size ? String(property.lot_size) : '',
-                        propertyType: property.property_type || '',
-                        purchasePrice: property.purchase_price ? String(property.purchase_price) : '',
-                        purchaseDate: property.purchase_date ? property.purchase_date.split('T')[0] : '',
                         negotiatedWins: property.negotiated_wins || '',
                     });
                 } catch (err) {
@@ -295,14 +278,6 @@ const AddPropertyPage = () => {
                 zip_code: formData.zipCode.trim(),
                 inspection_date: formData.inspectionDate || '',
                 negotiated_wins: formData.negotiatedWins.trim() || null,
-                year_built: formData.yearBuilt ? parseInt(formData.yearBuilt) : null,
-                square_footage: formData.squareFootage ? parseFloat(formData.squareFootage) : null,
-                bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
-                bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
-                lot_size: formData.lotSize ? parseFloat(formData.lotSize) : null,
-                property_type: formData.propertyType || null,
-                purchase_price: formData.purchasePrice ? parseFloat(formData.purchasePrice) : null,
-                purchase_date: formData.purchaseDate ? new Date(formData.purchaseDate).toISOString() : null,
             };
 
             const result = await propertyAPI.confirm(draftPropertyId, confirmData);
@@ -444,18 +419,9 @@ const AddPropertyPage = () => {
                 address: formData.address.trim(),
                 zip_code: formData.zipCode.trim(),
                 client_name: formData.clientName.trim(),
-                inspection_date: formData.inspectionDate ? new Date(formData.inspectionDate).toISOString() : null,
                 negotiated_wins: formData.negotiatedWins.trim() || null,
                 city: formData.city.trim(),
                 state: formData.state.trim(),
-                year_built: formData.yearBuilt ? parseInt(formData.yearBuilt) : null,
-                square_footage: formData.squareFootage ? parseFloat(formData.squareFootage) : null,
-                bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
-                bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
-                lot_size: formData.lotSize ? parseFloat(formData.lotSize) : null,
-                property_type: formData.propertyType || null,
-                purchase_price: formData.purchasePrice ? parseFloat(formData.purchasePrice) : null,
-                purchase_date: formData.purchaseDate ? new Date(formData.purchaseDate).toISOString() : null,
             };
 
             const createdProperty = await propertyAPI.create(propertyData);
@@ -806,128 +772,6 @@ const AddPropertyPage = () => {
                 />
             </div>
 
-            {/* Additional CMA Fields - Accordion */}
-            <div className="col-span-1 md:col-span-2 mt-4">
-                <button
-                    type="button"
-                    onClick={() => setSpecsOpen(!specsOpen)}
-                    disabled={isSubmitting}
-                    className="w-full flex items-center justify-between py-3 px-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition-colors disabled:opacity-50"
-                >
-                    <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-semibold text-[#1E1E1E]">Property Specifications</h3>
-                        <span className="text-xs text-gray-400 font-normal">(Optional)</span>
-                    </div>
-                    <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${specsOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {specsOpen && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 p-4 bg-white rounded-xl border border-gray-100">
-                    <div>
-                        <label className="block text-sm font-medium text-[#374151] mb-2">Property Type</label>
-                        <select
-                            name="propertyType"
-                            value={formData.propertyType}
-                            onChange={(e) => setFormData(prev => ({ ...prev, propertyType: e.target.value }))}
-                            disabled={isSubmitting}
-                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] focus:outline-none focus:ring-1 focus:ring-[#00346C] disabled:opacity-50"
-                        >
-                            <option value="">Select Type</option>
-                            <option value="single_family">Single Family</option>
-                            <option value="condo">Condo</option>
-                            <option value="townhouse">Townhouse</option>
-                            <option value="multi_family">Multi-Family</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#374151] mb-2">Year Built</label>
-                        <Input
-                            type="number"
-                            name="yearBuilt"
-                            placeholder="e.g. 1995"
-                            value={formData.yearBuilt}
-                            onChange={handleInputChange}
-                            disabled={isSubmitting}
-                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm disabled:opacity-50"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#374151] mb-2">Square Footage</label>
-                        <Input
-                            type="number"
-                            name="squareFootage"
-                            placeholder="Total sq ft"
-                            value={formData.squareFootage}
-                            onChange={handleInputChange}
-                            disabled={isSubmitting}
-                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm disabled:opacity-50"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#374151] mb-2">Lot Size (Acres)</label>
-                        <Input
-                            type="number"
-                            name="lotSize"
-                            placeholder="e.g. 0.25"
-                            step="0.01"
-                            value={formData.lotSize}
-                            onChange={handleInputChange}
-                            disabled={isSubmitting}
-                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm disabled:opacity-50"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#374151] mb-2">Bedrooms</label>
-                        <Input
-                            type="number"
-                            name="bedrooms"
-                            placeholder="Number of bedrooms"
-                            value={formData.bedrooms}
-                            onChange={handleInputChange}
-                            disabled={isSubmitting}
-                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm disabled:opacity-50"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#374151] mb-2">Bathrooms</label>
-                        <Input
-                            type="number"
-                            name="bathrooms"
-                            placeholder="Number of bathrooms"
-                            step="0.5"
-                            value={formData.bathrooms}
-                            onChange={handleInputChange}
-                            disabled={isSubmitting}
-                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm disabled:opacity-50"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#374151] mb-2">Purchase Price</label>
-                        <Input
-                            type="number"
-                            name="purchasePrice"
-                            placeholder="Last purchase price"
-                            value={formData.purchasePrice}
-                            onChange={handleInputChange}
-                            disabled={isSubmitting}
-                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm disabled:opacity-50"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-[#374151] mb-2">Purchase Date</label>
-                        <Input
-                            type="date"
-                            name="purchaseDate"
-                            value={formData.purchaseDate}
-                            onChange={handleInputChange}
-                            disabled={isSubmitting}
-                            className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm disabled:opacity-50"
-                        />
-                    </div>
-                </div>
-                )}
-            </div>
-
             {/* Negotiated Wins */}
             <div className="col-span-1 md:col-span-2 mt-4">
                 <label className="block text-sm font-medium text-[#374151] mb-2">
@@ -963,14 +807,6 @@ const AddPropertyPage = () => {
                         zipCode: '',
                         clientName: '',
                         inspectionDate: '',
-                        yearBuilt: '',
-                        squareFootage: '',
-                        bedrooms: '',
-                        bathrooms: '',
-                        lotSize: '',
-                        propertyType: '',
-                        purchasePrice: '',
-                        purchaseDate: '',
                         negotiatedWins: '',
                     });
                 }}
