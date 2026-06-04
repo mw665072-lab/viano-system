@@ -38,5 +38,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `UserResponse` interface: added `email_verified` and `phone_verified` optional boolean fields.
 - Removed Negotiated Wins editing from the property edit modal in Manage Properties. Negotiated Wins can now only be set during property creation.
 
+### Removed
+- **Breaking: 8 property fields removed** from the Property schema and all API endpoints to align with the updated backend contract.
+  - Removed fields: `year_built`, `square_footage`, `bedrooms`, `bathrooms`, `lot_size`, `property_type`, `purchase_price`, `purchase_date`.
+  - `CreatePropertyRequest`: removed all 8 fields and `inspection_date`.
+  - `PropertyResponse`: removed all 8 fields.
+  - `ConfirmPropertyRequest`: removed all 8 fields; remaining fields made optional.
+  - Removed the "Property Specifications" accordion section from the Add Properties form (PDF review and manual entry).
+  - Removed the "Property Specifications" display section from the Manage Properties detail panel.
+  - Dashboard stats: upcoming closings metric (based on `purchase_date`) replaced with `0`.
+  - Dashboard valuation: `closingDate` set to `undefined`.
+  - Backend will return `422 Unprocessable Entity` if any removed field is sent after deployment.
+
 ### Fixed
 - Skip subscription limit check when confirming an existing draft property. Previously, clicking a draft property to confirm it would incorrectly trigger the "Limit Reached" paywall, even though the user was not adding a new property but completing an existing draft.

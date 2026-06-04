@@ -33,14 +33,6 @@ interface Property {
     progress: number
     documentsSubmitted: number // Actual document count from API
     createdAt?: string // Added
-    yearBuilt?: number
-    squareFootage?: number
-    bedrooms?: number
-    bathrooms?: number
-    lotSize?: number
-    propertyType?: string
-    purchasePrice?: number
-    purchaseDate?: string
     city?: string
     state?: string
     zipCode?: string
@@ -65,14 +57,6 @@ interface PropertyDetail {
     statusMessage?: string
     processId?: string
     createdAt?: string // Added
-    yearBuilt?: number
-    squareFootage?: number
-    bedrooms?: number
-    bathrooms?: number
-    lotSize?: number
-    propertyType?: string
-    purchasePrice?: number
-    purchaseDate?: string
     city?: string
     state?: string
     zipCode?: string
@@ -209,7 +193,7 @@ const Page = () => {
                     location: prop.location,
                     image: undefined,
                     type: undefined,
-                    closingDate: prop.purchase_date ? new Date(prop.purchase_date).toLocaleDateString() : undefined,
+                    closingDate: undefined,
                     createdAt: process?.process_start ? new Date(process.process_start).toLocaleDateString() : undefined, // Map from process_start
                     status: propStatus,
                     detailedStatus: propDetailedStatus,
@@ -219,14 +203,6 @@ const Page = () => {
                     processId: process?.process_id,
                     progress: propProgress,
                     documentsSubmitted: isDraft ? 1 : documentsSubmitted,
-                    yearBuilt: prop.year_built ?? undefined,
-                    squareFootage: prop.square_footage ?? undefined,
-                    bedrooms: prop.bedrooms ?? undefined,
-                    bathrooms: prop.bathrooms ?? undefined,
-                    lotSize: prop.lot_size ?? undefined,
-                    propertyType: prop.property_type ?? undefined,
-                    purchasePrice: prop.purchase_price ?? undefined,
-                    purchaseDate: prop.purchase_date ?? undefined,
                     city: prop.city ?? undefined,
                     state: prop.state ?? undefined,
                     zipCode: prop.zip_code ?? undefined,
@@ -670,9 +646,7 @@ const Page = () => {
         location: selectedProperty.location,
         type: selectedProperty.type || "Property",
         client: selectedProperty.clientName || "N/A",
-        closingDays: selectedProperty.closingDate
-            ? Math.max(0, Math.ceil((new Date(selectedProperty.closingDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-            : 0,
+        closingDays: 0,
         status: selectedProperty.status,
         documentsSubmitted: selectedProperty.documentsSubmitted,
         documentsTotal: 2, // Fixed: Always 2 (4-Point and Home Inspection)
@@ -682,14 +656,6 @@ const Page = () => {
         statusMessage: selectedProperty.statusMessage,
         processId: selectedProperty.processId,
         createdAt: selectedProperty.createdAt,
-        yearBuilt: selectedProperty.yearBuilt,
-        squareFootage: selectedProperty.squareFootage,
-        bedrooms: selectedProperty.bedrooms,
-        bathrooms: selectedProperty.bathrooms,
-        lotSize: selectedProperty.lotSize,
-        propertyType: selectedProperty.propertyType,
-        purchasePrice: selectedProperty.purchasePrice,
-        purchaseDate: selectedProperty.purchaseDate,
         city: selectedProperty.city,
         state: selectedProperty.state,
         zipCode: selectedProperty.zipCode,
