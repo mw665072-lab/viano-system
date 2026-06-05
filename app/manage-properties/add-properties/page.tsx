@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId, UploadAndExtractResponse } from '@/lib/api';
+import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId, BillingError, PropertyResponse } from '@/lib/api';
 import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
 import BulkUpload from '@/components/manage-properties/bulk-upload';
 
@@ -27,7 +27,9 @@ const AddPropertyPage = () => {
     const [pdfDocType, setPdfDocType] = useState<'4point' | 'home_inspection'>('home_inspection');
     const [isExtracting, setIsExtracting] = useState(false);
     const [draftPropertyId, setDraftPropertyId] = useState<string | null>(draftId);
-    const [extractedData, setExtractedData] = useState<UploadAndExtractResponse | null>(null);
+    const [draftProperty, setDraftProperty] = useState<PropertyResponse | null>(null);
+    const [uploadFilename, setUploadFilename] = useState<string>('');
+    const [processingMessage, setProcessingMessage] = useState<string>('');
     const [confirmProgress, setConfirmProgress] = useState<string>('');
 
     // Second document upload for PDF flow (optional)
@@ -207,7 +209,7 @@ const AddPropertyPage = () => {
         }
     };
 
-    // Step 1: Upload PDF and extract data
+    // Step 1: Upload PDF and extract data (async — handles 202 response)
     const handlePdfUpload = async () => {
         if (!pdfFile) {
             setError('Please select a PDF file to upload');
@@ -224,27 +226,51 @@ const AddPropertyPage = () => {
 
         setIsExtracting(true);
         setError(null);
+        setProcessingMessage('Uploading document...');
 
         try {
-            const result = await propertyAPI.uploadAndExtract(pdfFile, pdfDocType);
-            setExtractedData(result);
-            setDraftPropertyId(result.property_id);
+            // Upload returns 202 Accepted immediately
+            const uploadResult = await propertyAPI.uploadAndExtract(pdfFile, pdfDocType);
+            setUploadFilename(uploadResult.filename);
+            setProcessingMessage(`Processing ${uploadResult.filename}... Extracting data and uploading document.`);
+
+            // Poll for the draft property to appear
+            const draft = await propertyAPI.pollForNewDraft(30, 2000);
+
+            if (!draft) {
+                setProcessingMessage('');
+                setError('Processing is taking longer than expected. Please check your properties list later.');
+                setIsExtracting(false);
+                return;
+            }
+
+            setDraftPropertyId(draft.property_id);
+
+            // Fetch full property with extracted data
+            const property = await propertyAPI.getProperty(draft.property_id);
+            setDraftProperty(property);
 
             // Pre-populate form with extracted data
             setFormData(prev => ({
                 ...prev,
-                clientName: result.extracted.client_name || '',
-                address: result.extracted.address || '',
-                city: result.extracted.city || '',
-                state: result.extracted.state || '',
-                zipCode: result.extracted.zip_code || '',
-                inspectionDate: result.extracted.inspection_date ? result.extracted.inspection_date.split('T')[0] : '',
+                clientName: property.client_name || '',
+                address: property.address || '',
+                city: property.city || '',
+                state: property.state || '',
+                zipCode: property.zip_code || '',
+                inspectionDate: property.inspection_date ? property.inspection_date.split('T')[0] : '',
             }));
 
+            setProcessingMessage('');
             setPdfStep(2);
         } catch (err) {
             console.error('Error uploading PDF:', err);
-            setError(err instanceof Error ? err.message : 'Failed to upload and extract PDF. Please try again.');
+            setProcessingMessage('');
+            if (err instanceof BillingError) {
+                setError('Subscription required: ' + err.message);
+            } else {
+                setError(err instanceof Error ? err.message : 'Failed to upload and extract PDF. Please try again.');
+            }
         } finally {
             setIsExtracting(false);
         }
@@ -288,7 +314,7 @@ const AddPropertyPage = () => {
                 setConfirmProgress('Uploading second document...');
                 try {
                     const secondDocType: '4point' | 'home_inspection' =
-                        extractedData?.document.doc_type === 'home_inspection' ? '4point' : 'home_inspection';
+                        pdfDocType === 'home_inspection' ? '4point' : 'home_inspection';
                     await documentAPI.upload(draftPropertyId, [secondDocFile], [secondDocType]);
                     console.log('Second document uploaded successfully');
                 } catch (uploadErr) {
@@ -655,9 +681,14 @@ const AddPropertyPage = () => {
             )}
 
             {isExtracting && (
-                <div className="flex items-center justify-center gap-3 py-4">
-                    <Loader2 className="w-5 h-5 animate-spin text-[#00346C]" />
-                    <span className="text-sm text-[#00346C]">Extracting data from PDF...</span>
+                <div className="flex flex-col items-center justify-center gap-2 py-4">
+                    <div className="flex items-center gap-3">
+                        <Loader2 className="w-5 h-5 animate-spin text-[#00346C]" />
+                        <span className="text-sm text-[#00346C]">{processingMessage || 'Extracting data from PDF...'}</span>
+                    </div>
+                    {processingMessage && (
+                        <p className="text-xs text-gray-500">This may take up to a minute. Your document is being processed in the background.</p>
+                    )}
                 </div>
             )}
 
@@ -671,7 +702,7 @@ const AddPropertyPage = () => {
                 {isExtracting ? (
                     <span className="flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Extracting...
+                        {processingMessage ? 'Processing...' : 'Extracting...'}
                     </span>
                 ) : (
                     'Extract Data'
@@ -798,8 +829,9 @@ const AddPropertyPage = () => {
                     setPdfFile(null);
                     setPdfDocType('home_inspection');
                     setSecondDocFile(null);
-                    setExtractedData(null);
+                    setDraftProperty(null);
                     setDraftPropertyId(null);
+                    setUploadFilename('');
                     setFormData({
                         address: '',
                         city: '',
@@ -824,14 +856,14 @@ const AddPropertyPage = () => {
                 </p>
             </div>
 
-            {extractedData && (
+            {draftProperty && (
                 <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
                     <div className="flex items-center gap-2 mb-2">
                         <FileText className="w-4 h-4 text-[#00346C]" />
-                        <span className="text-sm font-medium text-[#00346C]">{extractedData.document.doc_name}</span>
+                        <span className="text-sm font-medium text-[#00346C]">{uploadFilename}</span>
                     </div>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                        {extractedData.document.doc_type.replace('_', ' ')}
+                        {pdfDocType.replace('_', ' ')}
                     </span>
                 </div>
             )}
@@ -852,13 +884,13 @@ const AddPropertyPage = () => {
                     />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Already uploaded document */}
-                        {extractedData && (
+                        {draftProperty && (
                             <div className="h-[120px] rounded-[16px] border-2 border-solid border-[#10B981] bg-[#F0FDF4] flex flex-col items-center justify-center gap-2 relative">
                                 <FileText className="w-6 h-6 text-[#10B981]" />
                                 <span className="text-sm font-medium text-[#10B981] capitalize">
-                                    {extractedData.document.doc_type.replace('_', ' ')}
+                                    {pdfDocType.replace('_', ' ')}
                                 </span>
-                                <span className="text-xs text-[#6B7280] truncate max-w-[90%] px-2">{extractedData.document.doc_name}</span>
+                                <span className="text-xs text-[#6B7280] truncate max-w-[90%] px-2">{uploadFilename}</span>
                             </div>
                         )}
                         {/* Second document upload slot */}
@@ -871,7 +903,7 @@ const AddPropertyPage = () => {
                             >
                                 <Upload className="w-6 h-6 text-[#00346C]" />
                                 <span className="text-sm font-medium text-[#00346C]">
-                                    {extractedData?.document.doc_type === 'home_inspection' ? 'Upload 4-Point File' : 'Upload Home Inspection'}
+                                    {pdfDocType === 'home_inspection' ? 'Upload 4-Point File' : 'Upload Home Inspection'}
                                 </span>
                                 <span className="text-xs text-[#9CA3AF]">PDF format only</span>
                             </button>
@@ -887,7 +919,7 @@ const AddPropertyPage = () => {
                                 </button>
                                 <FileText className="w-6 h-6 text-[#10B981]" />
                                 <span className="text-sm font-medium text-[#10B981]">
-                                    {extractedData?.document.doc_type === 'home_inspection' ? '4-Point File' : 'Home Inspection'}
+                                    {pdfDocType === 'home_inspection' ? '4-Point File' : 'Home Inspection'}
                                 </span>
                                 <span className="text-xs text-[#6B7280] truncate max-w-[90%] px-2">{secondDocFile.name}</span>
                             </div>

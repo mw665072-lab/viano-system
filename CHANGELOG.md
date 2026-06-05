@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Async upload-and-extract (Phase 1 API)**: Single PDF upload now handles the `202 Accepted` response with background polling for the draft property.
+  - `propertyAPI.uploadAndExtract()` accepts `202` status and throws `BillingError` on `402`.
+  - New `propertyAPI.pollForNewDraft(maxAttempts, intervalMs)` helper polls `/my-properties` until the newest draft appears.
+  - New `BillingError` custom error class for subscription-related failures (HTTP 402).
+  - Processing indicator with descriptive status message shown during background polling.
+  - Graceful timeout message if draft does not appear within 60 seconds.
+- `failed_s3_upload` display in bulk upload results: new stat card and failure list section for S3 upload errors.
+- `created_at` optional field on `PropertyResponse` for sorting drafts by creation time.
 - **Bulk Property Upload** feature for uploading multiple PDF inspection reports at once.
   - New "Bulk Upload" tab in Add Properties page alongside "Upload PDF" and "Manual Entry".
   - Quota checking on mount with display of remaining uploads (e.g., "You can upload 12 more properties").
@@ -33,6 +41,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - New Systems API integration: `GET /systems`, `POST /systems/{id}/reset`, `GET /systems/{id}/history`.
 
 ### Changed
+- **Breaking: `UploadAndExtractResponse` type** now reflects the async 202 response shape (`upload_id`, `message`, `filename`, `doc_type`) instead of the old synchronous response (`property_id`, `extracted`, `document`).
+- `BulkUploadResponse` type: added optional `failed_s3_upload: BulkUploadFailedItem[]` field.
+- PDF review step now uses `draftProperty` (fetched from `/my-properties/{id}`), `uploadFilename`, and `pdfDocType` state instead of the old `extractedData` object.
+- Second document upload logic in PDF confirm uses `pdfDocType` state instead of `extractedData.document.doc_type`.
 - Signup flow now requires phone OTP verification before account creation. Email OTP is optional and the UI silently hides the email verification section when the channel is unavailable.
 - `SignUpRequest` interface: `email_otp` is now optional (`email_otp?: string`), `phone_otp` remains required.
 - `UserResponse` interface: added `email_verified` and `phone_verified` optional boolean fields.
