@@ -379,12 +379,49 @@ export const propertyAPI = {
             },
         });
 
-        if (!response.ok) {
+        // Handle 402 billing error specifically
+        if (response.status === 402) {
+            const error = await response.json().catch(() => ({ detail: 'Subscription required' }));
+            throw new BillingError(error.detail || 'Subscription required to upload more properties');
+        }
+
+        // Accept 202 Accepted as success (async processing)
+        if (response.status !== 202 && !response.ok) {
             const error = await response.json().catch(() => ({ detail: 'Failed to upload and extract PDF' }));
             throw new Error(error.detail || 'Failed to upload and extract PDF');
         }
 
         return response.json();
+    },
+
+    /**
+     * Poll /my-properties until a new draft property appears.
+     * Returns the most recently created draft, or null if none found within maxAttempts.
+     */
+    pollForNewDraft: async (maxAttempts = 30, intervalMs = 2000): Promise<PropertyResponse | null> => {
+        for (let i = 0; i < maxAttempts; i++) {
+            await new Promise(resolve => setTimeout(resolve, intervalMs));
+
+            try {
+                const properties = await propertyAPI.getUserProperties();
+                const drafts = properties
+                    .filter(p => p.is_draft)
+                    .sort((a, b) => {
+                        if (a.created_at && b.created_at) {
+                            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                        }
+                        return 0;
+                    });
+
+                if (drafts.length > 0) {
+                    return drafts[0];
+                }
+            } catch (err) {
+                console.error('Polling error:', err);
+                // Continue polling on transient errors
+            }
+        }
+        return null;
     },
 
     /**
@@ -847,6 +884,7 @@ export interface PropertyResponse {
     state: string | null;
     user_id: string;
     is_draft?: boolean;
+    created_at?: string;
 }
 
 // PDF-First Flow Types
@@ -867,11 +905,10 @@ export interface UploadedDocument {
 }
 
 export interface UploadAndExtractResponse {
-    success: boolean;
-    property_id: string;
-    is_draft: boolean;
-    extracted: ExtractedPropertyData;
-    document: UploadedDocument;
+    upload_id: string;
+    message: string;
+    filename: string;
+    doc_type: string;
 }
 
 export interface ConfirmPropertyRequest {
@@ -1054,6 +1091,15 @@ export interface BulkUploadResponse {
     successful: BulkUploadItem[];
     failed_extraction: BulkUploadFailedItem[];
     failed_draft_creation: BulkUploadFailedItem[];
+    failed_s3_upload?: BulkUploadFailedItem[];
+}
+
+/** Custom error class for billing/subscription errors (402) */
+export class BillingError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'BillingError';
+    }
 }
 
 // Validation Error (from API)

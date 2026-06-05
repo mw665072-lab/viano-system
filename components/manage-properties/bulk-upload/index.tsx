@@ -330,7 +330,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                 {/* Summary Card */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Complete</h3>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-4 gap-4">
                         <div className="bg-white rounded-xl p-4 text-center">
                             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                                 <CheckCircle className="w-5 h-5 text-green-600" />
@@ -351,6 +351,13 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                             </div>
                             <p className="text-2xl font-bold text-red-600">{uploadResult.failed_draft_creation.length}</p>
                             <p className="text-xs text-gray-500">Draft Creation Failed</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 text-center">
+                            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <Upload className="w-5 h-5 text-orange-600" />
+                            </div>
+                            <p className="text-2xl font-bold text-orange-600">{uploadResult.failed_s3_upload?.length || 0}</p>
+                            <p className="text-xs text-gray-500">Upload Failed</p>
                         </div>
                     </div>
                     <p className="text-sm text-gray-600 mt-4 text-center">
@@ -680,6 +687,26 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                     <div className="flex-1">
                                         <p className="text-sm font-medium text-gray-900">{item.filename}</p>
                                         <p className="text-xs text-red-600">{item.error || 'Could not create draft'}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Failed S3 Upload Items */}
+                {uploadResult.failed_s3_upload && uploadResult.failed_s3_upload.length > 0 && (
+                    <div>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                            Upload Failed ({uploadResult.failed_s3_upload.length})
+                        </h4>
+                        <div className="space-y-2">
+                            {uploadResult.failed_s3_upload.map((item, index) => (
+                                <div key={index} className="flex items-center gap-3 p-4 bg-orange-50 rounded-xl border border-orange-100">
+                                    <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-gray-900">{item.filename}</p>
+                                        <p className="text-xs text-orange-600">{item.error || 'Could not upload to storage'}</p>
                                     </div>
                                 </div>
                             ))}
