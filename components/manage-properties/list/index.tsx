@@ -1,9 +1,6 @@
 "use client"
 
-import Image from "next/image"
-import { StatusBadge } from "@/components/ui/status-badge"
-import { ChevronLeft, ChevronRight, Home, MapPin, Calendar, User, Loader2, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight, Home, Loader2, Trash2 } from "lucide-react"
 
 interface Property {
   id: string
@@ -28,6 +25,14 @@ interface PropertyListProps {
   totalPages?: number
   onPageChange?: (page: number) => void
   isLoading?: boolean
+  clientCount?: number
+}
+
+function getInitials(name: string): string {
+  const parts = name.split(' ').filter(Boolean)
+  if (parts.length === 0) return '??'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
 export function PropertyList({
@@ -39,6 +44,7 @@ export function PropertyList({
   totalPages = 1,
   onPageChange,
   isLoading = false,
+  clientCount = 0,
 }: PropertyListProps) {
   if (isLoading) {
     return (
@@ -62,112 +68,95 @@ export function PropertyList({
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
-      {/* Property List - Compact Cards */}
-      <div className="flex-1 overflow-y-auto space-y-3 p-2">
-        {properties.map((property) => (
-          <div
-            key={property.id}
-            onClick={() => onSelectProperty?.(property)}
-            className={`cursor-pointer transition-all duration-150 rounded-xl p-3 border flex items-center gap-3 ${selectedPropertyId === property.id
-              ? "bg-primary/5 border-primary/30 shadow-sm"
-              : "bg-white hover:bg-gray-50 border-gray-100"
-              }`}
-          >
-            {/* Compact Image */}
-            <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-              {property.image ? (
-                <Image src={property.image} alt={property.name} fill className="object-cover" />
-              ) : (
-                <img
-                  src="/property-default.png"
-                  alt={property.name}
-                  className="w-full h-full object-cover"
-                />
-              )}
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-semibold text-gray-900 truncate">
-                  {property.clientName || 'No Client'}
-                </h3>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  {property.isDraft && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700 border border-amber-200">
-                      Draft
-                    </span>
-                  )}
-                  <StatusBadge status={property.status} className="text-[10px] px-2 py-0.5" />
-                </div>
-              </div>
-              <p className="text-[11px] font-medium text-gray-700 truncate mt-0.5">
-                {property.name}
-              </p>
-              <div className="flex items-center gap-3 mt-0.5 text-[10px] text-gray-400">
-                <span className="flex items-center gap-1 truncate">
-                  <MapPin className="w-2.5 h-2.5" />
-                  {property.location}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {property.isDraft && onDeleteProperty && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteProperty(property.id);
-                  }}
-                  className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Delete draft"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              )}
-              <ChevronRight className={`w-4 h-4 ${selectedPropertyId === property.id ? "text-primary" : "text-gray-300"}`} />
-            </div>
-          </div>
-        ))}
+    <div className="flex flex-col h-full">
+      {/* Client Count */}
+      <div className="px-4 pt-4 pb-2 flex-shrink-0">
+        <span className="text-xs font-medium text-gray-500">Clients ({clientCount})</span>
       </div>
 
-      {/* Compact Pagination */}
-      <div className="flex items-center justify-between pt-4 pb-4 mt-auto border-t border-gray-100">
-        <span className="text-xs text-muted-foreground">
-          Page {currentPage} of {totalPages}
-        </span>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onPageChange?.(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="h-7 px-2 text-xs"
-          >
-            <ChevronLeft className="w-3 h-3" />
-          </Button>
-          {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => i + 1).map(pageNum => (
-            <Button
-              key={pageNum}
-              variant={currentPage === pageNum ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onPageChange?.(pageNum)}
-              className={`h-7 w-7 p-0 text-xs ${currentPage === pageNum ? "bg-primary" : ""}`}
+      {/* Property List - table style with bottom borders */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {properties.map((property, index) => {
+          const isSelected = selectedPropertyId === property.id
+          const isLast = index === properties.length - 1
+          return (
+            <div
+              key={property.id}
+              onClick={() => onSelectProperty?.(property)}
+              className={`cursor-pointer transition-all duration-150 px-4 py-3 flex items-center gap-3 ${
+                isSelected
+                  ? "bg-orange-50/50 border-l-2 border-l-orange-400"
+                  : "bg-white hover:bg-gray-50/50 border-l-2 border-l-transparent"
+              } ${!isLast ? "border-b border-gray-200" : ""}`}
             >
-              {pageNum}
-            </Button>
-          ))}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onPageChange?.(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className="h-7 px-2 text-xs"
+              {/* Client Initials Avatar */}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                isSelected
+                  ? "bg-gray-200 text-gray-700"
+                  : "bg-gray-100 text-gray-600"
+              }`}>
+                {getInitials(property.clientName || 'Unknown')}
+              </div>
+
+              {/* Client Name */}
+              <div className="flex-1 min-w-0">
+                <h3 className={`text-sm font-semibold truncate ${
+                  isSelected ? "text-gray-900" : "text-gray-700"
+                }`}>
+                  {property.clientName || 'No Client'}
+                </h3>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {property.isDraft && onDeleteProperty && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteProperty(property.id);
+                    }}
+                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete draft"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <ChevronRight className={`w-4 h-4 ${isSelected ? "text-gray-400" : "text-gray-300"}`} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Pagination - always at bottom */}
+      <div className="flex items-center justify-center gap-1 pt-3 pb-3 border-t border-gray-100 flex-shrink-0 mt-auto">
+        <button
+          onClick={() => onPageChange?.(Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(pageNum => (
+          <button
+            key={pageNum}
+            onClick={() => onPageChange?.(pageNum)}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+              currentPage === pageNum
+                ? "bg-orange-50 text-orange-600 border border-orange-200"
+                : "text-gray-500 hover:bg-gray-100"
+            }`}
           >
-            <ChevronRight className="w-3 h-3" />
-          </Button>
-        </div>
+            {pageNum}
+          </button>
+        ))}
+        <button
+          onClick={() => onPageChange?.(Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
       </div>
     </div>
   )

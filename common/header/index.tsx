@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Plus, Menu } from "lucide-react"
+import { ArrowLeft, Plus, Menu, Upload, Bell } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { getStoredUserInfo, authAPI } from "@/lib/api"
@@ -131,7 +131,7 @@ export function PageHeader({
                 <Link href={actionHref} className="group">
                     <Button
                         variant={actionVariant}
-                        className="gap-2.5 w-[200px] h-[48px] rounded-full py-2 px-5 border-0 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                        className="gap-2 h-10 rounded-lg px-5 border-0 text-white font-medium text-sm hover:opacity-90 transition-all"
                         style={{ background: '#00346C' }}
                     >
                         <span className="transition-transform group-hover:rotate-90 duration-300">{actionIcon}</span>
@@ -142,7 +142,7 @@ export function PageHeader({
                 <Button
                     onClick={onAction}
                     variant={actionVariant}
-                    className="gap-2.5 w-[200px] h-[48px] rounded-full py-2 px-5 border-0 text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className="gap-2 h-10 rounded-lg px-5 border-0 text-white font-medium text-sm hover:opacity-90 transition-all"
                     style={{ background: '#00346C' }}
                 >
                     {actionIcon}
@@ -178,7 +178,7 @@ export function PageHeader({
     )
 
     return (
-        <div className="w-full bg-white">
+        <div className="w-full bg-white border-b border-gray-100">
             {/* Mobile header with logo and menu */}
             <div className="flex lg:hidden items-center justify-between px-4 py-3 border-b border-gray-100">
                 <Image
@@ -199,21 +199,36 @@ export function PageHeader({
                 </Button>
             </div>
 
-            {/* Main header content */}
-            <header className={`flex items-center justify-between px-4 lg:px-6 py-4 ${className}`}>
+            {/* Main header content - hidden on mobile for manage-properties */}
+            <header className={`hidden lg:flex items-center justify-between px-6 py-4 ${className}`}>
                 <div className="flex items-center gap-4">
                     {showBack && (backHref ? backLink : backButton)}
-                    <div className="flex items-center gap-2">
-                        <h1 className="text-xl lg:text-2xl font-semibold leading-none text-[#1E1E1E]" style={{ fontFamily: 'Manrope' }}>
-                            {title}
-                        </h1>
-                        {title.toLowerCase().includes('welcome') && <span className="text-xl lg:text-2xl">👋</span>}
-                    </div>
+                    {/* Title */}
+                    <h1 className="text-xl font-bold text-[#1a1a2e]">
+                        {title}
+                    </h1>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {actionButton}
-                    {showProfileSection && profileSection}
+                    {/* Upload Property button */}
+                    <button
+                        onClick={() => router.push('/manage-properties/add-properties')}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                        <Upload className="w-4 h-4" />
+                        Upload Property
+                    </button>
+
+                    {/* Notification bell */}
+                    <button className="relative p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+                        <Bell className="w-4 h-4" />
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">12</span>
+                    </button>
+
+                    {/* User avatar */}
+                    <div className="w-9 h-9 rounded-full bg-[#00346C] text-white text-xs font-bold flex items-center justify-center">
+                        {userData.initials}
+                    </div>
                 </div>
             </header>
         </div>

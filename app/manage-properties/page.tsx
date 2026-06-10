@@ -1,13 +1,18 @@
 "use client";
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation';
-import PropertyListHeader from '@/common/property-list-header';
 import { PropertyList } from '@/components/manage-properties/list';
 import { PropertyDetailPanel } from '@/components/manage-properties/detail';
-import { AlertCircle, Loader2, X, Upload, FileText, Trash2 } from 'lucide-react';
+import { AlertCircle, Loader2, X, Upload, FileText, Trash2, Search, ChevronDown, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, EngineResultResponse, MessageResponse, getCurrentUserId } from '@/lib/api';
+import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, MessageResponse, getCurrentUserId } from '@/lib/api';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 
 
@@ -693,7 +698,7 @@ const Page = () => {
     };
 
     return (
-        <div className="h-full bg-gray-50">
+        <div className="h-full flex flex-col bg-[#F8F9FB]">
             {/* Error Message */}
             {error && (
                 <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
@@ -720,36 +725,72 @@ const Page = () => {
                 </div>
             )}
 
-            {/* Split View Layout */}
-            <div className="flex h-full overflow-hidden">
+            {/* Page Toolbar */}
+            <div className="bg-white px-4 sm:px-6 py-4 border-b border-gray-100">
+                <p className="text-sm text-gray-500 mb-3 hidden sm:block">View and manage all client properties and system insights.</p>
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="relative flex-1 sm:w-120 sm:flex-none">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                            placeholder="Search..."
+                            value={searchQuery}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            className="pl-10 h-10 rounded-lg border-gray-200 bg-white w-full"
+                        />
+                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors h-10 flex-shrink-0">
+                                <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M3 6h18M7 12h10M10 18h4" />
+                                </svg>
+                                <span className="hidden sm:inline">{statusFilter}</span>
+                                <ChevronDown className="w-4 h-4 text-gray-400" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleStatusFilterChange('All Status')}>All Status</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusFilterChange('Pending')}>Pending</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusFilterChange('Completed')}>Completed</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <div className="flex-1 hidden sm:block"></div>
+                    <button
+                        onClick={() => router.push('/manage-properties/add-properties')}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#F97316] text-white text-sm font-medium hover:bg-orange-600 transition-colors h-10 flex-shrink-0"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span className="hidden sm:inline">Add Property</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Content Layout */}
+            <div className="flex flex-1 overflow-hidden">
                 {/* Left Panel - Property List */}
-                <div className={`flex flex-col bg-white transition-all duration-300 ${selectedProperty
-                    ? 'hidden lg:flex lg:w-1/2 border-r border-gray-200'
-                    : 'w-full'
-                    }`}>
-                    <PropertyListHeader
-                        title={`Property List (${filteredProperties.length})`}
-                        searchQuery={searchQuery}
-                        onSearchChange={handleSearchChange}
-                        statusFilter={statusFilter}
-                        onStatusFilterChange={handleStatusFilterChange}
-                    />
+                <div className={`flex flex-col bg-white border-r border-gray-100 h-full transition-all duration-300 ${
+                    selectedProperty && selectedDetail
+                        ? 'lg:w-125'
+                        : 'w-full'
+                }`}>
                     <PropertyList
                         properties={listProperties}
+                        selectedPropertyId={selectedProperty?.id}
                         isLoading={isLoading}
                         onSelectProperty={handleSelectProperty}
                         onDeleteProperty={openDeleteModal}
                         currentPage={currentPage}
                         totalPages={totalPages}
                         onPageChange={handlePageChange}
+                        clientCount={filteredProperties.length}
                     />
                 </div>
 
-                {/* Right Panel - Property Detail */}
+                {/* Right Panel - Property Detail (only shown when property selected) */}
                 {selectedProperty && selectedDetail && (
                     <>
-                        {/* Desktop Detail Panel - FIXED: Added overflow-y-auto */}
-                        <div className="hidden lg:flex lg:flex-col w-1/2 bg-gray-50 overflow-y-auto">
+                        {/* Desktop Detail Panel */}
+                        <div className="hidden lg:flex lg:flex-col flex-1 bg-[#F8F9FB] overflow-y-auto">
                             <PropertyDetailPanel
                                 property={selectedDetail}
                                 onClose={handleCloseDetail}
@@ -766,8 +807,8 @@ const Page = () => {
                             )}
                         </div>
 
-                        {/* Mobile Full-Screen Overlay - FIXED: Added overflow-y-auto */}
-                        <div className="lg:hidden fixed inset-0 z-50 bg-gray-50 overflow-y-auto">
+                        {/* Mobile Full-Screen Overlay */}
+                        <div className="lg:hidden fixed inset-0 z-50 bg-[#F8F9FB] overflow-y-auto">
                             <PropertyDetailPanel
                                 property={selectedDetail}
                                 onClose={handleCloseDetail}
