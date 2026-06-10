@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, Clock, ArrowRight, History, Loader2 } from "lucide-react"
+import { X, Clock, ArrowRight, History, Loader2, Undo2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { systemsAPI, SystemResponse, ReplacementEventResponse } from "@/lib/api"
 
@@ -9,29 +9,47 @@ interface HistoryModalProps {
     propertyId: string
     system: SystemResponse
     onClose: () => void
+    onUndoSuccess?: (deletedAlertCount: number) => void
 }
 
-export function HistoryModal({ propertyId, system, onClose }: HistoryModalProps) {
+export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: HistoryModalProps) {
     const [history, setHistory] = useState<ReplacementEventResponse[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [undoingEventId, setUndoingEventId] = useState<string | null>(null)
+
+    const fetchHistory = async () => {
+        setIsLoading(true)
+        setError(null)
+        try {
+            const data = await systemsAPI.getReplacementHistory(propertyId, system.system_id)
+            setHistory(data)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to load history")
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     useEffect(() => {
-        const fetchHistory = async () => {
-            setIsLoading(true)
-            setError(null)
-            try {
-                const data = await systemsAPI.getReplacementHistory(propertyId, system.system_id)
-                setHistory(data)
-            } catch (err) {
-                setError(err instanceof Error ? err.message : "Failed to load history")
-            } finally {
-                setIsLoading(false)
-            }
-        }
-
         fetchHistory()
     }, [propertyId, system.system_id])
+
+    const handleUndo = async (eventId: string) => {
+        setUndoingEventId(eventId)
+        try {
+            const data = await systemsAPI.undoReset(propertyId, system.system_id, { event_id: eventId })
+            if (onUndoSuccess) {
+                onUndoSuccess(data.deleted_alert_count)
+            }
+            // Refresh history after undo
+            await fetchHistory()
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to undo reset")
+        } finally {
+            setUndoingEventId(null)
+        }
+    }
 
     const formattedSystemType = system.system_type
         .split('_')
@@ -114,30 +132,60 @@ export function HistoryModal({ propertyId, system, onClose }: HistoryModalProps)
                                     </div>
 
                                     {/* Event card */}
-                                    <div className="bg-gray-50 rounded-xl border border-gray-100 p-4">
+                                    <div className={`bg-gray-50 rounded-xl border border-gray-100 p-4 ${event.undone_at ? 'opacity-50' : ''}`}>
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="text-xs font-bold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-lg">
-                                                {formatEventType(event.event_type)}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${event.undone_at ? 'bg-gray-200 text-gray-500' : 'bg-blue-100 text-blue-700'}`}>
+                                                    {event.undone_at ? 'Undone' : formatEventType(event.event_type)}
+                                                </span>
+                                                {event.undone_at && (
+                                                    <span className="text-[10px] text-gray-400">
+                                                        {formatDate(event.undone_at)}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <span className="text-[10px] text-gray-500 font-medium">
                                                 {formatDate(event.replacement_date)}
                                             </span>
                                         </div>
 
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-sm font-semibold text-gray-700">
+                                            <span className={`text-sm font-semibold ${event.undone_at ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
                                                 {event.previous_age_at_inspection} yrs
                                             </span>
                                             <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                                            <span className="text-sm font-bold text-emerald-600">
+                                            <span className={`text-sm font-bold ${event.undone_at ? 'text-gray-400 line-through' : 'text-emerald-600'}`}>
                                                 {event.new_age_at_inspection} yrs
                                             </span>
                                         </div>
 
                                         {event.notes && (
-                                            <p className="text-xs text-gray-500 italic border-t border-gray-200 pt-2 mt-2">
+                                            <p className={`text-xs italic border-t border-gray-200 pt-2 mt-2 ${event.undone_at ? 'text-gray-400 line-through' : 'text-gray-500'}`}>
                                                 &ldquo;{event.notes}&rdquo;
                                             </p>
+                                        )}
+
+                                        {/* Undo button */}
+                                        {!event.undone_at && (
+                                            <div className="mt-3 pt-2 border-t border-gray-200">
+                                                <button
+                                                    onClick={() => handleUndo(event.event_id)}
+                                                    disabled={undoingEventId === event.event_id}
+                                                    className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors px-2 py-1 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {undoingEventId === event.event_id ? (
+                                                        <>
+                                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                                            Undoing...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Undo2 className="w-3 h-3" />
+                                                            Undo Reset
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 </div>

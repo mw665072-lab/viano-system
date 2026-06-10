@@ -1,12 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info, MessageSquare, Calendar, History, Wrench, TrendingUp } from "lucide-react"
+import { ArrowLeft, Pencil, Download, Trash2, CheckCircle2, Star, AlertTriangle, AlertCircle, Info, MessageSquare, Calendar, History, Wrench, TrendingUp, Plus, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { processAPI, documentAPI, MessageResponse, systemsAPI, SystemResponse, propertyAPI, CMAResponse } from "@/lib/api"
 import { ResetModal } from "./reset-modal"
 import { HistoryModal } from "./history-modal"
+import { SetAgeModal } from "./set-age-modal"
+import { AddManualSystemModal } from "./add-manual-system-modal"
+import { AddDefaultSystemsModal } from "./add-default-systems-modal"
 
 interface PropertyDetailData {
     id: string
@@ -78,6 +81,9 @@ export function PropertyDetailPanel({
     const [isLoadingSystems, setIsLoadingSystems] = useState(false)
     const [showResetModal, setShowResetModal] = useState(false)
     const [showHistoryModal, setShowHistoryModal] = useState(false)
+    const [showSetAgeModal, setShowSetAgeModal] = useState(false)
+    const [showAddManualModal, setShowAddManualModal] = useState(false)
+    const [showAddDefaultsModal, setShowAddDefaultsModal] = useState(false)
     const [selectedSystem, setSelectedSystem] = useState<SystemResponse | null>(null)
 
     // CMA state
@@ -205,6 +211,20 @@ export function PropertyDetailPanel({
         fetchCMA()
     }, [property.id, property.isDraft])
 
+    const refreshSystems = async () => {
+        if (property.id && !property.isDraft) {
+            setIsLoadingSystems(true)
+            try {
+                const data = await systemsAPI.getSystems(property.id)
+                setSystems(data)
+            } catch (err) {
+                console.error('Error refreshing systems:', err)
+            } finally {
+                setIsLoadingSystems(false)
+            }
+        }
+    }
+
     const handleOpenResetModal = (system: SystemResponse) => {
         setSelectedSystem(system)
         setShowResetModal(true)
@@ -215,17 +235,48 @@ export function PropertyDetailPanel({
         setShowHistoryModal(true)
     }
 
+    const handleOpenSetAgeModal = (system: SystemResponse) => {
+        setSelectedSystem(system)
+        setShowSetAgeModal(true)
+    }
+
     const handleResetSuccess = (alertCount: number) => {
         setShowResetModal(false)
         if (onShowToast) {
             onShowToast(`${alertCount} alert${alertCount !== 1 ? 's' : ''} rescheduled`, 'success')
         }
-        // Refresh systems list
-        if (property.id && !property.isDraft) {
-            systemsAPI.getSystems(property.id)
-                .then(setSystems)
-                .catch(err => console.error('Error refreshing systems:', err))
+        refreshSystems()
+    }
+
+    const handleSetAgeSuccess = (alertCount: number) => {
+        setShowSetAgeModal(false)
+        if (onShowToast) {
+            onShowToast(`Age set — ${alertCount} alert${alertCount !== 1 ? 's' : ''} generated`, 'success')
         }
+        refreshSystems()
+    }
+
+    const handleUndoSuccess = (deletedAlertCount: number) => {
+        if (onShowToast) {
+            onShowToast(`Undo successful — ${deletedAlertCount} alert${deletedAlertCount !== 1 ? 's' : ''} removed`, 'success')
+        }
+        refreshSystems()
+    }
+
+    const handleAddManualSuccess = () => {
+        setShowAddManualModal(false)
+        if (onShowToast) {
+            onShowToast('System added successfully', 'success')
+        }
+        refreshSystems()
+    }
+
+    const handleAddDefaultsSuccess = (createdCount: number) => {
+        setShowAddDefaultsModal(false)
+        if (onShowToast) {
+            onShowToast(`${createdCount} system${createdCount !== 1 ? 's' : ''} added successfully`, 'success')
+        }
+        refreshSystems()
     }
 
     const formatSystemType = (type: string) => {
@@ -475,9 +526,29 @@ export function PropertyDetailPanel({
                                             <p className="text-[9px] text-[#64748B] font-bold mt-0.5 uppercase tracking-tight opacity-60">Age & Lifespan Tracking</p>
                                         </div>
                                     </div>
-                                    <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
-                                        {isLoadingSystems ? '...' : `${systems.length} system${systems.length !== 1 ? 's' : ''}`}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
+                                            {isLoadingSystems ? '...' : `${systems.length} system${systems.length !== 1 ? 's' : ''}`}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Add system buttons - always visible */}
+                                <div className="flex gap-2 mb-4">
+                                    <button
+                                        onClick={() => setShowAddDefaultsModal(true)}
+                                        className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-50 border border-blue-100"
+                                    >
+                                        <Settings className="w-3.5 h-3.5" />
+                                        Add Defaults
+                                    </button>
+                                    <button
+                                        onClick={() => setShowAddManualModal(true)}
+                                        className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-emerald-50 border border-emerald-100"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        Add Manual
+                                    </button>
                                 </div>
 
                                 {isLoadingSystems ? (
@@ -486,12 +557,16 @@ export function PropertyDetailPanel({
                                     </div>
                                 ) : systems.length === 0 ? (
                                     <div className="text-center py-6">
-                                        <p className="text-xs text-gray-500">No systems data available for this property.</p>
+                                        <p className="text-xs text-gray-500 mb-3">No systems data available for this property.</p>
+                                        <p className="text-[10px] text-gray-400">Use the buttons above to add systems.</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
                                         {systems.map((system) => {
-                                            const progressPercent = Math.min(100, Math.max(0, system.percentage_used))
+                                            const isAgeUnknown = system.age_unknown
+                                            const progressPercent = system.percentage_used != null
+                                                ? Math.min(100, Math.max(0, system.percentage_used))
+                                                : 0
                                             const progressColor = system.alert_tier === 'Tier 2'
                                                 ? 'bg-red-500'
                                                 : system.alert_tier === 'Tier 1'
@@ -513,29 +588,51 @@ export function PropertyDetailPanel({
                                                                 )}
                                                             </h4>
                                                         </div>
-                                                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ml-2 shrink-0 ${getAlertTierColor(system.alert_tier)}`}>
-                                                            {getAlertTierLabel(system.alert_tier)}
-                                                        </span>
+                                                        {isAgeUnknown ? (
+                                                            <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg border ml-2 shrink-0 bg-gray-100 text-gray-600 border-gray-200">
+                                                                Age Unknown
+                                                            </span>
+                                                        ) : (
+                                                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ml-2 shrink-0 ${getAlertTierColor(system.alert_tier)}`}>
+                                                                {getAlertTierLabel(system.alert_tier)}
+                                                            </span>
+                                                        )}
                                                     </div>
 
                                                     {/* Age & Lifespan */}
-                                                    <div className="mb-3">
-                                                        <div className="flex items-center justify-between mb-1.5">
-                                                            <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
-                                                                Lifespan Used
-                                                            </span>
-                                                            <span className="text-xs font-bold text-[#0C1D38]">
-                                                                {system.current_age.toFixed(1)} yrs
-                                                                <span className="text-[#64748B] font-medium"> / {system.lifespan_max} yrs</span>
-                                                            </span>
+                                                    {isAgeUnknown ? (
+                                                        <div className="mb-3">
+                                                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between">
+                                                                <span className="text-xs text-amber-800">
+                                                                    Manufacturing year or age is not set
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => handleOpenSetAgeModal(system)}
+                                                                    className="text-[10px] font-bold text-white bg-amber-500 hover:bg-amber-600 transition-colors px-3 py-1.5 rounded-lg"
+                                                                >
+                                                                    Set Age
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                            <div
-                                                                className={`h-full ${progressColor} rounded-full transition-all duration-500`}
-                                                                style={{ width: `${progressPercent}%` }}
-                                                            />
+                                                    ) : (
+                                                        <div className="mb-3">
+                                                            <div className="flex items-center justify-between mb-1.5">
+                                                                <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">
+                                                                    Lifespan Used
+                                                                </span>
+                                                                <span className="text-xs font-bold text-[#0C1D38]">
+                                                                    {system.current_age != null ? system.current_age.toFixed(1) : '?'} yrs
+                                                                    <span className="text-[#64748B] font-medium"> / {system.lifespan_max} yrs</span>
+                                                                </span>
+                                                            </div>
+                                                            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                                <div
+                                                                    className={`h-full ${progressColor} rounded-full transition-all duration-500`}
+                                                                    style={{ width: `${progressPercent}%` }}
+                                                                />
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    )}
 
                                                     {/* Actions */}
                                                     <div className="flex items-center justify-between">
@@ -554,13 +651,15 @@ export function PropertyDetailPanel({
                                                                 <History className="w-3.5 h-3.5" />
                                                                 History
                                                             </button>
-                                                            <button
-                                                                onClick={() => handleOpenResetModal(system)}
-                                                                className="flex items-center gap-1.5 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors px-3 py-1.5 rounded-lg"
-                                                            >
-                                                                <Calendar className="w-3.5 h-3.5" />
-                                                                Log Replacement
-                                                            </button>
+                                                            {!isAgeUnknown && (
+                                                                <button
+                                                                    onClick={() => handleOpenResetModal(system)}
+                                                                    className="flex items-center gap-1.5 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors px-3 py-1.5 rounded-lg"
+                                                                >
+                                                                    <Calendar className="w-3.5 h-3.5" />
+                                                                    Log Replacement
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -685,12 +784,41 @@ export function PropertyDetailPanel({
                 />
             )}
 
+            {/* Set Age Modal */}
+            {showSetAgeModal && selectedSystem && property.id && (
+                <SetAgeModal
+                    propertyId={property.id}
+                    system={selectedSystem}
+                    onClose={() => setShowSetAgeModal(false)}
+                    onSuccess={handleSetAgeSuccess}
+                />
+            )}
+
+            {/* Add Manual System Modal */}
+            {showAddManualModal && property.id && (
+                <AddManualSystemModal
+                    propertyId={property.id}
+                    onClose={() => setShowAddManualModal(false)}
+                    onSuccess={handleAddManualSuccess}
+                />
+            )}
+
+            {/* Add Default Systems Modal */}
+            {showAddDefaultsModal && property.id && (
+                <AddDefaultSystemsModal
+                    propertyId={property.id}
+                    onClose={() => setShowAddDefaultsModal(false)}
+                    onSuccess={handleAddDefaultsSuccess}
+                />
+            )}
+
             {/* History Modal */}
             {showHistoryModal && selectedSystem && property.id && (
                 <HistoryModal
                     propertyId={property.id}
                     system={selectedSystem}
                     onClose={() => setShowHistoryModal(false)}
+                    onUndoSuccess={handleUndoSuccess}
                 />
             )}
         </div>

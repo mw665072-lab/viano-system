@@ -555,6 +555,42 @@ export const systemsAPI = {
      */
     getReplacementHistory: (propertyId: string, systemId: string) =>
         apiRequest<ReplacementEventResponse[]>(`/api/property/my-properties/${propertyId}/systems/${systemId}/history`),
+
+    /**
+     * Update system age (MFG year or direct age)
+     */
+    updateSystemAge: (propertyId: string, systemId: string, data: UpdateSystemAgeRequest) =>
+        apiRequest<UpdateSystemAgeResponse>(`/api/property/my-properties/${propertyId}/systems/${systemId}/age`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    /**
+     * Undo an age reset
+     */
+    undoReset: (propertyId: string, systemId: string, data: UndoResetRequest) =>
+        apiRequest<UndoResetResponse>(`/api/property/my-properties/${propertyId}/systems/${systemId}/undo-reset`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    /**
+     * Add a manual system
+     */
+    addManualSystem: (propertyId: string, data: AddManualSystemRequest) =>
+        apiRequest<SystemResponse>(`/api/property/my-properties/${propertyId}/systems/add-manual`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    /**
+     * Add default systems (Water Heater + A/C + Roof)
+     */
+    addDefaultSystems: (propertyId: string, data: AddDefaultSystemsRequest) =>
+        apiRequest<AddDefaultSystemsResponse>(`/api/property/my-properties/${propertyId}/systems/add-defaults`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
 };
 
 // ============ BILLING APIs ============
@@ -997,6 +1033,7 @@ export interface ReplacementEventResponse {
     event_type: 'full_replacement' | 'age_adjustment';
     notes: string | null;
     created_at: string;
+    undone_at: string | null;
 }
 
 export interface SystemResponse {
@@ -1004,12 +1041,14 @@ export interface SystemResponse {
     system_type: string;
     name: string | null;
     brand: string | null;
-    age_at_inspection: number;
-    current_age: number;
+    age_at_inspection: number | null;
+    current_age: number | null;
     lifespan_min: number;
     lifespan_max: number;
     alert_tier: string | null;
-    percentage_used: number;
+    percentage_used: number | null;
+    mfg_year: number | null;
+    age_unknown: boolean;
     replacement_history: ReplacementEventResponse[];
 }
 
@@ -1017,6 +1056,7 @@ export interface ResetSystemRequest {
     replacement_date?: string;
     notes?: string;
     event_type?: 'full_replacement' | 'age_adjustment';
+    adjusted_age?: number;
 }
 
 export interface ResetSystemResponse {
@@ -1027,6 +1067,60 @@ export interface ResetSystemResponse {
     replacement_date: string;
     new_alert_count: number;
     process_id: string;
+}
+
+export interface UpdateSystemAgeRequest {
+    mfg_year?: number;
+    age?: number;
+}
+
+export interface UpdateSystemAgeResponse {
+    success: boolean;
+    system_id: string;
+    age_at_inspection: number;
+    previous_age_at_inspection: number | null;
+    mfg_year: number;
+    current_age: number;
+    new_alert_count: number;
+    process_id: string;
+}
+
+export interface UndoResetRequest {
+    event_id: string;
+}
+
+export interface UndoResetResponse {
+    success: boolean;
+    event_id: string;
+    system_id: string;
+    restored_age_at_inspection: number;
+    previous_age_at_inspection: number;
+    deleted_alert_count: number;
+}
+
+export interface AddManualSystemRequest {
+    system_type: string;
+    name?: string;
+    mfg_year?: number | null;
+    age?: number | null;
+    brand?: string;
+}
+
+export interface AddDefaultSystemsRequest {
+    water_heater_mfg_year?: number;
+    water_heater_age?: number | null;
+    water_heater_brand?: string;
+    hvac_units?: Array<{ name: string; mfg_year: number; brand: string }>;
+    roof_type: 'shingle' | 'tile' | 'metal';
+    roof_mfg_year?: number;
+    roof_age?: number | null;
+}
+
+export interface AddDefaultSystemsResponse {
+    success: boolean;
+    created: Array<{ system_type: string; name?: string; system_id: string }>;
+    skipped: Array<{ system_type: string; reason: string }>;
+    message: string;
 }
 
 // Billing Types
