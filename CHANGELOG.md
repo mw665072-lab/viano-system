@@ -71,3 +71,53 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 - Skip subscription limit check when confirming an existing draft property. Previously, clicking a draft property to confirm it would incorrectly trigger the "Limit Reached" paywall, even though the user was not adding a new property but completing an existing draft.
+
+## [Unreleased] — Manage Properties UI/UX Refactor
+
+### Added
+- **Manage Properties detail panel close control**: back-arrow close button positioned to the left of the client avatar; clicking it clears the selected property and returns to the full-width list view.
+- **Dynamic system status badges and progress-bar colors** in the property detail panel based on `percentage_used`:
+  - `< 50%` → "Good" (emerald/green)
+  - `50–74%` → "Fair" (amber/yellow)
+  - `75–89%` → "Warning" (orange)
+  - `>= 90%` → "Critical" (red)
+- **Conditional "History" button** next to "Reset System" for each system; shown only when `replacement_history.length > 0` and opens the replacement-history modal.
+- **Responsive mobile toolbar** for Manage Properties:
+  - Shorter "Search..." placeholder on small screens
+  - Icon-only status filter and "Add Property" buttons on mobile
+  - Subtitle hidden on mobile to reduce clutter
+- **Responsive mobile detail panel**:
+  - System rows stack vertically on mobile while remaining horizontal on desktop
+  - Property Insights grid switches from 4 columns on desktop to 2 columns on mobile
+  - Reduced padding and font sizes for smaller viewports
+
+### Changed
+- **Manage Properties page layout**:
+  - Default view now shows the property list full-width; detail panel opens only after selecting a property
+  - Left property list panel fixed to `w-96` (384px) when the detail panel is open, matching the search-bar width for perfect vertical alignment
+  - Detail panel uses `flex-1` to fill the remaining viewport width
+- **Property list styling**:
+  - List items changed from rounded card style to table-style rows with `border-b border-gray-200` dividers
+  - Selected item highlighted with orange left border (`border-l-orange-400`) and light orange background
+- **Property detail panel styling**:
+  - Client header, property info grid, and systems list combined into a single white card with `rounded-2xl` and `border border-gray-100`
+  - Horizontal divider lines separate header, property info, and systems sections
+  - Vertical divider lines between the three property-info columns
+  - System rows separated by divider lines
+  - Action buttons (Edit, Download Report, Delete) moved directly below the client header card
+- **Current Home Value card** in the detail header:
+  - Wrapped in a bordered container with left-aligned text
+  - Added a purple trending-up icon in the top-right corner
+  - Vertically centered with the client name/address block
+- **Property Insights section**:
+  - Wrapped in a white card with border outline
+  - Inner stat cards now use solid tinted backgrounds (purple/orange/amber/blue) with matching border colors
+- **Top navigation header** (`common/header/index.tsx`):
+  - Hidden on mobile (`hidden lg:flex`) so the Manage Properties mobile toolbar is the only header content visible on small screens
+- **Left sidebar** (`common/sidebar/index.tsx`):
+  - Dark theme with viano logo, navigation items, plan upgrade cards, and user profile card
+  - Active "Manage Properties" item uses orange text
+
+### Fixed
+- Pagination footer in the property list now stays at the bottom of the list container regardless of record count by using a flex column layout with `flex-1` on the scrollable list area.
+- Desktop system-row action buttons now remain on the right side of the progress bar instead of wrapping to the left.

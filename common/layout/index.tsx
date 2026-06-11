@@ -101,7 +101,7 @@ const Layout = ({ children }: LayoutProps) => {
                             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
                     )}
-                    <main className="flex-1 p-4 lg:p-6 overflow-y-auto rotate-0 opacity-100 rounded-tl-[32px] bg-[#EFF6FF] w-full">
+                    <main className="flex-1 overflow-hidden bg-[#F8F9FB] w-full">
                         {children}
                     </main>
                 </div>
