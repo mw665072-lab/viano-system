@@ -531,6 +531,48 @@ export const propertyAPI = {
 
         return response.json();
     },
+
+    /**
+     * Get all properties with systems requiring action (critical/budgeting window)
+     */
+    getRequiringAction: () =>
+        apiRequest<RequiringActionProperty[]>('/api/property/requiring-action'),
+
+    /**
+     * Dismiss a flagged system so it no longer appears in requiring-action
+     */
+    dismissSystem: (systemId: string) =>
+        apiRequest<DismissSystemResponse>(`/api/property/systems/${systemId}/dismiss`, {
+            method: 'POST',
+        }),
+
+    /**
+     * Restore a previously dismissed system
+     */
+    restoreSystem: (systemId: string) =>
+        apiRequest<RestoreSystemResponse>(`/api/property/systems/${systemId}/restore`, {
+            method: 'POST',
+        }),
+
+    /**
+     * Get all scheduled alerts (messages with status scheduled_twilio)
+     * Returns alerts sorted by scheduled_for descending (most recent first)
+     */
+    getScheduledAlerts: () =>
+        apiRequest<ScheduledAlert[]>('/api/property/scheduled-alerts'),
+
+    /**
+     * Get upcoming touchpoints count and list for the next N days (default 180)
+     */
+    getUpcomingTouchpoints: (days = 180) =>
+        apiRequest<UpcomingTouchpointsResponse>(`/api/property/upcoming-touchpoints?days=${days}`),
+
+    /**
+     * Get property opportunities with appreciation data
+     * Returns properties where current price > last sale price, sorted by highest gain first
+     */
+    getOpportunities: () =>
+        apiRequest<PropertyOpportunitiesResponse>('/api/property/opportunities'),
 };
 
 // ============ SYSTEMS APIs ============
@@ -1121,6 +1163,91 @@ export interface AddDefaultSystemsResponse {
     created: Array<{ system_type: string; name?: string; system_id: string }>;
     skipped: Array<{ system_type: string; reason: string }>;
     message: string;
+}
+
+// Requiring Action Types
+export interface FlaggedSystem {
+    system_id: string;
+    system_type: string;
+    name: string | null;
+    alert_tier: string;
+    current_age: number;
+    lifespan_min: number;
+    percentage_used: number;
+    action_label: string;
+    timeframe: string;
+}
+
+export interface RequiringActionProperty {
+    property_id: string;
+    property_name: string;
+    address: string;
+    location: string;
+    client_name: string;
+    flagged_systems: FlaggedSystem[];
+}
+
+export interface DismissSystemResponse {
+    success: boolean;
+    system_id: string;
+    dismissed_at: string;
+}
+
+export interface RestoreSystemResponse {
+    success: boolean;
+    system_id: string;
+    restored: boolean;
+}
+
+// Scheduled Alerts Types
+export interface ScheduledAlert {
+    message_id: string;
+    property_id: string;
+    property_address: string;
+    client_name: string;
+    alert_type: string;
+    priority: number;
+    scheduled_for: string;
+    status: string;
+    trigger: string;
+}
+
+export interface UpcomingTouchpointItem {
+    message_id: string;
+    property_id: string;
+    property_address: string;
+    client_name: string;
+    alert_type: string;
+    priority: number;
+    scheduled_for: string;
+    trigger: string;
+    viano_year: number;
+    days_from_upload: number;
+}
+
+export interface UpcomingTouchpointsResponse {
+    count: number;
+    days: number;
+    touchpoints: UpcomingTouchpointItem[];
+}
+
+export interface PropertyOpportunityItem {
+    property_id: string;
+    property_name: string;
+    address: string;
+    location: string;
+    client_name: string;
+    current_price: number;
+    last_sale_price: number;
+    last_sale_date: string;
+    appreciation_amount: number;
+    appreciation_percentage: number;
+    formatted_gain: string;
+}
+
+export interface PropertyOpportunitiesResponse {
+    total_opportunities: number;
+    properties: PropertyOpportunityItem[];
 }
 
 // Billing Types
