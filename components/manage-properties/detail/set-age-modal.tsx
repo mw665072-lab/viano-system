@@ -1,25 +1,23 @@
 "use client"
 
 import { useState } from "react"
-import { X, Calendar, Loader2, Wrench } from "lucide-react"
+import { X, Calendar, Hash, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { systemsAPI, SystemResponse } from "@/lib/api"
 
-interface ResetModalProps {
+interface SetAgeModalProps {
     propertyId: string
     system: SystemResponse
     onClose: () => void
     onSuccess: (alertCount: number) => void
 }
 
-export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModalProps) {
-    const [replacementDate, setReplacementDate] = useState(() => {
-        const today = new Date()
-        return today.toISOString().split('T')[0]
-    })
-    const [notes, setNotes] = useState("")
-    const [eventType, setEventType] = useState<'full_replacement' | 'age_adjustment'>("full_replacement")
-    const [adjustedAge, setAdjustedAge] = useState<string>("")
+type AgeMode = 'mfg_year' | 'age'
+
+export function SetAgeModal({ propertyId, system, onClose, onSuccess }: SetAgeModalProps) {
+    const [mode, setMode] = useState<AgeMode>('mfg_year')
+    const [mfgYear, setMfgYear] = useState<string>("")
+    const [age, setAge] = useState<string>("")
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -28,42 +26,35 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
         setError(null)
 
         try {
-            const payload: {
-                replacement_date?: string;
-                notes?: string;
-                event_type?: 'full_replacement' | 'age_adjustment';
-                adjusted_age?: number;
-            } = {
-                replacement_date: replacementDate,
-                notes: notes.trim() || undefined,
-                event_type: eventType,
+            const payload = mode === 'mfg_year'
+                ? { mfg_year: parseInt(mfgYear, 10) }
+                : { age: parseFloat(age) }
+
+            if (mode === 'mfg_year' && (isNaN(parseInt(mfgYear, 10)) || parseInt(mfgYear, 10) < 1900 || parseInt(mfgYear, 10) > new Date().getFullYear())) {
+                throw new Error('Please enter a valid manufacturing year')
             }
 
-            if (eventType === 'age_adjustment') {
-                const ageVal = parseFloat(adjustedAge)
-                if (isNaN(ageVal) || ageVal < 0) {
-                    throw new Error('Please enter a valid adjusted age')
-                }
-                payload.adjusted_age = ageVal
+            if (mode === 'age' && (isNaN(parseFloat(age)) || parseFloat(age) < 0)) {
+                throw new Error('Please enter a valid age')
             }
 
-            const data = await systemsAPI.resetSystemAge(propertyId, system.system_id, payload)
+            const data = await systemsAPI.updateSystemAge(propertyId, system.system_id, payload)
             onSuccess(data.new_alert_count)
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to log replacement")
+            setError(err instanceof Error ? err.message : "Failed to update system age")
         } finally {
             setIsSubmitting(false)
         }
     }
 
-    const canSubmit = eventType === 'full_replacement'
-        ? !!replacementDate
-        : !!replacementDate && adjustedAge.trim() !== '' && !isNaN(parseFloat(adjustedAge))
-
     const formattedSystemType = system.system_type
         .split('_')
         .map(w => w.charAt(0).toUpperCase() + w.slice(1))
         .join(' ')
+
+    const canSubmit = mode === 'mfg_year'
+        ? mfgYear.trim() !== '' && !isNaN(parseInt(mfgYear, 10))
+        : age.trim() !== '' && !isNaN(parseFloat(age))
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -71,11 +62,11 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                 {/* Header */}
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-100">
+                        <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md shadow-amber-100">
                             <Calendar className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-[#0C1D38]">Log Replacement</h2>
+                            <h2 className="text-lg font-bold text-[#0C1D38]">Set System Age</h2>
                             <p className="text-xs text-[#64748B] font-medium">
                                 {formattedSystemType}{system.brand ? ` — ${system.brand}` : ''}
                             </p>
@@ -91,6 +82,11 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
 
                 {/* Body */}
                 <div className="p-6 space-y-5">
+                    {/* Info banner */}
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
+                        The age of this system is unknown. Set the manufacturing year or current age to enable lifespan tracking and alerts.
+                    </div>
+
                     {/* Error */}
                     {error && (
                         <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
@@ -98,87 +94,80 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                         </div>
                     )}
 
-                    {/* Replacement Date */}
+                    {/* Mode selector */}
                     <div>
                         <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
-                            Replacement Date
-                        </label>
-                        <input
-                            type="date"
-                            value={replacementDate}
-                            onChange={(e) => setReplacementDate(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                        />
-                        <p className="text-[10px] text-gray-400 mt-1.5">Defaults to today. Change if the replacement happened on a different date.</p>
-                    </div>
-
-                    {/* Event Type */}
-                    <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
-                            Event Type
+                            Input Method
                         </label>
                         <div className="flex gap-2">
                             <button
                                 type="button"
-                                onClick={() => setEventType('full_replacement')}
+                                onClick={() => setMode('mfg_year')}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
-                                    eventType === 'full_replacement'
-                                        ? 'bg-blue-50 border-blue-300 text-blue-700'
-                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
-                                }`}
-                            >
-                                <Wrench className="w-4 h-4" />
-                                Full Replacement
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setEventType('age_adjustment')}
-                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
-                                    eventType === 'age_adjustment'
+                                    mode === 'mfg_year'
                                         ? 'bg-blue-50 border-blue-300 text-blue-700'
                                         : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                 }`}
                             >
                                 <Calendar className="w-4 h-4" />
-                                Age Adjustment
+                                MFG Year
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMode('age')}
+                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
+                                    mode === 'age'
+                                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                }`}
+                            >
+                                <Hash className="w-4 h-4" />
+                                Direct Age
                             </button>
                         </div>
                     </div>
 
-                    {/* Adjusted Age - only for age_adjustment */}
-                    {eventType === 'age_adjustment' && (
+                    {/* MFG Year input */}
+                    {mode === 'mfg_year' && (
                         <div>
                             <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
-                                Adjusted Age (years) <span className="text-red-500">*</span>
+                                Manufacturing Year
                             </label>
                             <input
                                 type="number"
-                                value={adjustedAge}
-                                onChange={(e) => setAdjustedAge(e.target.value)}
-                                placeholder="e.g. 3.5"
+                                value={mfgYear}
+                                onChange={(e) => setMfgYear(e.target.value)}
+                                placeholder="e.g. 2018"
+                                min={1900}
+                                max={new Date().getFullYear()}
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            />
+                            <p className="text-[10px] text-gray-400 mt-1.5">
+                                The system age will be calculated from this year.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Age input */}
+                    {mode === 'age' && (
+                        <div>
+                            <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                                Current Age (years)
+                            </label>
+                            <input
+                                type="number"
+                                value={age}
+                                onChange={(e) => setAge(e.target.value)}
+                                placeholder="e.g. 8.5"
                                 min={0}
                                 step={0.1}
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                             />
                             <p className="text-[10px] text-gray-400 mt-1.5">
-                                Set the new age for this system. Use 0 for brand new.
+                                Enter the current age in years. Decimals are allowed.
                             </p>
                         </div>
                     )}
-
-                    {/* Notes */}
-                    <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
-                            Notes <span className="text-gray-400 font-normal normal-case">(optional)</span>
-                        </label>
-                        <textarea
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="e.g. Replaced after leak..."
-                            rows={3}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
-                        />
-                    </div>
                 </div>
 
                 {/* Footer */}
@@ -202,7 +191,7 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                                 Saving...
                             </span>
                         ) : (
-                            eventType === 'full_replacement' ? 'Confirm Replacement' : 'Confirm Adjustment'
+                            'Set Age'
                         )}
                     </Button>
                 </div>

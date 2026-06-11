@@ -38,7 +38,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Property Systems management in Manage Properties detail panel. Agents can now view all property systems (water heater, HVAC, roof, etc.) with real-time age tracking, lifespan progress bars, and alert tier badges (Tier 1 = amber, Tier 2 = red).
 - One-tap replacement logging via "Log Replacement" modal. Pre-filled with today's date, supports event types (Full Replacement, Age Adjustment), and optional agent notes. Shows success toast with rescheduled alert count.
 - Replacement History timeline modal per system. Displays a vertical timeline of all past replacement events with age transitions, event types, dates, and notes.
-- New Systems API integration: `GET /systems`, `POST /systems/{id}/reset`, `GET /systems/{id}/history`.
+- **Undo Reset** support in Replacement History. Each event shows an "Undo Reset" button (disabled if already undone). Undone events are visually dimmed with strikethrough. Calls `POST /systems/{id}/undo-reset`.
+- **Set System Age** modal for systems with unknown age. When `age_unknown: true`, the system card shows an "Age Unknown" badge and a "Set Age" prompt. Users can enter either a manufacturing year or a direct age. Calls `PUT /systems/{id}/age`.
+- **Add Manual System** modal for adding individual systems to a property. Supports all system types (HVAC, water heater, roof shingle/tile/metal, pool equipment, electrical, plumbing, appliances) with optional name, brand, and age info. Calls `POST /systems/add-manual`.
+- **Add Default Systems** wizard for bulk-adding Water Heater + HVAC units + Roof. Configurable per-section age inputs (MFG year or direct age), dynamic HVAC unit list (add/remove), and roof type dropdown (Shingle/Tile/Metal). Calls `POST /systems/add-defaults`.
+- **Age Adjustment** mode in the reset modal now supports `adjusted_age`. When "Age Adjustment" is selected, users enter a specific age value (e.g., 3.5 years). When "Full Replacement" is selected, age resets to 0 (brand new).
+- New Systems API methods: `GET /systems`, `PUT /systems/{id}/age`, `POST /systems/{id}/reset`, `POST /systems/{id}/undo-reset`, `POST /systems/add-manual`, `POST /systems/add-defaults`, `GET /systems/{id}/history`.
+- Updated `SystemResponse` type with new fields: `mfg_year`, `age_unknown`, and nullable `age_at_inspection`, `current_age`, `percentage_used`.
+- Updated `ReplacementEventResponse` type with `undone_at` field for tracking undone events.
 
 ### Changed
 - **Breaking: `UploadAndExtractResponse` type** now reflects the async 202 response shape (`upload_id`, `message`, `filename`, `doc_type`) instead of the old synchronous response (`property_id`, `extracted`, `document`).
