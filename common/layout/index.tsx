@@ -78,6 +78,8 @@ const Layout = ({ children }: LayoutProps) => {
                         <PageHeader
                             title={userName ? `Welcome Back, ${userName}!` : "Welcome Back!"}
                             showBack={false}
+                            actionLabel="Add New Property"
+                            actionHref="/manage-properties/add-properties"
                             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                             showProfileSection={true}
                         />
@@ -88,6 +90,8 @@ const Layout = ({ children }: LayoutProps) => {
                             title="Profile"
                             showBack={true}
                             onBack={() => router.back()}
+                            actionLabel="Add New Property"
+                            actionHref="/manage-properties/add-properties"
                             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
                     ) : pathname === "/manage-properties/add-properties" ? (

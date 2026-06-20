@@ -71,7 +71,7 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                 {/* Header */}
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-100">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#E8730A] to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-orange-100">
                             <Calendar className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -107,7 +107,7 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                             type="date"
                             value={replacementDate}
                             onChange={(e) => setReplacementDate(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                         />
                         <p className="text-[10px] text-gray-400 mt-1.5">Defaults to today. Change if the replacement happened on a different date.</p>
                     </div>
@@ -123,7 +123,7 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                                 onClick={() => setEventType('full_replacement')}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
                                     eventType === 'full_replacement'
-                                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                        ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                         : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                 }`}
                             >
@@ -135,7 +135,7 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                                 onClick={() => setEventType('age_adjustment')}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
                                     eventType === 'age_adjustment'
-                                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                        ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                         : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                 }`}
                             >
@@ -158,7 +158,7 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                                 placeholder="e.g. 3.5"
                                 min={0}
                                 step={0.1}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                             />
                             <p className="text-[10px] text-gray-400 mt-1.5">
                                 Set the new age for this system. Use 0 for brand new.
@@ -176,7 +176,7 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                             onChange={(e) => setNotes(e.target.value)}
                             placeholder="e.g. Replaced after leak..."
                             rows={3}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all resize-none"
                         />
                     </div>
                 </div>

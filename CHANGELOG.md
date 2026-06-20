@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-06-21]
+
+### Added
+- **Edit System** modal in the property detail panel. Edits a system's `system_type`, `name`, `brand`, and tankless flag (water heaters); only changed fields are sent, empty string clears name/brand. Calls `PUT /api/property/my-properties/{propertyId}/systems/{systemId}`.
+- **Delete System** confirmation modal. Destructive confirm dialog warning that the system, its replacement history, and pending alerts are removed (plus the same-day Twilio caveat). Calls `DELETE /api/property/my-properties/{propertyId}/systems/{systemId}`.
+- New Systems API methods `systemsAPI.editSystem()` and `systemsAPI.deleteSystem()`, with new types `EditSystemRequest`, `EditSystemResponse`, `DeleteSystemResponse`.
+- Per-system **Edit** (pencil) and **Delete** (trash) icon buttons next to "Reset System" in each system row, plus an **"Add System"** button in the System Age & Lifespan header (visible whenever the section renders, not just the empty state).
+
+### UI Changes
+- **App-wide orange theme.** Changed the `--primary` and `--ring` design tokens from navy `#00346C` to orange `#E8730A` (`app/globals.css`), recoloring all default buttons and focus rings. Swept remaining hardcoded navy/blue accents to the orange palette across the Add Property flow (`add-properties` page, bulk-upload, negotiated-wins-form) and the system modals (reset, set-age, add-manual, add-defaults, edit, history).
+- **Shared header (`PageHeader`) redesign.** Bold title, removed the placeholder notification bell on all pages, and an orange "Add New Property" pill driven by `actionLabel` (now shown on Dashboard, Profile, and Manage Properties). Mobile bar enlarged the logo and added a compact orange add button + larger hamburger.
+- **Sidebar bottom section** consolidated into a single profile card (avatar, name, role) with a dark-themed menu (Profile / Log Out) that opens on hover or click and aligns above the card; background tightened to `#1F1F1F` and active/accent colors to `#E8730A`.
+- **Manage Properties page redesign.** Clients list and detail panel are now separate rounded white cards on a gray background; search + status filter moved into the Clients panel (top toolbar removed); rows show full address + city/state and a "View / Hide Details" toggle; table-style columns when the detail panel is closed; redesigned pagination (orange active page, Previous/Next).
+- **Property detail panel** restyled to the new design: photo/initials header with icon action buttons, orange "Current Home Value" card, pill-based info grid (Viano Activated / Property Type / Inspection Date wired to the property endpoint), redesigned System Age & Lifespan rows, and a single continuous white card with Property Insights.
+- **Profile page** restyled to match the new design: rounded cards on gray, larger profile card with orange "Edit Profile" button (avatar pencil removed), Quick Stats with progress bars, and table-style Audit History. Existing billing and OTP verification flows retained.
+- **Dashboard restyle.** Top stat cards use neutral gray icon circles, dark values, gray-pill "View …" buttons with orange arrows, and a custom sparkle icon for Top Appreciating. Section headers (Needs Attention, Top Appreciating, Recent Property Alerts) updated with themed icons, `#6E6355` titles, and gray-pill "View All →" buttons.
+
 ## [Unreleased]
 
 ### Added

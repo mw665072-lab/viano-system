@@ -3,7 +3,7 @@ import { Home, Building2, User, LogOut, Shield, Lock, LayoutDashboard } from "lu
 import { useRouter, usePathname } from 'next/navigation';
 import { clearAuth, getStoredUserInfo } from '@/lib/api';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface SidebarProps {
   onClose?: () => void;
@@ -15,6 +15,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const [userName, setUserName] = useState('Chris Evans');
   const [userRole, setUserRole] = useState('Real Estate Agent');
   const [userInitials, setUserInitials] = useState('CE');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const userInfo = getStoredUserInfo();
@@ -35,10 +36,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
     { id: "contractors", label: "Contractors", icon: Lock, href: "/contractors", locked: true },
   ];
 
-  const bottomItems = [
-    { id: "profile", label: "Profile", icon: User, href: "/profile" },
-  ];
-
   const getActiveId = () => {
     if (pathname === '/dashboard' || pathname === '/') return 'dashboard';
     if (pathname.startsWith('/manage-properties') || pathname.startsWith('/add-properties')) return 'properties';
@@ -50,13 +47,29 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   const activeItem = getActiveId();
 
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelClose = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  };
+  const openMenu = () => {
+    cancelClose();
+    setMenuOpen(true);
+  };
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimer.current = setTimeout(() => setMenuOpen(false), 150);
+  };
+
   const handleLogout = () => {
     clearAuth();
     router.push('/login');
   };
 
   return (
-    <div className="w-[260px] h-screen bg-[#0a0a0a] flex flex-col text-white">
+    <div className="w-[260px] h-screen bg-[#1F1F1F] flex flex-col text-white">
       {/* Logo */}
       <div className="py-5 px-5 flex items-center gap-2">
         <Image
@@ -87,7 +100,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-white/10 text-orange-400"
+                    ? "bg-white/10 text-[#E8730A]"
                     : item.locked
                       ? "text-gray-500 cursor-not-allowed"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -112,7 +125,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         <div className="mt-8 space-y-3">
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
             <div className="flex items-center gap-2 mb-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8730A" strokeWidth="2">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
               </svg>
               <span className="text-sm font-semibold text-white">Core Plan</span>
@@ -126,7 +139,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
             <div className="flex items-center gap-2 mb-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F97316" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8730A" strokeWidth="2">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
               </svg>
               <span className="text-sm font-semibold text-white">Pro Plan</span>
@@ -140,53 +153,62 @@ export default function Sidebar({ onClose }: SidebarProps) {
         </div>
       </div>
 
-      {/* Bottom Section */}
+      {/* Bottom Section - Profile card (hover or click to reveal menu) */}
       <div className="px-3 pb-4">
-        {/* Profile Nav */}
-        <nav className="mb-2">
-          {bottomItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeItem === item.id;
-            return (
+        <div
+          className="relative"
+          onMouseEnter={openMenu}
+          onMouseLeave={scheduleClose}
+        >
+          {/* Account menu - above the card, full card width, dark themed */}
+          {menuOpen && (
+            <div
+              onMouseEnter={openMenu}
+              onMouseLeave={scheduleClose}
+              className="absolute bottom-full left-0 right-0 mb-2 z-50 rounded-xl bg-[#2A2A2A] border border-white/10 shadow-xl p-1.5"
+            >
               <button
-                key={item.id}
                 type="button"
                 onClick={() => {
-                  router.push(item.href);
+                  setMenuOpen(false);
+                  router.push('/profile');
                   onClose?.();
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-white/10 text-white"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-200 hover:bg-white/10 transition-colors"
               >
-                <Icon size={18} />
-                <span>{item.label}</span>
+                <User size={16} />
+                Profile
               </button>
-            );
-          })}
-        </nav>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  handleLogout();
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                <LogOut size={16} />
+                Log Out
+              </button>
+            </div>
+          )}
 
-        {/* Log Out */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#FF2D55] hover:bg-white/5 transition-colors"
-        >
-          <LogOut size={18} />
-          <span>Log Out</span>
-        </button>
-
-        {/* User Profile */}
-        <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-3 px-1">
-          <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-white">
-            {userInitials}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{userName}</p>
-            <p className="text-xs text-gray-500">{userRole}</p>
-          </div>
+          {/* Profile card - the trigger */}
+          <button
+            type="button"
+            aria-label="Account menu"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+            className={`w-full flex items-center gap-3 rounded-xl border border-white/10 p-3 text-left transition-colors ${menuOpen ? 'bg-white/10' : 'bg-white/5 hover:bg-white/10'}`}
+          >
+            <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-gray-300 flex-shrink-0">
+              <User size={18} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">{userName}</p>
+              <p className="text-xs text-gray-400 truncate">{userRole}</p>
+            </div>
+          </button>
         </div>
       </div>
     </div>
