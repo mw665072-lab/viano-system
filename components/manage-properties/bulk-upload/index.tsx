@@ -310,7 +310,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
     if (isCheckingQuota) {
         return (
             <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-[#00346C] mb-4" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#E8730A] mb-4" />
                 <p className="text-gray-500 text-sm">Checking upload quota...</p>
             </div>
         );
@@ -372,7 +372,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={selectedDrafts.size === unconfirmedDrafts.length ? deselectAllDrafts : selectAllDrafts}
-                                    className="text-sm text-[#00346C] hover:underline"
+                                    className="text-sm text-[#E8730A] hover:underline"
                                 >
                                     {selectedDrafts.size === unconfirmedDrafts.length ? 'Deselect All' : 'Select All'}
                                 </button>
@@ -396,7 +396,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                             onClick={handleBulkConfirm}
                                             disabled={isBulkConfirming}
                                             size="sm"
-                                            className="bg-[#00346C] hover:bg-[#002a56] text-white"
+                                            className="bg-[#E8730A] hover:bg-[#C45F08] text-white"
                                         >
                                             {isBulkConfirming ? (
                                                 <span className="flex items-center gap-2">
@@ -442,7 +442,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                             isConfirmed
                                                 ? 'bg-green-50 border-green-200'
                                                 : isExpanded
-                                                ? 'bg-white border-[#00346C] shadow-md'
+                                                ? 'bg-white border-[#E8730A] shadow-md'
                                                 : 'bg-white border-gray-200 hover:border-gray-300'
                                         }`}
                                     >
@@ -455,7 +455,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                                     className="flex-shrink-0"
                                                 >
                                                     {isSelected ? (
-                                                        <CheckSquare className="w-5 h-5 text-[#00346C]" />
+                                                        <CheckSquare className="w-5 h-5 text-[#E8730A]" />
                                                     ) : (
                                                         <Square className="w-5 h-5 text-gray-400" />
                                                     )}
@@ -511,7 +511,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                                     onClick={() => setExpandedDraft(isExpanded ? null : item.property_id!)}
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="text-[#00346C] hover:bg-blue-50 flex-shrink-0"
+                                                    className="text-[#E8730A] hover:bg-[#E8730A]/10 flex-shrink-0"
                                                 >
                                                     {isExpanded ? 'Collapse' : 'Review'}
                                                     <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
@@ -596,14 +596,14 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => document.getElementById(`second-doc-${item.property_id}`)?.click()}
-                                                                className="w-full h-[80px] rounded-lg border-2 border-dashed border-gray-300 hover:border-[#00346C] transition-colors flex flex-col items-center justify-center gap-1"
+                                                                className="w-full h-[80px] rounded-lg border-2 border-dashed border-gray-300 hover:border-[#E8730A] transition-colors flex flex-col items-center justify-center gap-1"
                                                             >
                                                                 <Upload className="w-5 h-5 text-gray-400" />
                                                                 <span className="text-xs text-gray-600">Upload 4-Point or Home Inspection</span>
                                                             </button>
                                                         ) : (
-                                                            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                                                <FileText className="w-5 h-5 text-blue-600" />
+                                                            <div className="flex items-center gap-2 p-3 bg-[#E8730A]/10 rounded-lg border border-[#E8730A]/30">
+                                                                <FileText className="w-5 h-5 text-[#E8730A]" />
                                                                 <span className="text-sm text-gray-700 flex-1 truncate">
                                                                     {formData.secondDocFile.name}
                                                                 </span>
@@ -621,7 +621,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                                     <Button
                                                         onClick={() => handleConfirmDraft(item)}
                                                         disabled={formData?.isConfirming}
-                                                        className="w-full bg-[#00346C] hover:bg-[#002a56] text-white"
+                                                        className="w-full bg-[#E8730A] hover:bg-[#C45F08] text-white"
                                                     >
                                                         {formData?.isConfirming ? (
                                                             <span className="flex items-center gap-2">
@@ -726,7 +726,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                     {confirmedDrafts.length > 0 && (
                         <Button
                             onClick={() => window.location.href = '/manage-properties'}
-                            className="flex-1 bg-[#00346C] hover:bg-[#002a56] text-white"
+                            className="flex-1 bg-[#E8730A] hover:bg-[#C45F08] text-white"
                         >
                             View Confirmed Properties
                         </Button>
@@ -780,10 +780,10 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading || !quota?.can_bulk_upload}
-                    className="w-full h-[180px] rounded-[16px] border-2 border-dashed border-[#00346C] bg-white hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-[180px] rounded-[16px] border-2 border-dashed border-[#E8730A] bg-white hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <Upload className="w-10 h-10 text-[#00346C]" />
-                    <span className="text-base font-medium text-[#00346C]">
+                    <Upload className="w-10 h-10 text-[#E8730A]" />
+                    <span className="text-base font-medium text-[#E8730A]">
                         Click to Upload Multiple PDFs
                     </span>
                     <span className="text-xs text-[#9CA3AF]">
@@ -832,7 +832,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                     value={item.docType}
                                     onChange={(e) => updateDocType(index, e.target.value as '4point' | 'home_inspection')}
                                     disabled={isUploading}
-                                    className="h-8 px-2 rounded-lg border border-gray-200 bg-white text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#00346C]"
+                                    className="h-8 px-2 rounded-lg border border-gray-200 bg-white text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#E8730A]"
                                 >
                                     <option value="home_inspection">Home Inspection</option>
                                     <option value="4point">4-Point</option>
@@ -866,7 +866,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                 onClick={handleUpload}
                 disabled={selectedFiles.length === 0 || isUploading || !quota?.can_bulk_upload || selectedFiles.length > quota?.remaining!}
                 className="w-full h-[48px] rounded-full text-white text-sm font-medium hover:opacity-90 transition-all duration-300"
-                style={{ background: '#00346C', fontFamily: 'Roboto', fontWeight: 500 }}
+                style={{ background: '#E8730A', fontFamily: 'Roboto', fontWeight: 500 }}
             >
                 {isUploading ? (
                     <span className="flex items-center gap-2">
