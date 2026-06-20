@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
-import { ArrowLeft, Pencil, ChevronRight, Loader2, CheckCircle, XCircle, Mail, Smartphone } from "lucide-react"
+import { ArrowLeft, ChevronRight, Loader2, CheckCircle, XCircle, Mail, Smartphone } from "lucide-react"
 import Image from "next/image"
 import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, UpdateUserRequest, getCurrentUserId } from "@/lib/api"
 import { CreditCard, ExternalLink, ShieldCheck, Zap } from "lucide-react"
@@ -675,15 +675,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Main Content Area with curved background */}
+    <div className="min-h-screen">
+      {/* Main Content Area */}
       <div className="relative">
-        {/* Background Container */}
-        <div
-          className="absolute top-0 left-0 right-0 bottom-0 bg-white rounded-t-[24px] md:rounded-tl-[32px] md:rounded-tr-none"
-          style={{ marginLeft: '0px' }}
-        />
-
         {/* Content */}
         <div className="relative z-10">
           {/* Header removed to avoid duplication with Layout header */}
@@ -694,7 +688,7 @@ export default function ProfilePage() {
               {/* Left Column */}
               <div className="flex-1 flex flex-col gap-6">
                 {/* Profile Info Container */}
-                <Card className="p-5 md:p-8">
+                <Card className="p-5 md:p-8 rounded-3xl">
                   <div className="flex flex-col sm:flex-row gap-6">
                     {/* Profile Image */}
                     <div className="relative flex-shrink-0 mx-auto sm:mx-0">
@@ -714,12 +708,6 @@ export default function ProfilePage() {
                           </div>
                         )}
                       </div>
-                      <button
-                        onClick={handleOpenEditModal}
-                        className="hidden sm:flex absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
-                      >
-                        <Pencil className="w-4 h-4 text-white" />
-                      </button>
                     </div>
 
                     {/* Info Section */}
@@ -728,7 +716,7 @@ export default function ProfilePage() {
                       <p className="text-gray-500 mt-1">{profile.role}</p>
 
                       {/* Contact Grid */}
-                      <div className="grid grid-cols-1 gap-4 mt-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-6">
                         <div>
                           <div className="flex items-center justify-between">
                             <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">EMAIL</p>
@@ -770,12 +758,22 @@ export default function ProfilePage() {
                           <p className="text-sm text-gray-900 mt-1">{profile.phone}</p>
                         </div>
                       </div>
+
+                      {/* Action button */}
+                      <div className="flex flex-wrap gap-3 mt-6 justify-center sm:justify-start">
+                        <Button
+                          onClick={handleOpenEditModal}
+                          className="rounded-xl h-11 px-6 font-semibold"
+                        >
+                          Edit Profile
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </Card>
 
                 {/* Audit History Container */}
-                <Card className="p-5 md:p-8">
+                <Card className="p-5 md:p-8 rounded-3xl">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-gray-900">Audit History</h2>
                     <button
@@ -794,24 +792,27 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {audits.map((audit, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl"
-                        >
-                          <div className="flex-shrink-0 w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                            <span className="text-lg font-bold text-gray-600">{audit.initial}</span>
-                          </div>
+                      {audits.map((audit, index) => {
+                        const isPending = ['pending', 'started', 'downloading', 'generating_messages', 'storing_messages', 'in_progress', 'processing', 'paused'].includes(audit.status?.toLowerCase())
+                        return (
+                          <div
+                            key={index}
+                            className={`flex items-center gap-4 p-4 rounded-2xl border ${isPending ? 'bg-amber-50/60 border-amber-100' : 'bg-white border-gray-100'}`}
+                          >
+                            <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                              <span className="text-lg font-bold text-gray-600">{audit.initial}</span>
+                            </div>
 
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-semibold text-gray-900">{audit.name}</h3>
-                            <p className="text-xs text-gray-500 mt-0.5">{audit.type}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">{audit.date}</p>
-                          </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-sm font-semibold text-gray-900">{audit.name}</h3>
+                              <p className="text-xs text-gray-500 mt-0.5">{audit.type}</p>
+                              <p className="text-xs text-gray-400 mt-0.5">{audit.date}</p>
+                            </div>
 
-                          <StatusBadge status={audit.status} className="text-xs capitalize rounded-md px-3 py-1" />
-                        </div>
-                      ))}
+                            <StatusBadge status={audit.status} className="text-xs capitalize rounded-full px-3 py-1" />
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </Card>
@@ -820,33 +821,40 @@ export default function ProfilePage() {
               {/* Right Column */}
               <div className="w-full lg:w-[326px] flex flex-col gap-6">
                 {/* Quick Stats Container */}
-                <Card className="p-6">
+                <Card className="p-6 rounded-3xl">
                   <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Stats</h2>
 
                   <div className="space-y-6">
-                    {stats.map((stat, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div>
+                    {stats.map((stat, index) => {
+                      const total = parseInt(stats[0]?.value || '0', 10) || 0;
+                      const val = parseInt(stat.value, 10) || 0;
+                      const pct = total > 0 ? Math.min(100, Math.round((val / total) * 100)) : 0;
+                      return (
+                        <div key={index}>
                           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{stat.label}</p>
-                          <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                          <div className="flex items-center justify-between gap-4 mt-1">
+                            <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                            {stat.indicator ? (
+                              <div className="flex-1 max-w-[140px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${stat.indicator} transition-all duration-500`}
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                            ) : stat.trend ? (
+                              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 ${stat.trendColor || 'text-green-600'}`}>
+                                {stat.trend} ↗
+                              </span>
+                            ) : null}
+                          </div>
                         </div>
-                        <div className="flex items-center">
-                          {stat.trend && (
-                            <span className={`text-sm font-medium ${stat.trendColor}`}>
-                              {stat.trend} <span className="inline-block transform rotate-45">↗</span>
-                            </span>
-                          )}
-                          {stat.indicator && (
-                            <div className={`w-3 h-3 rounded-full ${stat.indicator}`} />
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </Card>
 
                 {/* Subscription & Billing Container */}
-                <Card className="p-6">
+                <Card className="p-6 rounded-3xl">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-gray-900">Subscription</h2>
                     <CreditCard className="w-5 h-5 text-gray-400" />
@@ -982,7 +990,7 @@ export default function ProfilePage() {
                   value={editForm.first_name}
                   onChange={(e) => handleEditFormChange('first_name', e.target.value)}
                   placeholder="Enter first name"
-                  className="h-11 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  className="h-11 rounded-xl border-gray-200 focus:border-[#E8730A] focus:ring-[#E8730A]"
                 />
               </div>
 
@@ -993,7 +1001,7 @@ export default function ProfilePage() {
                   value={editForm.last_name}
                   onChange={(e) => handleEditFormChange('last_name', e.target.value)}
                   placeholder="Enter last name"
-                  className="h-11 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  className="h-11 rounded-xl border-gray-200 focus:border-[#E8730A] focus:ring-[#E8730A]"
                 />
               </div>
 
@@ -1004,7 +1012,7 @@ export default function ProfilePage() {
                   value={editForm.mobile_number}
                   onChange={(e) => handleEditFormChange('mobile_number', e.target.value)}
                   placeholder="Enter phone number"
-                  className="h-11 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  className="h-11 rounded-xl border-gray-200 focus:border-[#E8730A] focus:ring-[#E8730A]"
                 />
               </div>
             </div>
