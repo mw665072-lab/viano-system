@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from "react"
-import { ChevronRight, TrendingUp, Loader2 } from "lucide-react"
+import { ChevronRight, TrendingUp, ArrowRight, Loader2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { propertyAPI, PropertyOpportunityItem } from "@/lib/api"
@@ -36,11 +36,11 @@ export function TopEquityOpportunities() {
       {/* Header */}
       <div className="flex items-center justify-between pb-2 md:pb-3 mb-0 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-            <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-emerald-600" />
+          <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg border-[1.5px] border-[#E8730A] flex items-center justify-center flex-shrink-0">
+            <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-[#E8730A]" />
           </div>
           <h2
-            className="text-sm md:text-base font-bold uppercase tracking-wide text-[#0C1D38]"
+            className="text-sm md:text-base font-bold uppercase tracking-wide text-[#6E6355]"
             style={{ fontFamily: "Manrope, sans-serif" }}
           >
             Top Appreciating Properties
@@ -48,11 +48,11 @@ export function TopEquityOpportunities() {
         </div>
         <Link
           href="/top-appreciating-properties"
-          className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors flex items-center gap-1 whitespace-nowrap group/link"
+          className="inline-flex items-center gap-2 bg-[#F9F9F7] border border-[#F3F4F4] rounded-xl px-4 py-2 text-sm font-semibold text-[#1F1F1F] hover:bg-gray-100 transition-colors whitespace-nowrap"
           style={{ fontFamily: "Manrope, sans-serif" }}
         >
           View All
-          <ChevronRight className="w-4 h-4 text-orange-500 group-hover/link:text-orange-600 transition-colors" />
+          <ArrowRight className="w-4 h-4 text-[#1F1F1F]" />
         </Link>
       </div>
 
