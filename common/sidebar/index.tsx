@@ -73,7 +73,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
       {/* Logo */}
       <div className="py-5 px-5 flex items-center gap-2">
         <Image
-          src="/logo.svg"
+          src="/Logo.svg"
           alt="Viano Systems"
           width={28}
           height={23}
