@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from "react"
-import { ChevronRight, Bell, ThumbsUp, ThumbsDown, Check, Loader2, AlertTriangle } from "lucide-react"
+import { ChevronRight, Bell, ThumbsUp, ThumbsDown, Check, Loader2, AlertTriangle, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { propertyAPI, ScheduledAlert } from "@/lib/api"
@@ -97,11 +97,9 @@ export function RecentPropertyAlerts() {
       {/* Header */}
       <div className="flex items-center justify-between pb-3 md:pb-4 mb-0 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-            <Bell className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
-          </div>
+          <AlertTriangle className="w-5 h-5 md:w-6 md:h-6 text-[#6E6355] flex-shrink-0" />
           <h2
-            className="text-sm md:text-base font-bold uppercase tracking-wide text-[#0C1D38]"
+            className="text-sm md:text-base font-bold uppercase tracking-wide text-[#6E6355]"
             style={{ fontFamily: "Manrope, sans-serif" }}
           >
             Recent Property Alerts
@@ -109,11 +107,11 @@ export function RecentPropertyAlerts() {
         </div>
         <Link
           href="/recent-alerts"
-          className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors flex items-center gap-1 whitespace-nowrap group/link"
+          className="inline-flex items-center gap-2 bg-[#F9F9F7] border border-[#F3F4F4] rounded-xl px-4 py-2 text-sm font-semibold text-[#1F1F1F] hover:bg-gray-100 transition-colors whitespace-nowrap"
           style={{ fontFamily: "Manrope, sans-serif" }}
         >
-          View All Alerts
-          <ChevronRight className="w-4 h-4 text-orange-500 group-hover/link:text-orange-600 transition-colors" />
+          View All
+          <ArrowRight className="w-4 h-4 text-[#1F1F1F]" />
         </Link>
       </div>
 
