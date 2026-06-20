@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Pencil, Download, Trash2, Wrench, TrendingUp, Plus, Settings, Droplets, Wind, Home, ArrowLeft } from "lucide-react"
+import { Pencil, Download, Trash2, Wrench, TrendingUp, Plus, Settings, Droplets, Wind, Home, ArrowLeft, Calendar, Hammer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { processAPI, documentAPI, MessageResponse, systemsAPI, SystemResponse, propertyAPI, CMAResponse } from "@/lib/api"
 import { ResetModal } from "./reset-modal"
@@ -9,6 +9,8 @@ import { HistoryModal } from "./history-modal"
 import { SetAgeModal } from "./set-age-modal"
 import { AddManualSystemModal } from "./add-manual-system-modal"
 import { AddDefaultSystemsModal } from "./add-default-systems-modal"
+import { EditSystemModal } from "./edit-system-modal"
+import { DeleteSystemModal } from "./delete-system-modal"
 
 interface PropertyDetailData {
     id: string
@@ -52,17 +54,26 @@ function getInitials(name: string): string {
 
 function getSystemIcon(type: string) {
     const t = type.toLowerCase()
-    if (t.includes('water')) return <Droplets className="w-4 h-4 text-emerald-500" />
-    if (t.includes('hvac') || t.includes('air')) return <Wind className="w-4 h-4 text-blue-400" />
-    if (t.includes('roof')) return <Home className="w-4 h-4 text-purple-400" />
-    return <Wrench className="w-4 h-4 text-gray-400" />
+    if (t.includes('water')) return <Droplets className="w-5 h-5 text-gray-700" />
+    if (t.includes('hvac') || t.includes('air')) return <Wind className="w-5 h-5 text-gray-700" />
+    if (t.includes('roof')) return <Home className="w-5 h-5 text-gray-700" />
+    return <Wrench className="w-5 h-5 text-gray-700" />
+}
+
+/** Format system age for display, e.g. "7 mo / 8 Yrs" or "6 / 10 Yrs" */
+function formatAge(currentAge: number | null, lifespanMax: number | string | null): string {
+    let agePart: string
+    if (currentAge == null) agePart = '?'
+    else if (currentAge < 1) agePart = `${Math.max(1, Math.round(currentAge * 12))} mo`
+    else agePart = `${Math.round(currentAge)}`
+    return `${agePart} / ${lifespanMax ?? '?'} Yrs`
 }
 
 /** Get status label and color based on percentage used */
 function getSystemStatus(percentageUsed: number | null): { label: string; bgColor: string; textColor: string; borderColor: string } {
     const pct = percentageUsed ?? 0
     if (pct < 50) {
-        return { label: 'Good', bgColor: 'bg-emerald-50', textColor: 'text-emerald-600', borderColor: 'border-emerald-200' }
+        return { label: 'Good', bgColor: 'bg-[#34C759]/15', textColor: 'text-[#006C1B]', borderColor: 'border-transparent' }
     } else if (pct < 75) {
         return { label: 'Fair', bgColor: 'bg-amber-50', textColor: 'text-amber-600', borderColor: 'border-amber-200' }
     } else if (pct < 90) {
@@ -104,11 +115,15 @@ export function PropertyDetailPanel({
     const [showSetAgeModal, setShowSetAgeModal] = useState(false)
     const [showAddManualModal, setShowAddManualModal] = useState(false)
     const [showAddDefaultsModal, setShowAddDefaultsModal] = useState(false)
+    const [showEditModal, setShowEditModal] = useState(false)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [selectedSystem, setSelectedSystem] = useState<SystemResponse | null>(null)
 
     const [cmaData, setCmaData] = useState<CMAResponse | null>(null)
     const [isLoadingCMA, setIsLoadingCMA] = useState(false)
     const [cmaError, setCmaError] = useState<string | null>(null)
+
+    const [inspectionDate, setInspectionDate] = useState<string | null>(null)
 
     const getEffectivePriority = (m: MessageResponse): number => {
         const alertPriority = m.realtor_alert?.priority;
@@ -220,6 +235,25 @@ export function PropertyDetailPanel({
         fetchCMA()
     }, [property.id, property.isDraft])
 
+    useEffect(() => {
+        const fetchProperty = async () => {
+            if (!property.id) {
+                setInspectionDate(null)
+                return
+            }
+
+            try {
+                const data = await propertyAPI.getProperty(property.id)
+                setInspectionDate(data.inspection_date)
+            } catch (err) {
+                console.error('Error fetching property:', err)
+                setInspectionDate(null)
+            }
+        }
+
+        fetchProperty()
+    }, [property.id])
+
     const refreshSystems = async () => {
         if (property.id && !property.isDraft) {
             setIsLoadingSystems(true)
@@ -247,6 +281,32 @@ export function PropertyDetailPanel({
     const handleOpenSetAgeModal = (system: SystemResponse) => {
         setSelectedSystem(system)
         setShowSetAgeModal(true)
+    }
+
+    const handleOpenEditModal = (system: SystemResponse) => {
+        setSelectedSystem(system)
+        setShowEditModal(true)
+    }
+
+    const handleOpenDeleteModal = (system: SystemResponse) => {
+        setSelectedSystem(system)
+        setShowDeleteModal(true)
+    }
+
+    const handleEditSystemSuccess = () => {
+        setShowEditModal(false)
+        if (onShowToast) {
+            onShowToast('System updated successfully', 'success')
+        }
+        refreshSystems()
+    }
+
+    const handleDeleteSystemSuccess = (deletedAlertCount: number) => {
+        setShowDeleteModal(false)
+        if (onShowToast) {
+            onShowToast(`System deleted — ${deletedAlertCount} alert${deletedAlertCount !== 1 ? 's' : ''} removed`, 'success')
+        }
+        refreshSystems()
     }
 
     const handleResetSuccess = (alertCount: number) => {
@@ -304,116 +364,131 @@ export function PropertyDetailPanel({
     return (
         <div className="flex flex-col h-full relative overflow-hidden">
             {/* Main Content */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+            <div className="flex-1 overflow-y-auto">
                 {/* Main Property Card */}
-                <div className="bg-white rounded-2xl border border-gray-100 mb-4 overflow-hidden">
+                <div>
                     {/* Header Section */}
                     <div className="p-4 sm:p-6">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                {/* Back Button */}
-                                <button
-                                    onClick={onClose}
-                                    className="p-2 -ml-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
-                                >
-                                    <ArrowLeft className="w-5 h-5" />
-                                </button>
-                                {/* Avatar */}
-                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-100 flex items-center justify-center text-base sm:text-lg font-bold text-gray-500 flex-shrink-0">
-                                    {getInitials(property.client)}
+                        <div className="flex flex-col lg:flex-row lg:items-stretch lg:justify-between gap-5">
+                            {/* Left column: identity + actions */}
+                            <div className="flex flex-col gap-5 min-w-0">
+                                <div className="flex items-center gap-3 sm:gap-4">
+                                    {/* Back Button */}
+                                    <button
+                                        onClick={onClose}
+                                        aria-label="Back"
+                                        className="p-2 -ml-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors flex-shrink-0"
+                                    >
+                                        <ArrowLeft className="w-5 h-5" />
+                                    </button>
+                                    {/* Avatar */}
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gray-100 flex items-center justify-center text-lg sm:text-xl font-bold text-gray-500 flex-shrink-0">
+                                        {getInitials(property.client)}
+                                    </div>
+                                    {/* Name & Address */}
+                                    <div className="min-w-0">
+                                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{property.client}</h2>
+                                        <p className="text-sm sm:text-base text-gray-500 truncate">{property.address}</p>
+                                        <p className="text-sm sm:text-base text-gray-500 truncate">{property.location}</p>
+                                    </div>
                                 </div>
-                                {/* Name & Address */}
-                                <div className="min-w-0">
-                                    <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">{property.client}</h2>
-                                    <p className="text-xs sm:text-sm text-gray-500 truncate">{property.address}</p>
-                                    <p className="text-xs sm:text-sm text-gray-400 truncate">{property.location}</p>
+
+                                {/* Action Buttons */}
+                                <div className="flex flex-wrap items-center gap-3">
+                                    {property.isDraft ? (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={onContinueSetup}
+                                            className="flex items-center gap-2 rounded-xl border-amber-200 text-amber-700 hover:bg-amber-50 h-10 text-xs font-semibold px-4"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                            Continue Setup
+                                        </Button>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={onDownload}
+                                                aria-label="Download report"
+                                                title="Download report"
+                                                className="w-11 h-10 rounded-xl border border-gray-100 bg-white flex items-center justify-center text-gray-800 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <Download className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={onEdit}
+                                                aria-label="Edit"
+                                                title="Edit"
+                                                className="w-11 h-10 rounded-xl border border-gray-100 bg-white flex items-center justify-center text-gray-800 hover:bg-gray-50 transition-colors"
+                                            >
+                                                <Pencil className="w-5 h-5" />
+                                            </button>
+                                        </>
+                                    )}
+                                    <button
+                                        onClick={onDelete}
+                                        aria-label="Delete"
+                                        title="Delete"
+                                        className="w-11 h-10 rounded-xl border border-red-100 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
                                 </div>
                             </div>
+
                             {/* Home Value */}
-                            <div className="border border-gray-200 rounded-xl p-4 sm:p-5 pl-11 sm:pl-4 flex-1 sm:flex-none sm:min-w-[220px] self-stretch sm:self-auto flex flex-col justify-center">
+                            <div className="rounded-2xl border border-gray-100 bg-[#FCFCFC] p-5 w-full lg:w-[300px] lg:flex-shrink-0 flex flex-col justify-center">
                                 <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Current Home Value</p>
-                                        {isLoadingCMA ? (
-                                            <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mt-1" />
-                                        ) : cmaData ? (
-                                            <>
-                                                <p className="text-xl sm:text-2xl font-bold text-gray-900">{cmaData.formatted}</p>
-                                                <p className="text-xs text-gray-400">Estimated Range: ${cmaData.low.toLocaleString()} - ${cmaData.high.toLocaleString()}</p>
-                                            </>
-                                        ) : (
-                                            <p className="text-lg sm:text-xl font-bold text-gray-400">N/A</p>
-                                        )}
-                                    </div>
-                                    <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
-                                        <TrendingUp className="w-4 h-4 text-purple-500" />
+                                    <p className="text-sm sm:text-base text-gray-500">Current Home Value</p>
+                                    <div className="w-9 h-9 rounded-xl border-[1.5px] border-[#E8730A] flex items-center justify-center flex-shrink-0">
+                                        <TrendingUp className="w-4 h-4 text-[#E8730A]" />
                                     </div>
                                 </div>
+                                {isLoadingCMA ? (
+                                    <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mt-2" />
+                                ) : cmaData ? (
+                                    <>
+                                        <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{cmaData.formatted}</p>
+                                        <p className="text-xs sm:text-sm text-gray-400 mt-1">Estimated Range: ${cmaData.low.toLocaleString()} - ${cmaData.high.toLocaleString()}</p>
+                                    </>
+                                ) : (
+                                    <p className="text-xl sm:text-2xl font-bold text-gray-400 mt-1">N/A</p>
+                                )}
                             </div>
                         </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="px-4 sm:px-6 pb-4 flex flex-wrap gap-2">
-                        {property.isDraft ? (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={onContinueSetup}
-                                className="flex items-center gap-2 rounded-lg border-amber-200 text-amber-700 hover:bg-amber-50 h-9 text-xs font-semibold px-4"
-                            >
-                                <Pencil className="w-4 h-4" />
-                                Continue Setup
-                            </Button>
-                        ) : (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={onEdit}
-                                    className="flex items-center gap-2 rounded-lg border-gray-200 text-gray-700 hover:bg-gray-50 h-9 text-xs font-semibold px-4"
-                                >
-                                    <Pencil className="w-4 h-4" />
-                                    Edit
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={onDownload}
-                                    className="flex items-center gap-2 rounded-lg border-gray-200 text-gray-700 hover:bg-gray-50 h-9 text-xs font-semibold px-4 whitespace-nowrap"
-                                >
-                                    <Download className="w-4 h-4" />
-                                    Download Report
-                                </Button>
-                            </>
-                        )}
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={onDelete}
-                            className="flex items-center gap-2 rounded-lg border-red-100 text-red-600 hover:bg-red-50 h-9 text-xs font-semibold px-4"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                            Delete
-                        </Button>
                     </div>
 
                     {/* Divider */}
                     <div className="border-t border-gray-100" />
 
                     {/* Property Info Grid */}
-                    <div className="grid grid-cols-3 gap-4 px-4 sm:px-6 py-4">
-                        <div>
-                            <p className="text-xs text-gray-500 mb-1">Viano Activated</p>
-                            <p className="text-sm font-semibold text-gray-900">{property.createdAt || 'N/A'}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-0 px-4 sm:px-6 py-4">
+                        <div className="flex flex-col gap-3 sm:pr-6">
+                            <div className="flex items-center gap-2">
+                                <Calendar className="w-5 h-5 text-gray-900 flex-shrink-0" />
+                                <p className="text-sm sm:text-base text-gray-900">Viano Activated on</p>
+                            </div>
+                            <span className="rounded-full bg-[#E8730A]/15 border border-[#E8730A]/30 text-[#895000] text-sm sm:text-base font-medium text-center px-4 py-2.5">
+                                {property.createdAt || 'N/A'}
+                            </span>
                         </div>
-                        <div className="border-l border-gray-100 pl-4">
-                            <p className="text-xs text-gray-500 mb-1">Property Type</p>
-                            <p className="text-sm font-semibold text-gray-900">Single Family</p>
+                        <div className="flex flex-col gap-3 sm:border-l sm:border-gray-100 sm:px-6">
+                            <div className="flex items-center gap-2">
+                                <Home className="w-5 h-5 text-gray-900 flex-shrink-0" />
+                                <p className="text-sm sm:text-base text-gray-900">Property Type</p>
+                            </div>
+                            <span className="rounded-full bg-[#666666] text-white text-sm sm:text-base font-medium text-center px-4 py-2.5">
+                                Single Family
+                            </span>
                         </div>
-                        <div className="border-l border-gray-100 pl-4">
-                            <p className="text-xs text-gray-500 mb-1">Year Built</p>
-                            <p className="text-sm font-semibold text-gray-900">2001</p>
+                        <div className="flex flex-col gap-3 sm:border-l sm:border-gray-100 sm:pl-6">
+                            <div className="flex items-center gap-2">
+                                <Hammer className="w-5 h-5 text-gray-900 flex-shrink-0" />
+                                <p className="text-sm sm:text-base text-gray-900">Inspection Date</p>
+                            </div>
+                            <span className="rounded-full bg-white border border-gray-200 text-gray-900 text-sm sm:text-base font-medium text-center px-4 py-2.5">
+                                {inspectionDate ? new Date(inspectionDate).toLocaleDateString() : 'N/A'}
+                            </span>
                         </div>
                     </div>
 
@@ -424,9 +499,18 @@ export function PropertyDetailPanel({
                             <div className="border-t border-gray-100" />
 
                             <div className="px-4 sm:px-6 py-4">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">System Age & Lifespan</h3>
-                                    <span className="text-xs text-gray-400">{systems.length} Systems</span>
+                                <div className="flex items-center justify-between gap-2 mb-4">
+                                    <h3 className="text-sm sm:text-base font-semibold text-gray-500 uppercase tracking-wide">System Age & Lifespan</h3>
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                        <button
+                                            onClick={() => setShowAddManualModal(true)}
+                                            className="flex items-center gap-1.5 text-sm font-medium text-[#E8730A] border border-[#E8730A]/30 hover:bg-[#E8730A]/5 rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                            Add System
+                                        </button>
+                                        <span className="text-sm text-gray-500 border border-gray-100 rounded-lg px-3 py-1.5 whitespace-nowrap">{systems.length} Systems Total</span>
+                                    </div>
                                 </div>
 
                                 {isLoadingSystems ? (
@@ -439,7 +523,7 @@ export function PropertyDetailPanel({
                                         <div className="flex gap-2 justify-center">
                                             <button
                                                 onClick={() => setShowAddDefaultsModal(true)}
-                                                className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200"
+                                                className="flex items-center gap-1.5 text-xs font-medium text-[#E8730A] hover:text-orange-700 px-3 py-1.5 rounded-lg border border-[#E8730A]/30 hover:bg-[#E8730A]/5"
                                             >
                                                 <Settings className="w-3.5 h-3.5" />
                                                 Add Defaults
@@ -466,46 +550,46 @@ export function PropertyDetailPanel({
                                     return (
                                         <div
                                             key={system.system_id}
-                                            className="bg-white rounded-xl px-4 py-3"
+                                            className="bg-white px-2 py-4"
                                         >
                                             {/* Desktop: single row */}
-                                            <div className="hidden sm:flex items-center gap-3">
+                                            <div className="hidden sm:flex items-center gap-4">
                                                 {/* Icon */}
-                                                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0">
+                                                <div className="w-12 h-12 rounded-xl bg-[#F9F8F7] border border-[#D9D9D9] flex items-center justify-center flex-shrink-0">
                                                     {getSystemIcon(system.system_type)}
                                                 </div>
 
-                                                {/* System Name */}
-                                                <div className="flex-shrink-0 w-32">
-                                                    <h4 className="text-sm font-semibold text-gray-900 truncate">
+                                                {/* System Name + Brand */}
+                                                <div className="flex-shrink-0 w-40">
+                                                    <h4 className="text-base font-semibold text-[#3C4653] truncate">
                                                         {formatSystemType(system.system_type)}
                                                     </h4>
                                                     {system.brand && (
-                                                        <p className="text-xs text-gray-500 truncate">{system.brand}</p>
+                                                        <span className="inline-block mt-1 max-w-full truncate text-xs text-gray-600 bg-white border border-gray-200 rounded-md px-2 py-0.5">{system.brand}</span>
                                                     )}
                                                 </div>
 
                                                 {/* Dynamic Status Badge */}
-                                                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${status.bgColor} ${status.textColor} border ${status.borderColor} flex-shrink-0`}>
+                                                <span className={`text-xs font-medium px-3 py-1.5 rounded-lg ${status.bgColor} ${status.textColor} flex-shrink-0`}>
                                                     {status.label}
                                                 </span>
 
                                                 {/* Progress / Age Unknown */}
-                                                <div className="flex-1 flex items-center gap-3 min-w-0">
+                                                <div className="flex-1 min-w-0">
                                                     {!isAgeUnknown ? (
-                                                        <>
-                                                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <span className="text-sm text-gray-600 text-right whitespace-nowrap">
+                                                                {formatAge(system.current_age, system.lifespan_max)}
+                                                            </span>
+                                                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                                                 <div
                                                                     className={`h-full ${barColor} rounded-full transition-all duration-500`}
                                                                     style={{ width: `${progressPercent}%` }}
                                                                 />
                                                             </div>
-                                                            <span className="text-xs text-gray-500 whitespace-nowrap">
-                                                                {system.current_age != null ? system.current_age.toFixed(1) : '?'} yrs / {system.lifespan_max} yrs
-                                                            </span>
-                                                        </>
+                                                        </div>
                                                     ) : (
-                                                        <span className="text-xs text-amber-600">
+                                                        <span className="text-sm text-amber-600">
                                                             Age unknown — <button onClick={() => handleOpenSetAgeModal(system)} className="underline">Set Age</button>
                                                         </span>
                                                     )}
@@ -516,76 +600,108 @@ export function PropertyDetailPanel({
                                                     {system.replacement_history && system.replacement_history.length > 0 && (
                                                         <button
                                                             onClick={() => handleOpenHistoryModal(system)}
-                                                            className="text-xs font-medium text-blue-600 hover:text-blue-700 whitespace-nowrap px-3 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+                                                            className="text-sm font-medium text-gray-700 hover:text-gray-900 whitespace-nowrap px-4 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
                                                         >
                                                             History
                                                         </button>
                                                     )}
                                                     <button
                                                         onClick={() => handleOpenResetModal(system)}
-                                                        className="text-xs font-medium text-gray-600 hover:text-gray-900 whitespace-nowrap px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                                                        className="text-sm font-medium text-[#1F1F1F] whitespace-nowrap px-4 py-2.5 rounded-lg bg-[#F3F4F4] hover:bg-gray-200 transition-colors"
                                                     >
                                                         Reset System
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleOpenEditModal(system)}
+                                                        aria-label="Edit system"
+                                                        title="Edit system"
+                                                        className="p-2.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                                                    >
+                                                        <Pencil className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleOpenDeleteModal(system)}
+                                                        aria-label="Delete system"
+                                                        title="Delete system"
+                                                        className="p-2.5 rounded-lg border border-red-100 text-red-600 hover:bg-red-50 transition-colors"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             </div>
 
                                             {/* Mobile: stacked rows */}
-                                            <div className="flex sm:hidden flex-col gap-2">
-                                                {/* Row 1: Icon, Name, Badge */}
+                                            <div className="flex sm:hidden flex-col gap-3">
+                                                {/* Row 1: Icon, Name+Brand, Badge */}
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-12 h-12 rounded-xl bg-[#F9F8F7] border border-[#D9D9D9] flex items-center justify-center flex-shrink-0">
                                                         {getSystemIcon(system.system_type)}
                                                     </div>
-                                                    <div className="flex-shrink-0 w-28">
-                                                        <h4 className="text-sm font-semibold text-gray-900 truncate">
+                                                    <div className="min-w-0 flex-1">
+                                                        <h4 className="text-base font-semibold text-[#3C4653] truncate">
                                                             {formatSystemType(system.system_type)}
                                                         </h4>
                                                         {system.brand && (
-                                                            <p className="text-xs text-gray-500 truncate">{system.brand}</p>
+                                                            <span className="inline-block mt-1 max-w-full truncate text-xs text-gray-600 bg-white border border-gray-200 rounded-md px-2 py-0.5">{system.brand}</span>
                                                         )}
                                                     </div>
-                                                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${status.bgColor} ${status.textColor} border ${status.borderColor} flex-shrink-0`}>
+                                                    <span className={`text-xs font-medium px-3 py-1.5 rounded-lg ${status.bgColor} ${status.textColor} flex-shrink-0`}>
                                                         {status.label}
                                                     </span>
                                                 </div>
 
                                                 {/* Row 2: Progress / Age Unknown */}
-                                                <div className="flex items-center gap-3 pl-11">
+                                                <div>
                                                     {!isAgeUnknown ? (
-                                                        <>
-                                                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <span className="text-sm text-gray-600 text-right whitespace-nowrap">
+                                                                {formatAge(system.current_age, system.lifespan_max)}
+                                                            </span>
+                                                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                                                 <div
                                                                     className={`h-full ${barColor} rounded-full transition-all duration-500`}
                                                                     style={{ width: `${progressPercent}%` }}
                                                                 />
                                                             </div>
-                                                            <span className="text-xs text-gray-500 whitespace-nowrap">
-                                                                {system.current_age != null ? system.current_age.toFixed(1) : '?'} yrs / {system.lifespan_max} yrs
-                                                            </span>
-                                                        </>
+                                                        </div>
                                                     ) : (
-                                                        <span className="text-xs text-amber-600">
+                                                        <span className="text-sm text-amber-600">
                                                             Age unknown — <button onClick={() => handleOpenSetAgeModal(system)} className="underline">Set Age</button>
                                                         </span>
                                                     )}
                                                 </div>
 
                                                 {/* Row 3: Action Buttons */}
-                                                <div className="flex items-center gap-2 pl-11">
+                                                <div className="flex items-center gap-2">
                                                     {system.replacement_history && system.replacement_history.length > 0 && (
                                                         <button
                                                             onClick={() => handleOpenHistoryModal(system)}
-                                                            className="text-xs font-medium text-blue-600 hover:text-blue-700 whitespace-nowrap px-3 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 transition-colors"
+                                                            className="flex-1 text-center text-sm font-medium text-gray-700 hover:text-gray-900 whitespace-nowrap px-3 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
                                                         >
                                                             History
                                                         </button>
                                                     )}
                                                     <button
                                                         onClick={() => handleOpenResetModal(system)}
-                                                        className="text-xs font-medium text-gray-600 hover:text-gray-900 whitespace-nowrap px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                                                        className="flex-1 text-center text-sm font-medium text-[#1F1F1F] whitespace-nowrap px-3 py-2.5 rounded-lg bg-[#F3F4F4] hover:bg-gray-200 transition-colors"
                                                     >
                                                         Reset System
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleOpenEditModal(system)}
+                                                        aria-label="Edit system"
+                                                        title="Edit system"
+                                                        className="p-2.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors flex-shrink-0"
+                                                    >
+                                                        <Pencil className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleOpenDeleteModal(system)}
+                                                        aria-label="Delete system"
+                                                        title="Delete system"
+                                                        className="p-2.5 rounded-lg border border-red-100 text-red-600 hover:bg-red-50 transition-colors flex-shrink-0"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -597,30 +713,30 @@ export function PropertyDetailPanel({
                     </div>
                 </>
             )}
-        </div>
 
-        {/* Property Insights */}
-                <div className="mb-6 bg-white rounded-2xl border border-gray-100 p-5">
-                    <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-4">Property Insights</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
-                            <p className="text-2xl font-bold text-purple-600">{isLoadingMessages ? "..." : messageCount}</p>
-                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">Total<br/>Touchpoints</p>
-                        </div>
-                        <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
-                            <p className="text-2xl font-bold text-orange-500">{tierBreakdown.high}</p>
-                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">High Priority<br/>Issues</p>
-                        </div>
-                        <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
-                            <p className="text-2xl font-bold text-amber-500">{tierBreakdown.medium}</p>
-                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">Medium Priority<br/>Issues</p>
-                        </div>
-                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                            <p className="text-2xl font-bold text-blue-500">{tierBreakdown.low}</p>
-                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">Low Priority<br/>Issues</p>
+                    {/* Property Insights */}
+                    <div className="px-4 sm:px-6 py-4">
+                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Property Insights</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="rounded-xl border border-gray-100 bg-white p-5">
+                                <p className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide mb-2">Total Touch Points</p>
+                                <p className="text-3xl sm:text-4xl font-bold text-gray-900">{isLoadingMessages ? "..." : messageCount}</p>
+                            </div>
+                            <div className="rounded-xl border border-gray-100 bg-white p-5">
+                                <p className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide mb-2">High Priority Issues</p>
+                                <p className="text-3xl sm:text-4xl font-bold text-[#BB0000]">{tierBreakdown.high}</p>
+                            </div>
+                            <div className="rounded-xl border border-gray-100 bg-white p-5">
+                                <p className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide mb-2">Medium Priority Issues</p>
+                                <p className="text-3xl sm:text-4xl font-bold text-[#A38601]">{tierBreakdown.medium}</p>
+                            </div>
+                            <div className="rounded-xl border border-gray-100 bg-white p-5">
+                                <p className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide mb-2">Low Priority Issues</p>
+                                <p className="text-3xl sm:text-4xl font-bold text-gray-700">{tierBreakdown.low}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+        </div>
             </div>
 
             {/* Modals */}
@@ -664,6 +780,24 @@ export function PropertyDetailPanel({
                     system={selectedSystem}
                     onClose={() => setShowHistoryModal(false)}
                     onUndoSuccess={handleUndoSuccess}
+                />
+            )}
+
+            {showEditModal && selectedSystem && property.id && (
+                <EditSystemModal
+                    propertyId={property.id}
+                    system={selectedSystem}
+                    onClose={() => setShowEditModal(false)}
+                    onSuccess={handleEditSystemSuccess}
+                />
+            )}
+
+            {showDeleteModal && selectedSystem && property.id && (
+                <DeleteSystemModal
+                    propertyId={property.id}
+                    system={selectedSystem}
+                    onClose={() => setShowDeleteModal(false)}
+                    onSuccess={handleDeleteSystemSuccess}
                 />
             )}
         </div>
