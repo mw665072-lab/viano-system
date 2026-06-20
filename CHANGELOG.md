@@ -7,6 +7,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Dashboard stat cards now display real API data** instead of dummy values.
+  - **Active Properties**: Integrates `GET /api/property/bulk-upload/quota` to show `current_count` and `max_allowed` with a green progress bar showing plan usage percentage.
+  - **Upcoming Touchpoints**: Integrates `GET /api/property/upcoming-touchpoints?days=180` to display the real `count` from the API.
+  - **Top Appreciating Properties**: Integrates `GET /api/property/opportunities` to display `total_opportunities` from the appreciation API.
+- **Property Opportunities API integration** (`lib/api.ts`):
+  - New types: `PropertyOpportunityItem`, `PropertyOpportunitiesResponse`.
+  - New method: `propertyAPI.getOpportunities()` → `GET /api/property/opportunities`.
+  - Returns appreciated properties only (current price > last sale price), sorted by highest gain first, with formatted gain like `+$142K`.
+- **Upcoming Touchpoints API integration** (`lib/api.ts`):
+  - New types: `UpcomingTouchpointItem`, `UpcomingTouchpointsResponse`.
+  - New method: `propertyAPI.getUpcomingTouchpoints(days)` → `GET /api/property/upcoming-touchpoints?days={days}`.
+- **Dedicated full-width list pages** for each dashboard section with pagination (15 items per page):
+  - `/requiring-action` — Full list of properties requiring attention with dismiss functionality.
+  - `/top-appreciating-properties` — Full list of appreciating properties with ranked badges.
+  - `/recent-alerts` — Full list of scheduled property alerts with feedback buttons.
+  - Each page uses a clean full-width layout: single title with gray count badge, no outer card wrapper, edge-to-edge rows with light dividers.
+- **Dashboard section "View All" links** now route to the new dedicated pages instead of `/manage-properties`.
 - **Async upload-and-extract (Phase 1 API)**: Single PDF upload now handles the `202 Accepted` response with background polling for the draft property.
   - `propertyAPI.uploadAndExtract()` accepts `202` status and throws `BillingError` on `402`.
   - New `propertyAPI.pollForNewDraft(maxAttempts, intervalMs)` helper polls `/my-properties` until the newest draft appears.
@@ -48,6 +65,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Updated `ReplacementEventResponse` type with `undone_at` field for tracking undone events.
 
 ### Changed
+- **Dashboard UI refinements** across all list sections for visual consistency:
+  - Section headers now use `pb-3 md:pb-4 mb-0 border-b border-gray-100` with reduced height.
+  - Row padding standardized to `py-[10px]` with 52x52px property images and `border-b` dividers.
+  - Max 5 rows for dashboard list sections (Requiring Action, Equity Opportunities); max 3 rows for Recent Alerts.
+  - Removed row navigation links and chevron arrows from list items (except "View All" header links).
+  - Added dismiss button (X) to Properties Requiring Attention rows, wired to `POST /api/property/systems/{systemId}/dismiss`.
+  - Renamed "Top Equity Opportunities" → "Top Appreciating Properties" in both section header and stat card title.
+  - Stat cards redesigned: larger icon circles, colored values, stacked title/value/subtitle layout, progress bar for Active Properties.
+  - Compact empty state for Requiring Action: smaller icon, shorter subtitle text.
+- **Recent Property Alerts section** fully integrated with `GET /api/property/scheduled-alerts`:
+  - Maps API fields: `property_address`, `client_name`, `alert_type`, `trigger`, `priority`, `scheduled_for`, `status`.
+  - Priority mapping: `1=High`, `2=Medium`, `3=Low` with colored badges.
+  - Status `scheduled_twilio` displayed as "Sent".
+  - Added feedback buttons (Yes/No) per alert with local state tracking.
+- **Top Appreciating Properties section** now fetches real data via `propertyAPI.getOpportunities()`:
+  - Displays `formatted_gain` from API instead of calculated dummy values.
+  - Shows `location` and `last_sale_date` from API response.
 - **Breaking: `UploadAndExtractResponse` type** now reflects the async 202 response shape (`upload_id`, `message`, `filename`, `doc_type`) instead of the old synchronous response (`property_id`, `extracted`, `document`).
 - `BulkUploadResponse` type: added optional `failed_s3_upload: BulkUploadFailedItem[]` field.
 - PDF review step now uses `draftProperty` (fetched from `/my-properties/{id}`), `uploadFilename`, and `pdfDocType` state instead of the old `extractedData` object.

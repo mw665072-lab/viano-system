@@ -182,10 +182,10 @@ export function PageHeader({
             {/* Mobile header with logo and menu */}
             <div className="flex lg:hidden items-center justify-between px-4 py-3 border-b border-gray-100">
                 <Image
-                    src="/Logo Web.svg"
+                    src="/logo-dark.svg"
                     alt="Viano Systems"
-                    width={100}
-                    height={32}
+                    width={155}
+                    height={52}
                     priority
                     className="h-8 w-auto"
                 />

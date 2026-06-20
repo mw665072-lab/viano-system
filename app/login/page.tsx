@@ -93,10 +93,10 @@ export default function LoginPage() {
             {/* Logo inside card */}
             <div className="mb-8 flex justify-center">
               <Image
-                src="/Logo Web.svg"
+                src="/logo-dark.svg"
                 alt="Viano Systems"
-                width={140}
-                height={46}
+                width={155}
+                height={52}
                 style={{ height: "auto" }}
                 priority
               />

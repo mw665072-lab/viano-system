@@ -59,12 +59,14 @@ export default function Sidebar({ onClose }: SidebarProps) {
     <div className="w-[260px] h-screen bg-[#0a0a0a] flex flex-col text-white">
       {/* Logo */}
       <div className="py-5 px-5 flex items-center gap-2">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M14 2L2 8L14 14L26 8L14 2Z" fill="#F97316" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M2 20L14 26L26 20" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M2 14L14 20L26 14" stroke="#F97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <span className="text-xl font-bold">viano</span>
+        <Image
+          src="/logo.svg"
+          alt="Viano Systems"
+          width={28}
+          height={23}
+          priority
+          className="h-[50px] w-auto"
+        />
       </div>
 
       {/* Main Nav */}
