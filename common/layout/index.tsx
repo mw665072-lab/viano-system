@@ -4,7 +4,7 @@ import { type ReactNode, useState, useEffect } from "react";
 import Navbar from "../navbar";
 import Sidebar from "../sidebar";
 import { PageHeader } from "../header";
-import { getStoredUserInfo } from "@/lib/api";
+import { getStoredUserInfo, isAuthenticated } from "@/lib/api";
 
 
 interface LayoutProps {
@@ -14,24 +14,36 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [userName, setUserName] = useState<string | null>(null);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const pathname = usePathname();
     const router = useRouter();
+
+    // Auth and landing pages should bypass the sidebar/navbar layout
+    const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/" || pathname === "/landing-page";
+
+    useEffect(() => {
+        if (!isAuthPage && !isAuthenticated()) {
+            router.replace("/login");
+        } else {
+            setIsCheckingAuth(false);
+        }
+    }, [pathname, isAuthPage, router]);
 
     // Get user name for welcome message
     useEffect(() => {
         const userInfo = getStoredUserInfo();
         if (userInfo.name) {
-            // Extract first name from full name
             const firstName = userInfo.name.split(' ')[0];
             setUserName(firstName);
         }
     }, []);
 
-    // Auth and landing pages should bypass the sidebar/navbar layout
-    const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/" || pathname === "/landing-page";
-
     if (isAuthPage) {
         return <>{children}</>;
+    }
+
+    if (isCheckingAuth) {
+        return null;
     }
 
     const handleAddProperty = () => {
