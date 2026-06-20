@@ -633,6 +633,25 @@ export const systemsAPI = {
             method: 'POST',
             body: JSON.stringify(data),
         }),
+
+    /**
+     * Edit a system's descriptive fields (partial update).
+     * Only send the fields you want to change. Use "" for name/brand to clear them.
+     * The response is a summary — refetch getSystems() for the full row.
+     */
+    editSystem: (propertyId: string, systemId: string, data: EditSystemRequest) =>
+        apiRequest<EditSystemResponse>(`/api/property/my-properties/${propertyId}/systems/${systemId}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    /**
+     * Delete a system (cascades to replacement history and pending alerts).
+     */
+    deleteSystem: (propertyId: string, systemId: string) =>
+        apiRequest<DeleteSystemResponse>(`/api/property/my-properties/${propertyId}/systems/${systemId}`, {
+            method: 'DELETE',
+        }),
 };
 
 // ============ BILLING APIs ============
@@ -1163,6 +1182,41 @@ export interface AddDefaultSystemsResponse {
     created: Array<{ system_type: string; name?: string; system_id: string }>;
     skipped: Array<{ system_type: string; reason: string }>;
     message: string;
+}
+
+export interface EditSystemRequest {
+    system_type?: string;
+    /** Send "" to clear; omit/null to leave unchanged. */
+    name?: string | null;
+    /** Send "" to clear; omit/null to leave unchanged. */
+    brand?: string | null;
+    /** Water-heater tankless flag. Toggling changes lifespan (8 → 20 yrs). */
+    is_tankless?: boolean;
+}
+
+export interface EditSystemResponse {
+    success: boolean;
+    system_id: string;
+    system_type: string;
+    name: string | null;
+    brand: string | null;
+    is_tankless: boolean;
+    lifespan_min: number;
+    lifespan_max: number;
+    alert_tier: string | null;
+    percentage_used: number | null;
+    /** Informational: alert touchpoints regenerated; null if no completed schedule yet. */
+    new_alert_count: number | null;
+    process_id: string | null;
+}
+
+export interface DeleteSystemResponse {
+    success: boolean;
+    system_id: string;
+    system_type: string;
+    deleted_alert_count: number;
+    /** Alerts already handed to Twilio — may still send (same-day window). */
+    superseded_alert_count: number;
 }
 
 // Requiring Action Types

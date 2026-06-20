@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Plus, Menu, Upload, Bell } from "lucide-react"
+import { ArrowLeft, Plus, Menu } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { getStoredUserInfo, authAPI } from "@/lib/api"
@@ -125,33 +125,6 @@ export function PageHeader({
         </Link>
     ) : null
 
-    const actionButton = actionLabel && (
-        <>
-            {actionHref ? (
-                <Link href={actionHref} className="group">
-                    <Button
-                        variant={actionVariant}
-                        className="gap-2 h-10 rounded-lg px-5 border-0 text-white font-medium text-sm hover:opacity-90 transition-all"
-                        style={{ background: '#00346C' }}
-                    >
-                        <span className="transition-transform group-hover:rotate-90 duration-300">{actionIcon}</span>
-                        {actionLabel}
-                    </Button>
-                </Link>
-            ) : (
-                <Button
-                    onClick={onAction}
-                    variant={actionVariant}
-                    className="gap-2 h-10 rounded-lg px-5 border-0 text-white font-medium text-sm hover:opacity-90 transition-all"
-                    style={{ background: '#00346C' }}
-                >
-                    {actionIcon}
-                    {actionLabel}
-                </Button>
-            )}
-        </>
-    )
-
     // Profile section that appears on the right
     const profileSection = (
         <div className="flex items-center gap-3">
@@ -187,48 +160,77 @@ export function PageHeader({
                     width={155}
                     height={52}
                     priority
-                    className="h-8 w-auto"
+                    className="h-11 w-auto"
                 />
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onToggleSidebar}
-                    className="h-9 w-9"
-                >
-                    <Menu className="h-5 w-5" />
-                </Button>
+                <div className="flex items-center gap-2.5">
+                    {/* Primary action */}
+                    {actionLabel && (
+                        actionHref ? (
+                            <Link
+                                href={actionHref}
+                                onClick={onAction}
+                                aria-label={actionLabel}
+                                className="inline-flex items-center justify-center gap-2 h-11 w-11 sm:w-auto sm:px-4 rounded-xl bg-[#E8730A] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+                            >
+                                <Plus className="w-5 h-5" />
+                                <span className="hidden sm:inline">{actionLabel}</span>
+                            </Link>
+                        ) : (
+                            <button
+                                onClick={onAction}
+                                aria-label={actionLabel}
+                                className="inline-flex items-center justify-center gap-2 h-11 w-11 sm:w-auto sm:px-4 rounded-xl bg-[#E8730A] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+                            >
+                                <Plus className="w-5 h-5" />
+                                <span className="hidden sm:inline">{actionLabel}</span>
+                            </button>
+                        )
+                    )}
+                    <button
+                        onClick={onToggleSidebar}
+                        aria-label="Open menu"
+                        className="h-11 w-11 flex items-center justify-center rounded-xl text-gray-900 hover:bg-gray-100 transition-colors"
+                    >
+                        <Menu className="h-6 w-6" />
+                    </button>
+                </div>
             </div>
 
             {/* Main header content - hidden on mobile for manage-properties */}
-            <header className={`hidden lg:flex items-center justify-between px-6 py-4   ${className}`}>
+            <header className={`hidden lg:flex items-center justify-between px-6 py-5 ${className}`}>
                 <div className="flex items-center gap-4">
                     {showBack && (backHref ? backLink : backButton)}
                     {/* Title */}
-                    <h1 className="text-xl font-bold text-[#1a1a2e]">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-[#1a1a2e]">
                         {title}
                     </h1>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {/* Upload Property button */}
-                    <button
-                        onClick={() => router.push('/manage-properties/add-properties')}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                        <Upload className="w-4 h-4" />
-                        Upload Property
-                    </button>
+                    {/* Primary action */}
+                    {actionLabel && (
+                        actionHref ? (
+                            <Link
+                                href={actionHref}
+                                onClick={onAction}
+                                className="group inline-flex items-center gap-2 h-10 rounded-xl px-5 border border-[#D9D9D9] bg-[#E8730A] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+                            >
+                                <span className="transition-transform group-hover:rotate-90 duration-300">{actionIcon}</span>
+                                {actionLabel}
+                            </Link>
+                        ) : (
+                            <button
+                                onClick={onAction}
+                                className="group inline-flex items-center gap-2 h-10 rounded-xl px-5 border border-[#D9D9D9] bg-[#E8730A] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+                            >
+                                <span className="transition-transform group-hover:rotate-90 duration-300">{actionIcon}</span>
+                                {actionLabel}
+                            </button>
+                        )
+                    )}
 
-                    {/* Notification bell */}
-                    <button className="relative p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
-                        <Bell className="w-4 h-4" />
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">12</span>
-                    </button>
-
-                    {/* User avatar */}
-                    <div className="w-9 h-9 rounded-full bg-[#00346C] text-white text-xs font-bold flex items-center justify-center">
-                        {userData.initials}
-                    </div>
+                    {/* Optional profile section */}
+                    {showProfileSection && profileSection}
                 </div>
             </header>
         </div>

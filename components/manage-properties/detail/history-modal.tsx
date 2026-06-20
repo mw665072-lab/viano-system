@@ -99,7 +99,7 @@ export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: His
                 <div className="p-6">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-12">
-                            <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-3" />
+                            <Loader2 className="w-8 h-8 animate-spin text-[#E8730A] mb-3" />
                             <p className="text-sm text-gray-500">Loading history...</p>
                         </div>
                     ) : error ? (
@@ -127,15 +127,15 @@ export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: His
                                     )}
 
                                     {/* Timeline dot */}
-                                    <div className="absolute left-0 top-1 w-6 h-6 bg-blue-100 border-2 border-blue-300 rounded-full flex items-center justify-center">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                                    <div className="absolute left-0 top-1 w-6 h-6 bg-[#E8730A]/15 border-2 border-[#E8730A]/40 rounded-full flex items-center justify-center">
+                                        <div className="w-2 h-2 bg-[#E8730A] rounded-full" />
                                     </div>
 
                                     {/* Event card */}
                                     <div className={`bg-gray-50 rounded-xl border border-gray-100 p-4 ${event.undone_at ? 'opacity-50' : ''}`}>
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-2">
-                                                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${event.undone_at ? 'bg-gray-200 text-gray-500' : 'bg-blue-100 text-blue-700'}`}>
+                                                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${event.undone_at ? 'bg-gray-200 text-gray-500' : 'bg-[#E8730A]/15 text-[#E8730A]'}`}>
                                                     {event.undone_at ? 'Undone' : formatEventType(event.event_type)}
                                                 </span>
                                                 {event.undone_at && (
@@ -171,7 +171,7 @@ export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: His
                                                 <button
                                                     onClick={() => handleUndo(event.event_id)}
                                                     disabled={undoingEventId === event.event_id}
-                                                    className="flex items-center gap-1.5 text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors px-2 py-1 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="flex items-center gap-1.5 text-[10px] font-bold text-[#E8730A] hover:text-orange-700 transition-colors px-2 py-1 rounded-lg hover:bg-[#E8730A]/10 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     {undoingEventId === event.event_id ? (
                                                         <>

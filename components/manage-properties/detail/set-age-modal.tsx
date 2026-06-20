@@ -105,7 +105,7 @@ export function SetAgeModal({ propertyId, system, onClose, onSuccess }: SetAgeMo
                                 onClick={() => setMode('mfg_year')}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
                                     mode === 'mfg_year'
-                                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                        ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                         : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                 }`}
                             >
@@ -117,7 +117,7 @@ export function SetAgeModal({ propertyId, system, onClose, onSuccess }: SetAgeMo
                                 onClick={() => setMode('age')}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
                                     mode === 'age'
-                                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                        ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                         : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                 }`}
                             >
@@ -140,7 +140,7 @@ export function SetAgeModal({ propertyId, system, onClose, onSuccess }: SetAgeMo
                                 placeholder="e.g. 2018"
                                 min={1900}
                                 max={new Date().getFullYear()}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                             />
                             <p className="text-[10px] text-gray-400 mt-1.5">
                                 The system age will be calculated from this year.
@@ -161,7 +161,7 @@ export function SetAgeModal({ propertyId, system, onClose, onSuccess }: SetAgeMo
                                 placeholder="e.g. 8.5"
                                 min={0}
                                 step={0.1}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                             />
                             <p className="text-[10px] text-gray-400 mt-1.5">
                                 Enter the current age in years. Decimals are allowed.

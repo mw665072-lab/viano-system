@@ -138,7 +138,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                 {/* Header */}
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-100">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#E8730A] to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-orange-100">
                             <Home className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -181,7 +181,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     onClick={() => setWhAgeMode('mfg_year')}
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         whAgeMode === 'mfg_year'
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                            ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                             : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                     }`}
                                 >
@@ -192,7 +192,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     onClick={() => setWhAgeMode('age')}
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         whAgeMode === 'age'
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                            ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                             : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                     }`}
                                 >
@@ -203,7 +203,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     onClick={() => setWhAgeMode('none')}
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         whAgeMode === 'none'
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                            ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                             : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                     }`}
                                 >
@@ -219,7 +219,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     placeholder="MFG Year e.g. 2020"
                                     min={1900}
                                     max={new Date().getFullYear()}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                 />
                             )}
                             {whAgeMode === 'age' && (
@@ -230,7 +230,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     placeholder="Age in years e.g. 5"
                                     min={0}
                                     step={0.1}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                 />
                             )}
 
@@ -239,7 +239,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                 value={whBrand}
                                 onChange={(e) => setWhBrand(e.target.value)}
                                 placeholder="Brand (optional) e.g. Rheem"
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                             />
                         </div>
                     </div>
@@ -272,7 +272,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                         value={unit.name}
                                         onChange={(e) => updateHvacUnit(unit.id, 'name', e.target.value)}
                                         placeholder="Name e.g. Unit 1"
-                                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                     />
                                     <div className="flex gap-2">
                                         <input
@@ -282,21 +282,21 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                             placeholder="MFG Year"
                                             min={1900}
                                             max={new Date().getFullYear()}
-                                            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                         />
                                         <input
                                             type="text"
                                             value={unit.brand}
                                             onChange={(e) => updateHvacUnit(unit.id, 'brand', e.target.value)}
                                             placeholder="Brand"
-                                            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                         />
                                     </div>
                                 </div>
                             ))}
                             <button
                                 onClick={addHvacUnit}
-                                className="flex items-center gap-2 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                                className="flex items-center gap-2 text-xs font-semibold text-[#E8730A] hover:text-orange-700 transition-colors"
                             >
                                 <Plus className="w-4 h-4" />
                                 Add Another HVAC Unit
@@ -317,7 +317,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                             <select
                                 value={roofType}
                                 onChange={(e) => setRoofType(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none"
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all appearance-none"
                             >
                                 {ROOF_TYPES.map((type) => (
                                     <option key={type.value} value={type.value}>
@@ -332,7 +332,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     onClick={() => setRoofAgeMode('mfg_year')}
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         roofAgeMode === 'mfg_year'
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                            ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                             : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                     }`}
                                 >
@@ -343,7 +343,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     onClick={() => setRoofAgeMode('age')}
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         roofAgeMode === 'age'
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                            ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                             : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                     }`}
                                 >
@@ -354,7 +354,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     onClick={() => setRoofAgeMode('none')}
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         roofAgeMode === 'none'
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                            ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                             : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                     }`}
                                 >
@@ -370,7 +370,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     placeholder="MFG Year e.g. 2015"
                                     min={1900}
                                     max={new Date().getFullYear()}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                 />
                             )}
                             {roofAgeMode === 'age' && (
@@ -381,7 +381,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     placeholder="Age in years e.g. 10"
                                     min={0}
                                     step={0.1}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                 />
                             )}
                         </div>

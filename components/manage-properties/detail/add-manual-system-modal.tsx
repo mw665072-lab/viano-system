@@ -97,7 +97,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                 {/* Header */}
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md shadow-emerald-100">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#E8730A] to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-orange-100">
                             <Plus className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -132,7 +132,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                         <select
                             value={systemType}
                             onChange={(e) => setSystemType(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all appearance-none"
                         >
                             <option value="">Select a system type...</option>
                             {VALID_SYSTEM_TYPES.map((type) => (
@@ -153,7 +153,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g. Unit 2"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                         />
                     </div>
 
@@ -167,7 +167,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                             value={brand}
                             onChange={(e) => setBrand(e.target.value)}
                             placeholder="e.g. Trane"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                         />
                     </div>
 
@@ -182,7 +182,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                                 onClick={() => setAgeMode('mfg_year')}
                                 className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                     ageMode === 'mfg_year'
-                                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                        ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                         : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                 }`}
                             >
@@ -193,7 +193,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                                 onClick={() => setAgeMode('age')}
                                 className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                     ageMode === 'age'
-                                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                        ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                         : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                 }`}
                             >
@@ -204,7 +204,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                                 onClick={() => setAgeMode('none')}
                                 className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                     ageMode === 'none'
-                                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                        ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
                                         : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                 }`}
                             >
@@ -226,7 +226,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                                 placeholder="e.g. 2020"
                                 min={1900}
                                 max={new Date().getFullYear()}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                             />
                         </div>
                     )}
@@ -244,7 +244,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                                 placeholder="e.g. 5.5"
                                 min={0}
                                 step={0.1}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                             />
                         </div>
                     )}
