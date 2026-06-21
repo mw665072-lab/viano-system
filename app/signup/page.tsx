@@ -5,7 +5,7 @@ import { Eye, EyeOff, ArrowRight, Loader2, CheckCircle, XCircle, ArrowLeft, Mail
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { authAPI, isAuthenticated, saveAuth, LoginResponse } from "@/lib/api";
+import { authAPI, isAuthenticated, saveAuth, LoginResponse, SMS_CONSENT_TEXT, setPendingSmsConsent, flushPendingSmsConsent } from "@/lib/api";
 import { OTPInput } from "@/components/ui/otp-input";
 
 // Password requirement validation
@@ -52,6 +52,9 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+
+  // SMS alert consent (TCPA) — affirmative opt-in only, so it always starts unchecked.
+  const [smsConsent, setSmsConsent] = useState(false);
 
   // UI state
   const [isLoading, setIsLoading] = useState(false);
@@ -309,6 +312,12 @@ export default function SignupPage() {
       if (response.success) {
         setSuccess(true);
 
+        // Persist the SMS opt-in so it survives the signup→login boundary. /sms-consent needs
+        // a JWT; signup may not return one, in which case this is flushed on the next login.
+        if (smsConsent) {
+          setPendingSmsConsent(email.trim());
+        }
+
         if (response.access_token) {
           const authData: LoginResponse = {
             success: true,
@@ -320,10 +329,15 @@ export default function SignupPage() {
           };
           saveAuth(authData);
 
+          // We hold a token now, so record consent immediately. Best-effort — never blocks the
+          // redirect (signup isn't gated on consent), and on failure the flag retries on login.
+          await flushPendingSmsConsent(email.trim());
+
           setTimeout(() => {
             router.push("/dashboard");
           }, 2000);
         } else {
+          // No token from signup → consent will be sent automatically on the user's first login.
           setTimeout(() => {
             router.push("/login");
           }, 2000);
@@ -694,6 +708,20 @@ export default function SignupPage() {
                     {showConfirmPassword ? <EyeOff size={18} className="pointer-events-none" /> : <Eye size={18} className="pointer-events-none" />}
                   </button>
                 </div>
+
+                {/* SMS alert consent (TCPA) — optional, starts unchecked. Not a condition of signup. */}
+                <label className="flex items-start gap-3 pt-1 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={smsConsent}
+                    onChange={(e) => setSmsConsent(e.target.checked)}
+                    disabled={isLoading || success}
+                    className="mt-0.5 h-4 w-4 flex-shrink-0 cursor-pointer rounded border-white/20 bg-white/5 accent-[#E8730A] focus:ring-2 focus:ring-[#E8730A]/30 disabled:cursor-not-allowed"
+                  />
+                  <span className="text-xs leading-relaxed text-gray-400">
+                    {SMS_CONSENT_TEXT}
+                  </span>
+                </label>
 
                 <div className="flex gap-3 pt-2">
                   <button

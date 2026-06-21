@@ -7,8 +7,8 @@ import { StatusBadge } from "@/components/ui/status-badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft, ChevronRight, Loader2, CheckCircle, XCircle, Mail, Smartphone } from "lucide-react"
 import Image from "next/image"
-import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, UpdateUserRequest, getCurrentUserId } from "@/lib/api"
-import { CreditCard, ExternalLink, ShieldCheck, Zap } from "lucide-react"
+import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, UpdateUserRequest, getCurrentUserId, SMS_CONSENT_TEXT } from "@/lib/api"
+import { CreditCard, ExternalLink, ShieldCheck, Zap, MessageSquare } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { OTPInput } from "@/components/ui/otp-input"
 
@@ -20,6 +20,7 @@ interface ProfileData {
   avatar: string;
   emailVerified: boolean;
   phoneVerified: boolean;
+  smsConsent: boolean;
 }
 
 interface AuditItem {
@@ -53,7 +54,12 @@ export default function ProfilePage() {
     avatar: "",
     emailVerified: false,
     phoneVerified: false,
+    smsConsent: false,
   });
+
+  // SMS-consent toggle state (separate from the profile read so save errors don't clobber the page)
+  const [smsConsentSaving, setSmsConsentSaving] = useState(false);
+  const [smsConsentError, setSmsConsentError] = useState<string | null>(null);
 
   const [audits, setAudits] = useState<AuditItem[]>([]);
 
@@ -145,6 +151,7 @@ export default function ProfilePage() {
           avatar: '',
           emailVerified: userData.email_verified || false,
           phoneVerified: userData.phone_verified || false,
+          smsConsent: userData.sms_consent || false,
         });
 
         // Pre-fill edit form
@@ -359,6 +366,33 @@ export default function ProfilePage() {
     }
   };
 
+  const handleToggleSmsConsent = async () => {
+    if (smsConsentSaving) return;
+
+    const next = !profile.smsConsent;
+    setSmsConsentSaving(true);
+    setSmsConsentError(null);
+    // Optimistic flip so the switch feels responsive.
+    setProfile(prev => ({ ...prev, smsConsent: next }));
+
+    try {
+      // On opt-in, send the exact disclosure for the audit trail; on opt-out, send null
+      // so the backend keeps the previously stored text.
+      const result = await authAPI.setSmsConsent({
+        consent: next,
+        consent_text: next ? SMS_CONSENT_TEXT : null,
+      });
+      // Reflect the backend's authoritative value rather than trusting local state.
+      setProfile(prev => ({ ...prev, smsConsent: result.sms_consent }));
+    } catch (err) {
+      // Roll back the optimistic flip on failure.
+      setProfile(prev => ({ ...prev, smsConsent: !next }));
+      setSmsConsentError(err instanceof Error ? err.message : 'Failed to update SMS consent');
+    } finally {
+      setSmsConsentSaving(false);
+    }
+  };
+
   const handleOpenEditModal = () => {
     setSaveError(null);
     setIsEditModalOpen(true);
@@ -492,6 +526,9 @@ export default function ProfilePage() {
   const handleConfirmPhoneUpdate = async () => {
     if (phoneUpdateOtpModal.otp.length !== 6) return;
 
+    // Capture whether the agent had already opted in before the number changes.
+    const hadConsent = profile.smsConsent;
+
     setPhoneUpdateOtpModal(prev => ({ ...prev, isVerifying: true, error: null }));
 
     try {
@@ -511,6 +548,18 @@ export default function ProfilePage() {
       // Update localStorage name
       if (typeof window !== 'undefined') {
         localStorage.setItem('userName', `${result.user.first_name || ''} ${result.user.last_name || ''}`.trim());
+      }
+
+      // If the agent had already consented, re-affirm consent for the new number. An
+      // affirmative re-consent also clears any prior Twilio STOP, so alerts resume on the
+      // new number. We never auto-opt-in here — only carry an existing opt-in forward.
+      if (hadConsent) {
+        try {
+          const consentRes = await authAPI.setSmsConsent({ consent: true, consent_text: SMS_CONSENT_TEXT });
+          setProfile(prev => ({ ...prev, smsConsent: consentRes.sms_consent }));
+        } catch (consentErr) {
+          console.error('Failed to re-affirm SMS consent after phone update:', consentErr);
+        }
       }
 
       closePhoneUpdateOtpModal();
@@ -851,6 +900,61 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   </div>
+                </Card>
+
+                {/* SMS Alerts (TCPA consent) Container */}
+                <Card className="p-5 md:p-8 rounded-3xl">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <MessageSquare className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Text Alerts</h2>
+                        <p className="text-sm mt-0.5 font-medium">
+                          {profile.smsConsent ? (
+                            <span className="text-green-600 dark:text-green-400">
+                              On — you&apos;ll receive automated property alerts by text.
+                            </span>
+                          ) : (
+                            <span className="text-gray-500 dark:text-gray-400">
+                              Off — turn on to receive automated property alerts by text.
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Toggle */}
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={profile.smsConsent}
+                      aria-label="Receive automated property-alert text messages"
+                      onClick={handleToggleSmsConsent}
+                      disabled={smsConsentSaving}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#E8730A]/40 disabled:opacity-60 disabled:cursor-not-allowed ${
+                        profile.smsConsent ? 'bg-primary' : 'bg-gray-300 dark:bg-white/15'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                          profile.smsConsent ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {smsConsentError && (
+                    <div className="mt-4 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl text-sm text-red-700 dark:text-red-400 flex items-center gap-2">
+                      <XCircle size={16} className="flex-shrink-0" />
+                      {smsConsentError}
+                    </div>
+                  )}
+
+                  <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                    {SMS_CONSENT_TEXT}
+                  </p>
                 </Card>
 
                 {/* Audit History Container */}

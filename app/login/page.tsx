@@ -5,7 +5,7 @@ import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { authAPI, saveAuth, isAuthenticated } from "@/lib/api";
+import { authAPI, saveAuth, isAuthenticated, flushPendingSmsConsent } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -61,6 +61,10 @@ export default function LoginPage() {
       if (response.success) {
         // Save auth data to localStorage
         saveAuth(response);
+
+        // If the user opted into SMS alerts at signup but had no token then, send it now.
+        // Best-effort and email-matched; never blocks the redirect on failure.
+        await flushPendingSmsConsent(response.email);
 
         // Redirect to dashboard/manage properties
         router.push("/dashboard");
