@@ -36,6 +36,8 @@ interface Property {
     zipCode?: string
     negotiatedWins?: string
     isDraft?: boolean
+    isTransferred?: boolean // Registration handed to another agent
+    transferredAt?: string | null
 }
 
 interface PropertyDetail {
@@ -59,6 +61,8 @@ interface PropertyDetail {
     state?: string
     zipCode?: string
     isDraft?: boolean
+    isTransferred?: boolean
+    transferredAt?: string | null
 }
 
 // Status configuration with colors and messages
@@ -206,6 +210,8 @@ const Page = () => {
                     zipCode: prop.zip_code ?? undefined,
                     negotiatedWins: prop.negotiated_wins ?? undefined,
                     isDraft: isDraft,
+                    isTransferred: prop.status === 'transferred',
+                    transferredAt: prop.transferred_at ?? null,
                 };
             });
 
@@ -658,6 +664,8 @@ const Page = () => {
         state: selectedProperty.state,
         zipCode: selectedProperty.zipCode,
         isDraft: selectedProperty.isDraft,
+        isTransferred: selectedProperty.isTransferred,
+        transferredAt: selectedProperty.transferredAt,
     } : null;
 
     const handlePageChange = (page: number) => {

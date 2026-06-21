@@ -39,6 +39,63 @@ const processQueue = (error: Error | null, token: string | null = null) => {
     failedQueue = [];
 };
 
+/**
+ * Error thrown by apiRequest for any non-OK response.
+ * Extends Error (so existing `instanceof Error` / `.message` handling keeps working)
+ * while also carrying the HTTP `status` and the parsed `detail` payload, so callers
+ * can react to structured responses such as the 409 property-conflict body.
+ */
+export class ApiError extends Error {
+    status: number;
+    detail: unknown;
+    constructor(message: string, status: number, detail: unknown) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+        this.detail = detail;
+    }
+}
+
+/**
+ * Pull a human-readable message out of a parsed error body without ever producing
+ * "[object Object]". Handles FastAPI's string `detail`, validation-error arrays of
+ * `{ msg }`, and object `detail` payloads (e.g. the conflict body, which carries the
+ * prompt under `message`/`prompt`).
+ */
+function extractApiErrorMessage(body: unknown): string | undefined {
+    if (body == null) return undefined;
+    if (typeof body === 'string') return body;
+    if (typeof body !== 'object') return String(body);
+
+    const obj = body as Record<string, unknown>;
+    const detail = obj.detail;
+
+    if (typeof detail === 'string') return detail;
+
+    if (Array.isArray(detail)) {
+        // FastAPI validation errors: [{ msg, loc, type }, ...]
+        const msgs = detail
+            .map(d => (d && typeof d === 'object' && typeof (d as Record<string, unknown>).msg === 'string')
+                ? String((d as Record<string, unknown>).msg)
+                : null)
+            .filter((m): m is string => Boolean(m));
+        if (msgs.length) return msgs.join(', ');
+    }
+
+    if (detail && typeof detail === 'object') {
+        const d = detail as Record<string, unknown>;
+        for (const key of ['message', 'prompt', 'detail', 'error']) {
+            if (typeof d[key] === 'string') return d[key] as string;
+        }
+    }
+
+    for (const key of ['message', 'error']) {
+        if (typeof obj[key] === 'string') return obj[key] as string;
+    }
+
+    return undefined;
+}
+
 // Generic fetch wrapper with error handling
 async function apiRequest<T>(
     endpoint: string,
@@ -148,14 +205,18 @@ async function apiRequest<T>(
     }
 
     if (!response.ok) {
-        let errorDetail = 'An error occurred';
+        let body: unknown = null;
         try {
-            const error = await response.json();
-            errorDetail = error.detail || error.message || errorDetail;
-        } catch (e) {
-            errorDetail = `HTTP Error: ${response.status}`;
+            body = await response.json();
+        } catch {
+            // Non-JSON (or empty) error body
         }
-        throw new Error(errorDetail);
+        const message = extractApiErrorMessage(body) ?? `HTTP Error: ${response.status}`;
+        // Preserve the structured payload so callers can read e.g. the 409 conflict fields.
+        const detail = (body && typeof body === 'object' && 'detail' in (body as Record<string, unknown>))
+            ? (body as Record<string, unknown>).detail
+            : body;
+        throw new ApiError(message, response.status, detail);
     }
 
     return response.json();
@@ -982,6 +1043,10 @@ export interface PropertyResponse {
     user_id: string;
     is_draft?: boolean;
     created_at?: string;
+    /** Lifecycle of the registration. "transferred" means another agent took it over. */
+    status?: 'active' | 'transferred';
+    /** ISO datetime of the handoff, or null while active. */
+    transferred_at?: string | null;
 }
 
 // PDF-First Flow Types
@@ -1016,6 +1081,36 @@ export interface ConfirmPropertyRequest {
     zip_code?: string;
     inspection_date?: string;
     negotiated_wins?: string | null;
+    /**
+     * Set true to override an existing agent's active plan for the same address.
+     * Only succeeds when this inspection date is strictly newer than the existing one;
+     * otherwise the backend re-rejects with 409.
+     */
+    confirm_conflict?: boolean;
+}
+
+/**
+ * Shape of the `detail` payload returned by POST /confirm with a 409 status when the
+ * address is already registered to another agent's active plan.
+ * (FastAPI nests this under `detail`.)
+ */
+export interface PropertyConflict {
+    conflict?: boolean;
+    requires_confirmation?: boolean;
+    /** true → safe to show the takeover confirmation; false → inspection isn't newer. */
+    can_override?: boolean;
+    /** Verbatim wording to show the agent. */
+    message?: string;
+    existing_inspection_date?: string | null;
+    new_inspection_date?: string | null;
+}
+
+/** A previous-agent plan that was terminated by a successful takeover. */
+export interface TerminatedProperty {
+    property_id: string;
+    terminated_pending_messages?: number;
+    /** Messages already handed to Twilio that cannot be recalled and may still send. */
+    scheduled_twilio_count?: number;
 }
 
 export interface ConfirmPropertyResponse {
@@ -1023,6 +1118,11 @@ export interface ConfirmPropertyResponse {
     process_id: string;
     status: string;
     property_id: string;
+    /** Present and true only when a takeover (confirm_conflict: true) succeeded. */
+    ownership_transferred?: boolean;
+    terminated_properties?: TerminatedProperty[];
+    /** Non-recallable Twilio messages from the previous plan; surface to the agent if present. */
+    warning?: string;
 }
 
 // Document Types
