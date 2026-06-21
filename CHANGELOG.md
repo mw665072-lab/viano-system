@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-06-21] — TCPA SMS Consent
+
+### Added
+- **SMS alert consent capture.** Agents now give express opt-in consent to receive automated property-alert text messages, captured in the UI before any SMS is dispatched (the backend sends nothing until `sms_consent = true`). Opt-in only — STOP/opt-out is handled by Twilio and the backend, not the frontend.
+- **Consent API** (`lib/api.ts`): `authAPI.setSmsConsent()` → `POST /api/auth/user/me/sms-consent`; new `SmsConsentRequest`/`SmsConsentResponse` types; `sms_consent` added to `UserResponse` (read from `GET /api/auth/user/me`); and a single shared verbatim `SMS_CONSENT_TEXT` constant used as both the on-screen copy and the stored `consent_text` audit string.
+- **Signup consent checkbox** (`app/signup/page.tsx`). An unchecked (TCPA affirmative opt-in) checkbox with the verbatim disclosure on the final step. Signup is not gated on it.
+- **Settings/profile "Text Alerts" toggle** (`app/profile/page.tsx`). A toggle bound to `sms_consent` from `/user/me`, with optimistic update, rollback on error, and on/off status copy; flipping it calls `setSmsConsent({ consent })`.
+- **Phone-change re-affirm** (`app/profile/page.tsx`). After a successful OTP-verified phone update, an *existing* opt-in is re-affirmed for the new number (`consent: true`), which clears any prior Twilio STOP so alerts resume. A user who never consented is never auto-opted-in.
+
+### Fixed
+- **Signup opt-in no longer lost when signup returns no access token.** The consent POST previously sat inside the `if (response.access_token)` branch, so when signup returned no token (the user logs in afterward) the checked box was dropped silently. The opt-in is now persisted (email-tagged) via new `setPendingSmsConsent`/`clearPendingSmsConsent`/`flushPendingSmsConsent` helpers in `lib/api.ts` and flushed to the consent endpoint on the user's next successful login (`app/login/page.tsx`), as well as immediately when a token is available.
+
+### Notes
+- Consent copy is shown verbatim and stored for the audit trail; confirm final wording (including any carrier-required "Msg & data rates" / "Reply STOP HELP" language) with legal/compliance before launch.
+- `GET /user/me` exposes `sms_consent` only (not `sms_opted_out_at`), so the UI cannot yet distinguish "never consented" from "consented then texted STOP"; no STOP-based banner is shown pending a backend field.
+
 ## [2026-06-21] — Agent-to-Agent Property Conflict & Transfer
 
 ### Added

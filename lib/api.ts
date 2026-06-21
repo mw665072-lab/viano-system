@@ -331,6 +331,18 @@ export const authAPI = {
             method: 'POST',
             body: JSON.stringify(data),
         }),
+
+    /**
+     * Record or revoke the agent's TCPA consent to receive automated SMS alerts (Bearer auth).
+     * Until consent is `true`, the backend dispatches no property-alert texts to this agent.
+     * Always pass `consent_text` (use SMS_CONSENT_TEXT) on an affirmative opt-in so the exact
+     * disclosure the user saw is stored for the audit trail.
+     */
+    setSmsConsent: (data: SmsConsentRequest) =>
+        apiRequest<SmsConsentResponse>('/api/auth/user/me/sms-consent', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
 };
 
 // ============ PROPERTY APIs ============
@@ -958,6 +970,8 @@ export interface UserResponse {
     stripe_customer_id?: string | null;
     email_verified?: boolean;
     phone_verified?: boolean;
+    /** Whether the agent has given express consent to receive automated property-alert SMS. */
+    sms_consent?: boolean;
 }
 
 export interface UpdateUserRequest {
@@ -1015,6 +1029,23 @@ export interface UpdatePhoneResponse {
     success: boolean;
     message: string;
     user: UserResponse;
+}
+
+// TCPA SMS Consent Types
+export interface SmsConsentRequest {
+    /** TCPA express opt-in (true) or revocation (false). */
+    consent: boolean;
+    /**
+     * The exact disclosure text shown to the user, stored for the audit trail.
+     * Pass `null`/omit to keep any previously stored text (the backend won't overwrite it).
+     */
+    consent_text?: string | null;
+}
+
+export interface SmsConsentResponse {
+    success: boolean;
+    message: string;
+    sms_consent: boolean;
 }
 
 // Property Types
@@ -1489,6 +1520,55 @@ export interface HTTPValidationError {
 }
 
 // ============ HELPER FUNCTIONS ============
+
+/**
+ * Verbatim TCPA disclosure shown next to every SMS-consent control and sent as
+ * `consent_text` on opt-in. Keep this the single source of truth so the copy the user
+ * sees and the copy stored for the audit trail can never drift apart.
+ * (Confirm final wording with legal/compliance before launch.)
+ */
+export const SMS_CONSENT_TEXT =
+    "I agree to receive automated property-alert text messages from Viano at the " +
+    "number provided. Consent is not a condition of any purchase. Message frequency " +
+    "varies.";
+
+// Survives the signup→login boundary: /sms-consent needs a JWT, but signup may not return
+// one (the user logs in afterward). We stash the opt-in here, tagged with the signup email,
+// and flush it on the next successful login.
+const PENDING_SMS_CONSENT_KEY = 'pendingSmsConsent';
+
+/**
+ * Remember that the user opted into SMS alerts during signup, so it can be sent once a token
+ * exists. Tagged with the (normalized) email so it only ever applies to that account.
+ */
+export function setPendingSmsConsent(email: string): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(PENDING_SMS_CONSENT_KEY, email.trim().toLowerCase());
+}
+
+export function clearPendingSmsConsent(): void {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(PENDING_SMS_CONSENT_KEY);
+}
+
+/**
+ * If an SMS opt-in was captured at signup but couldn't be sent yet (no token until login),
+ * send it now. Call right after a successful login/signup (once saveAuth has stored the token).
+ * Email-matched so a pending opt-in only applies to the account it was made for. Best-effort
+ * and idempotent; the flag is cleared only on success so a transient failure retries next login.
+ */
+export async function flushPendingSmsConsent(loggedInEmail: string): Promise<void> {
+    if (typeof window === 'undefined') return;
+    const pending = localStorage.getItem(PENDING_SMS_CONSENT_KEY);
+    if (!pending || pending !== loggedInEmail.trim().toLowerCase()) return;
+    try {
+        await authAPI.setSmsConsent({ consent: true, consent_text: SMS_CONSENT_TEXT });
+        clearPendingSmsConsent();
+    } catch (err) {
+        console.error('Failed to flush pending SMS consent:', err);
+        // Leave the flag in place so the next login retries it.
+    }
+}
 
 /**
  * Get current user ID from localStorage

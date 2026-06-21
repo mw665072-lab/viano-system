@@ -4464,95 +4464,83 @@ body {
     }
 
     .data-grid-container {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 12px !important;
+        grid-template-columns: 1fr !important;
+        /* Single column on phones — readable, full-width cards */
+        gap: 16px !important;
         max-width: 100%;
     }
 
     .data-card {
-        padding: 12px !important;
-        /* Ultra tight */
-        border-radius: 14px !important;
+        padding: 24px !important;
+        border-radius: 20px !important;
         min-height: auto !important;
-        aspect-ratio: 1 / 1 !important;
-        justify-content: space-between !important;
+        aspect-ratio: auto !important;
+        justify-content: flex-start !important;
         overflow: hidden !important;
-        /* contain overflow */
     }
 
     .card-header {
-        gap: 4px !important;
-        margin-bottom: 4px !important;
+        gap: 10px !important;
+        margin-bottom: 16px !important;
     }
 
     .card-icon {
-        font-size: 10px !important;
-        width: 20px !important;
-        height: 20px !important;
+        font-size: 14px !important;
+        width: 30px !important;
+        height: 30px !important;
     }
 
     .card-label {
         font-family: 'Inter', sans-serif !important;
-        font-size: 10px !important;
+        font-size: 16px !important;
         font-weight: 500 !important;
-        line-height: 1.1 !important;
+        line-height: 1.2 !important;
         opacity: 0.9 !important;
     }
 
     .card-value {
         font-family: 'Inter', sans-serif !important;
-        font-size: 24px !important;
-        /* Smaller to fit */
+        font-size: 44px !important;
         font-weight: 600 !important;
-        margin-bottom: 6px !important;
+        margin-bottom: 18px !important;
     }
 
     .unit {
-        font-size: 14px !important;
+        font-size: 24px !important;
     }
 
-    /* Restore details with micro-typography */
+    /* Full descriptions — no clamp, inherit each card's own text color
+       (gray on the white cards, white on the orange card) */
     .card-desc,
     .card-sub-info {
-        display: -webkit-box !important;
-        -webkit-line-clamp: 4 !important;
-        line-clamp: 4 !important;
-        /* Allow more lines */
-        -webkit-box-orient: vertical !important;
-        overflow: hidden !important;
+        display: block !important;
+        overflow: visible !important;
         font-family: 'Inter', sans-serif !important;
-        /* Enforce font */
-        font-size: 10px !important;
-        /* Smaller to fit */
-        font-weight: 400 !important;
-        color: rgba(255, 255, 255, 0.7) !important;
-        /* Match design gray */
-        line-height: 1.15 !important;
-        /* Tighter leading */
-        margin-top: 2px !important;
+        font-size: 15px !important;
+        font-weight: 450 !important;
+        line-height: 1.4 !important;
+        margin-top: 4px !important;
         white-space: normal !important;
         text-align: left !important;
     }
 
     .card-source {
         display: block !important;
-        /* Restore source */
         font-family: 'Inter', sans-serif !important;
-        font-size: 8px !important;
+        font-size: 12px !important;
         opacity: 0.5 !important;
-        margin-top: 4px !important;
+        margin-top: 8px !important;
         width: 100% !important;
     }
 
     .progress-container {
-        height: 6px !important;
-        /* Bolder bar */
-        margin-bottom: 6px !important;
-        border-radius: 4px !important;
+        height: 14px !important;
+        margin-bottom: 20px !important;
+        border-radius: 8px !important;
     }
 
     .progress-bar {
-        border-radius: 4px !important;
+        border-radius: 8px !important;
     }
 
     /* Final CTA Section */
@@ -4577,27 +4565,21 @@ body {
         box-shadow: none !important;
     }
 
-    .cta-star-container {
-        gap: 12px;
-    }
-
+    /* Decorative stars are positioned for the desktop layout (right:14%)
+       and overlap the full-width heading on phones — hide them here */
     .cta-star {
-        width: 20px;
-        height: 20px;
+        display: none !important;
     }
 
-    .cta-title {
-        font-size: 26px;
-        line-height: 1.3;
+    .cta-banner-text {
+        font-size: 28px !important;
+        line-height: 1.3 !important;
+        max-width: 100% !important;
     }
 
-    .cta-subtitle {
-        font-size: 14px;
-    }
-
-    .cta-btn {
-        padding: 14px 24px;
-        font-size: 16px;
+    .cta-overlay-btn {
+        padding: 14px 28px !important;
+        font-size: 16px !important;
     }
 
     /* Footer */
