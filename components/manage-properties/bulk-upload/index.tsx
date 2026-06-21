@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Upload, Loader2, X, FileText, AlertCircle, CheckCircle, ChevronDown, Trash2, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { propertyAPI, BulkUploadQuotaResponse, BulkUploadResponse, BulkUploadItem, BulkUploadFailedItem, getCurrentUserId, documentAPI, ConfirmPropertyRequest } from '@/lib/api';
 import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
 
@@ -13,6 +14,13 @@ interface SelectedFile {
 }
 
 interface DraftFormData {
+    // Editable extracted fields
+    clientName: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    inspectionDate: string;
     negotiatedWins: string;
     secondDocFile: File | null;
     isConfirming: boolean;
@@ -21,9 +29,44 @@ interface DraftFormData {
 
 interface BulkUploadProps {
     onNavigateToDraft?: (draftId: string) => void;
+    onReviewingChange?: (reviewing: boolean) => void;
 }
 
-const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
+type DocType = '4point' | 'home_inspection';
+
+const DOC_TYPE_LABELS: Record<DocType, string> = {
+    '4point': '4-Point Inspection',
+    home_inspection: 'Home Inspection',
+};
+
+// Normalize whatever the backend returns into a known doc type (defaults to home inspection)
+const normalizeDocType = (docType?: string | null): DocType =>
+    docType === '4point' ? '4point' : 'home_inspection';
+
+// The "missing" second document is the complement of the first/primary document
+const getMissingDocType = (firstDocType?: string | null): DocType =>
+    normalizeDocType(firstDocType) === '4point' ? 'home_inspection' : '4point';
+
+// Convert an extracted date string into a value an <input type="date"> accepts (yyyy-MM-dd)
+const toDateInputValue = (value?: string | null): string => {
+    if (!value) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+// Format a date for display without timezone shifting (yyyy-MM-dd -> MM/DD/YYYY)
+const formatDateDisplay = (value?: string | null): string => {
+    if (!value) return '';
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    if (m) return `${m[2]}/${m[3]}/${m[1]}`;
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? value : d.toLocaleDateString();
+};
+
+const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) => {
     const [quota, setQuota] = useState<BulkUploadQuotaResponse | null>(null);
     const [isCheckingQuota, setIsCheckingQuota] = useState(true);
     const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
@@ -38,6 +81,11 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
     const [selectedDrafts, setSelectedDrafts] = useState<Set<string>>(new Set());
     const [isBulkConfirming, setIsBulkConfirming] = useState(false);
     const [bulkConfirmError, setBulkConfirmError] = useState<string | null>(null);
+
+    // Notify parent when entering/leaving the review (results) state
+    useEffect(() => {
+        onReviewingChange?.(!!uploadResult);
+    }, [uploadResult, onReviewingChange]);
 
     // Check quota on mount
     useEffect(() => {
@@ -69,6 +117,12 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
             uploadResult.successful.forEach(item => {
                 if (item.property_id) {
                     initialFormData[item.property_id] = {
+                        clientName: item.extracted?.client_name || '',
+                        address: item.extracted?.address || '',
+                        city: item.extracted?.city || '',
+                        state: item.extracted?.state || '',
+                        zipCode: item.extracted?.zip_code || '',
+                        inspectionDate: toDateInputValue(item.extracted?.inspection_date),
                         negotiatedWins: '',
                         secondDocFile: null,
                         isConfirming: false,
@@ -197,6 +251,20 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
         return 'filename' in item ? item.filename : 'Unknown file';
     };
 
+    // Build the confirm payload from the user-edited fields, falling back to extracted values
+    const buildConfirmData = (item: BulkUploadItem): ConfirmPropertyRequest => {
+        const fd = item.property_id ? draftFormData[item.property_id] : undefined;
+        return {
+            client_name: fd?.clientName ?? item.extracted?.client_name,
+            address: fd?.address ?? item.extracted?.address,
+            city: fd?.city ?? item.extracted?.city,
+            state: fd?.state ?? item.extracted?.state,
+            zip_code: fd?.zipCode ?? item.extracted?.zip_code,
+            inspection_date: fd?.inspectionDate || item.extracted?.inspection_date,
+            negotiated_wins: fd?.negotiatedWins || null,
+        };
+    };
+
     // Confirm single draft
     const handleConfirmDraft = async (item: BulkUploadItem) => {
         if (!item.property_id || !item.extracted) return;
@@ -204,25 +272,15 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
         updateDraftFormData(item.property_id, { isConfirming: true });
 
         try {
-            const confirmData: ConfirmPropertyRequest = {
-                client_name: item.extracted.client_name,
-                address: item.extracted.address,
-                city: item.extracted.city,
-                state: item.extracted.state,
-                zip_code: item.extracted.zip_code,
-                inspection_date: item.extracted.inspection_date,
-                negotiated_wins: draftFormData[item.property_id]?.negotiatedWins || null,
-            };
+            const confirmData = buildConfirmData(item);
 
             await propertyAPI.confirm(item.property_id, confirmData);
 
-            // Upload second document if provided
+            // Upload second document if provided (the complement of the primary doc type)
             const secondDoc = draftFormData[item.property_id]?.secondDocFile;
             if (secondDoc) {
                 try {
-                    // Determine the opposite doc type for the second document
-                    const firstDocType = 'home_inspection'; // Default assumption
-                    const secondDocType: '4point' | 'home_inspection' = firstDocType === 'home_inspection' ? '4point' : 'home_inspection';
+                    const secondDocType = getMissingDocType(item.doc_type);
                     await documentAPI.upload(item.property_id, [secondDoc], [secondDocType]);
                 } catch (uploadErr) {
                     console.error('Failed to upload second document:', uploadErr);
@@ -260,24 +318,15 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
             if (!item.property_id || !item.extracted) continue;
 
             try {
-                const confirmData: ConfirmPropertyRequest = {
-                    client_name: item.extracted.client_name,
-                    address: item.extracted.address,
-                    city: item.extracted.city,
-                    state: item.extracted.state,
-                    zip_code: item.extracted.zip_code,
-                    inspection_date: item.extracted.inspection_date,
-                    negotiated_wins: draftFormData[item.property_id]?.negotiatedWins || null,
-                };
+                const confirmData = buildConfirmData(item);
 
                 await propertyAPI.confirm(item.property_id, confirmData);
 
-                // Upload second document if provided
+                // Upload second document if provided (the complement of the primary doc type)
                 const secondDoc = draftFormData[item.property_id]?.secondDocFile;
                 if (secondDoc) {
                     try {
-                        const firstDocType = 'home_inspection';
-                        const secondDocType: '4point' | 'home_inspection' = firstDocType === 'home_inspection' ? '4point' : 'home_inspection';
+                        const secondDocType = getMissingDocType(item.doc_type);
                         await documentAPI.upload(item.property_id, [secondDoc], [secondDocType]);
                     } catch (uploadErr) {
                         console.error('Failed to upload second document:', uploadErr);
@@ -309,9 +358,20 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
     // Loading state
     if (isCheckingQuota) {
         return (
-            <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-[#E8730A] mb-4" />
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Checking upload quota...</p>
+            <div className="space-y-6">
+                {/* Quota banner skeleton */}
+                <div className="p-4 rounded-xl border border-gray-100 dark:border-white/10">
+                    <div className="flex items-center gap-3">
+                        <Skeleton className="w-10 h-10 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-56" />
+                            <Skeleton className="h-3 w-40" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Dropzone skeleton */}
+                <Skeleton className="w-full h-[180px] rounded-[16px]" />
             </div>
         );
     }
@@ -326,45 +386,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
         );
 
         return (
-            <div className="space-y-6">
-                {/* Summary Card */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 rounded-2xl p-6 border border-blue-100 dark:border-white/10">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Upload Complete</h3>
-                    <div className="grid grid-cols-4 gap-4">
-                        <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-xl p-4 text-center">
-                            <div className="w-10 h-10 bg-green-100 dark:bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-2">
-                                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                            </div>
-                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{uploadResult.successful.length}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Successful</p>
-                        </div>
-                        <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-xl p-4 text-center">
-                            <div className="w-10 h-10 bg-amber-100 dark:bg-amber-500/15 rounded-full flex items-center justify-center mx-auto mb-2">
-                                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{uploadResult.failed_extraction.length}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Extraction Failed</p>
-                        </div>
-                        <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-xl p-4 text-center">
-                            <div className="w-10 h-10 bg-red-100 dark:bg-red-500/15 rounded-full flex items-center justify-center mx-auto mb-2">
-                                <X className="w-5 h-5 text-red-600 dark:text-red-400" />
-                            </div>
-                            <p className="text-2xl font-bold text-red-600 dark:text-red-400">{uploadResult.failed_draft_creation.length}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Draft Creation Failed</p>
-                        </div>
-                        <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-xl p-4 text-center">
-                            <div className="w-10 h-10 bg-orange-100 dark:bg-orange-500/15 rounded-full flex items-center justify-center mx-auto mb-2">
-                                <Upload className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                            </div>
-                            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{uploadResult.failed_s3_upload?.length || 0}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Upload Failed</p>
-                        </div>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-4 text-center">
-                        {uploadResult.quota_remaining} uploads remaining in your quota
-                    </p>
-                </div>
-
+            <div className="space-y-5">
                 {/* Bulk Actions for Unconfirmed Drafts */}
                 {unconfirmedDrafts.length > 0 && (
                     <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/10">
@@ -425,15 +447,14 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                 {/* Successfully Created Drafts */}
                 {uploadResult.successful.length > 0 && (
                     <div>
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                            Draft Properties ({uploadResult.successful.length})
-                        </h4>
                         <div className="space-y-3">
                             {uploadResult.successful.map((item, index) => {
                                 const isExpanded = expandedDraft === item.property_id;
                                 const isConfirmed = draftFormData[item.property_id!]?.isConfirmed;
                                 const isSelected = item.property_id ? selectedDrafts.has(item.property_id) : false;
                                 const formData = draftFormData[item.property_id!];
+                                const primaryDocLabel = DOC_TYPE_LABELS[normalizeDocType(item.doc_type)];
+                                const missingDocLabel = DOC_TYPE_LABELS[getMissingDocType(item.doc_type)];
 
                                 return (
                                     <div
@@ -477,7 +498,7 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2">
                                                     <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                                                        {item.extracted?.address || item.filename}
+                                                        {formData?.address || item.extracted?.address || item.filename}
                                                     </p>
                                                     {isConfirmed && (
                                                         <span className="px-2 py-0.5 bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400 text-xs font-medium rounded-full">
@@ -488,17 +509,17 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                                 {item.extracted && (
                                                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
                                                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                            <span className="font-medium">Client:</span> {item.extracted.client_name}
+                                                            <span className="font-medium">Client:</span> {formData?.clientName || item.extracted.client_name}
                                                         </span>
                                                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                            <span className="font-medium">City:</span> {item.extracted.city}, {item.extracted.state}
+                                                            <span className="font-medium">City:</span> {formData?.city || item.extracted.city}, {formData?.state || item.extracted.state}
                                                         </span>
                                                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                            <span className="font-medium">ZIP:</span> {item.extracted.zip_code}
+                                                            <span className="font-medium">ZIP:</span> {formData?.zipCode || item.extracted.zip_code}
                                                         </span>
-                                                        {item.extracted.inspection_date && (
+                                                        {(formData?.inspectionDate || item.extracted.inspection_date) && (
                                                             <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                                <span className="font-medium">Inspection:</span> {new Date(item.extracted.inspection_date).toLocaleDateString()}
+                                                                <span className="font-medium">Inspection:</span> {formatDateDisplay(formData?.inspectionDate || item.extracted.inspection_date)}
                                                             </span>
                                                         )}
                                                     </div>
@@ -523,39 +544,68 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                         {isExpanded && !isConfirmed && (
                                             <div className="border-t border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5">
                                                 <div className="space-y-4">
-                                                    {/* Extracted Data Summary */}
+                                                    {/* Editable Property Details */}
                                                     <div className="bg-white dark:bg-[#1a1a1a] rounded-lg p-4 border border-gray-200 dark:border-white/10">
-                                                        <h5 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
-                                                            Extracted Property Details
-                                                        </h5>
-                                                        <div className="grid grid-cols-2 gap-3 text-sm">
-                                                            <div>
-                                                                <span className="text-gray-500 dark:text-gray-400">Address:</span>
-                                                                <p className="font-medium">{item.extracted?.address}</p>
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <h5 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                                                                Property Details
+                                                            </h5>
+                                                            <span className="text-[11px] text-gray-400 dark:text-gray-500">Review &amp; edit before confirming</span>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div className="col-span-2">
+                                                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Address</label>
+                                                                <Input
+                                                                    value={formData?.address ?? item.extracted?.address ?? ''}
+                                                                    onChange={(e) => item.property_id && updateDraftFormData(item.property_id, { address: e.target.value })}
+                                                                    disabled={formData?.isConfirming}
+                                                                    placeholder="Street address"
+                                                                />
                                                             </div>
                                                             <div>
-                                                                <span className="text-gray-500 dark:text-gray-400">Client Name:</span>
-                                                                <p className="font-medium">{item.extracted?.client_name}</p>
+                                                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Client Name</label>
+                                                                <Input
+                                                                    value={formData?.clientName ?? item.extracted?.client_name ?? ''}
+                                                                    onChange={(e) => item.property_id && updateDraftFormData(item.property_id, { clientName: e.target.value })}
+                                                                    disabled={formData?.isConfirming}
+                                                                    placeholder="Client name"
+                                                                />
                                                             </div>
                                                             <div>
-                                                                <span className="text-gray-500 dark:text-gray-400">City:</span>
-                                                                <p className="font-medium">{item.extracted?.city}</p>
+                                                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">City</label>
+                                                                <Input
+                                                                    value={formData?.city ?? item.extracted?.city ?? ''}
+                                                                    onChange={(e) => item.property_id && updateDraftFormData(item.property_id, { city: e.target.value })}
+                                                                    disabled={formData?.isConfirming}
+                                                                    placeholder="City"
+                                                                />
                                                             </div>
                                                             <div>
-                                                                <span className="text-gray-500 dark:text-gray-400">State:</span>
-                                                                <p className="font-medium">{item.extracted?.state}</p>
+                                                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">State</label>
+                                                                <Input
+                                                                    value={formData?.state ?? item.extracted?.state ?? ''}
+                                                                    onChange={(e) => item.property_id && updateDraftFormData(item.property_id, { state: e.target.value })}
+                                                                    disabled={formData?.isConfirming}
+                                                                    placeholder="State"
+                                                                />
                                                             </div>
                                                             <div>
-                                                                <span className="text-gray-500 dark:text-gray-400">ZIP Code:</span>
-                                                                <p className="font-medium">{item.extracted?.zip_code}</p>
+                                                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">ZIP Code</label>
+                                                                <Input
+                                                                    value={formData?.zipCode ?? item.extracted?.zip_code ?? ''}
+                                                                    onChange={(e) => item.property_id && updateDraftFormData(item.property_id, { zipCode: e.target.value })}
+                                                                    disabled={formData?.isConfirming}
+                                                                    placeholder="ZIP code"
+                                                                />
                                                             </div>
-                                                            <div>
-                                                                <span className="text-gray-500 dark:text-gray-400">Inspection Date:</span>
-                                                                <p className="font-medium">
-                                                                    {item.extracted?.inspection_date
-                                                                        ? new Date(item.extracted.inspection_date).toLocaleDateString()
-                                                                        : 'N/A'}
-                                                                </p>
+                                                            <div className="col-span-2">
+                                                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Inspection Date</label>
+                                                                <Input
+                                                                    type="date"
+                                                                    value={formData?.inspectionDate ?? toDateInputValue(item.extracted?.inspection_date)}
+                                                                    onChange={(e) => item.property_id && updateDraftFormData(item.property_id, { inspectionDate: e.target.value })}
+                                                                    disabled={formData?.isConfirming}
+                                                                />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -575,11 +625,14 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                                         </p>
                                                     </div>
 
-                                                    {/* Second Document Upload */}
+                                                    {/* Second Document Upload — the document type missing from this property */}
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                            Second Document (Optional)
+                                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                            Missing Document — {missingDocLabel} (Optional)
                                                         </label>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                                            We detected a {primaryDocLabel}. Add the matching {missingDocLabel} to complete this property.
+                                                        </p>
                                                         <input
                                                             type="file"
                                                             accept=".pdf"
@@ -596,20 +649,29 @@ const BulkUpload = ({ onNavigateToDraft }: BulkUploadProps) => {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => document.getElementById(`second-doc-${item.property_id}`)?.click()}
-                                                                className="w-full h-[80px] rounded-lg border-2 border-dashed border-gray-300 dark:border-white/15 dark:bg-white/5 hover:border-[#E8730A] transition-colors flex flex-col items-center justify-center gap-1"
+                                                                className="w-full min-h-[80px] py-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-white/15 dark:bg-white/5 hover:border-[#E8730A] transition-colors flex flex-col items-center justify-center gap-1"
                                                             >
                                                                 <Upload className="w-5 h-5 text-gray-400 dark:text-gray-400" />
-                                                                <span className="text-xs text-gray-600 dark:text-gray-300">Upload 4-Point or Home Inspection</span>
+                                                                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Upload {missingDocLabel}</span>
+                                                                <span className="text-[11px] text-gray-400 dark:text-gray-500">PDF only</span>
                                                             </button>
                                                         ) : (
-                                                            <div className="flex items-center gap-2 p-3 bg-[#E8730A]/10 rounded-lg border border-[#E8730A]/30">
-                                                                <FileText className="w-5 h-5 text-[#E8730A]" />
-                                                                <span className="text-sm text-gray-700 dark:text-gray-300 flex-1 truncate">
-                                                                    {formData.secondDocFile.name}
-                                                                </span>
+                                                            <div className="flex items-center gap-3 p-3 bg-[#E8730A]/10 rounded-lg border border-[#E8730A]/30">
+                                                                <div className="w-9 h-9 rounded-lg bg-[#E8730A]/15 flex items-center justify-center flex-shrink-0">
+                                                                    <FileText className="w-5 h-5 text-[#E8730A]" />
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                                        {formData.secondDocFile.name}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                                        {missingDocLabel} · {(formData.secondDocFile.size / 1024 / 1024).toFixed(2)} MB
+                                                                    </p>
+                                                                </div>
                                                                 <button
                                                                     onClick={() => item.property_id && updateDraftFormData(item.property_id, { secondDocFile: null })}
-                                                                    className="text-red-500 hover:text-red-700"
+                                                                    className="text-red-500 hover:text-red-700 flex-shrink-0"
+                                                                    aria-label="Remove document"
                                                                 >
                                                                     <X className="w-4 h-4" />
                                                                 </button>

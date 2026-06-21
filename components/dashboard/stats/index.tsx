@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from "react"
-import { Home, CalendarDays, ArrowRight, Loader2 } from "lucide-react"
+import { Home, CalendarDays, ArrowRight } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
 import { propertyAPI } from "@/lib/api"
 
@@ -158,7 +159,10 @@ export default function DashboardStatsCard() {
                   {stat.title}
                 </h3>
                 {isLoading ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-gray-300 mt-1" />
+                  <div className="flex flex-col gap-2 mt-1">
+                    <Skeleton className="h-9 md:h-10 w-16 rounded-lg" />
+                    <Skeleton className="h-4 w-24 rounded" />
+                  </div>
                 ) : (
                   <div className="flex flex-col mt-0.5">
                     <span

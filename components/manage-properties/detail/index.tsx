@@ -11,6 +11,7 @@ import { AddManualSystemModal } from "./add-manual-system-modal"
 import { AddDefaultSystemsModal } from "./add-default-systems-modal"
 import { EditSystemModal } from "./edit-system-modal"
 import { DeleteSystemModal } from "./delete-system-modal"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface PropertyDetailData {
     id: string
@@ -33,6 +34,8 @@ interface PropertyDetailData {
     state?: string
     zipCode?: string
     isDraft?: boolean
+    isTransferred?: boolean
+    transferredAt?: string | null
 }
 
 interface PropertyDetailPanelProps {
@@ -361,6 +364,15 @@ export function PropertyDetailPanel({
         low: messages.filter(m => getEffectivePriority(m) === 4).length,
     }
 
+    // A transferred property is now another agent's plan — render it read-only (no mutations).
+    const isReadOnly = !!property.isTransferred
+    const transferredOnLabel = property.transferredAt
+        ? (() => {
+            const d = new Date(property.transferredAt)
+            return isNaN(d.getTime()) ? property.transferredAt : d.toLocaleDateString()
+        })()
+        : null
+
     return (
         <div className="flex flex-col h-full relative overflow-hidden">
             {/* Main Content */}
@@ -390,6 +402,11 @@ export function PropertyDetailPanel({
                                         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{property.client}</h2>
                                         <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 truncate">{property.address}</p>
                                         <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 truncate">{property.location}</p>
+                                        {isReadOnly && (
+                                            <span className="inline-flex items-center gap-1.5 mt-2 rounded-full bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs font-semibold px-3 py-1">
+                                                Transferred{transferredOnLabel ? ` on ${transferredOnLabel}` : ''}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
 
@@ -415,24 +432,28 @@ export function PropertyDetailPanel({
                                             >
                                                 <Download className="w-5 h-5" />
                                             </button>
-                                            <button
-                                                onClick={onEdit}
-                                                aria-label="Edit"
-                                                title="Edit"
-                                                className="w-11 h-10 rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/5 flex items-center justify-center text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
-                                            >
-                                                <Pencil className="w-5 h-5" />
-                                            </button>
+                                            {!isReadOnly && (
+                                                <button
+                                                    onClick={onEdit}
+                                                    aria-label="Edit"
+                                                    title="Edit"
+                                                    className="w-11 h-10 rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/5 flex items-center justify-center text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
+                                                >
+                                                    <Pencil className="w-5 h-5" />
+                                                </button>
+                                            )}
                                         </>
                                     )}
-                                    <button
-                                        onClick={onDelete}
-                                        aria-label="Delete"
-                                        title="Delete"
-                                        className="w-11 h-10 rounded-xl border border-red-100 dark:border-red-500/30 bg-white dark:bg-white/5 flex items-center justify-center text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
+                                    {!isReadOnly && (
+                                        <button
+                                            onClick={onDelete}
+                                            aria-label="Delete"
+                                            title="Delete"
+                                            className="w-11 h-10 rounded-xl border border-red-100 dark:border-red-500/30 bg-white dark:bg-white/5 flex items-center justify-center text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
@@ -445,7 +466,10 @@ export function PropertyDetailPanel({
                                     </div>
                                 </div>
                                 {isLoadingCMA ? (
-                                    <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mt-2" />
+                                    <>
+                                        <Skeleton className="h-8 w-40 max-w-full mt-1" />
+                                        <Skeleton className="h-4 w-48 max-w-full mt-2" />
+                                    </>
                                 ) : cmaData ? (
                                     <>
                                         <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">{cmaData.formatted}</p>
@@ -502,40 +526,80 @@ export function PropertyDetailPanel({
                                 <div className="flex items-center justify-between gap-2 mb-4">
                                     <h3 className="text-sm sm:text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">System Age & Lifespan</h3>
                                     <div className="flex items-center gap-2 flex-shrink-0">
-                                        <button
-                                            onClick={() => setShowAddManualModal(true)}
-                                            className="flex items-center gap-1.5 text-sm font-medium text-[#E8730A] border border-[#E8730A]/30 hover:bg-[#E8730A]/5 rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                            Add System
-                                        </button>
+                                        {!isReadOnly && (
+                                            <button
+                                                onClick={() => setShowAddManualModal(true)}
+                                                className="flex items-center gap-1.5 text-sm font-medium text-[#E8730A] border border-[#E8730A]/30 hover:bg-[#E8730A]/5 rounded-lg px-3 py-1.5 whitespace-nowrap transition-colors"
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                                Add System
+                                            </button>
+                                        )}
                                         <span className="text-sm text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-white/10 rounded-lg px-3 py-1.5 whitespace-nowrap">{systems.length} Systems Total</span>
                                     </div>
                                 </div>
 
                                 {isLoadingSystems ? (
-                                    <div className="flex items-center justify-center py-8">
-                                        <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+                                    <div className="divide-y divide-gray-100 dark:divide-white/20">
+                                        {Array.from({ length: 4 }).map((_, i) => (
+                                            <div key={i} className="px-2 py-4">
+                                                {/* Desktop row */}
+                                                <div className="hidden sm:flex items-center gap-4">
+                                                    <Skeleton className="w-12 h-12 rounded-xl flex-shrink-0" />
+                                                    <div className="flex-shrink-0 w-40 space-y-2">
+                                                        <Skeleton className="h-5 w-28 max-w-full" />
+                                                        <Skeleton className="h-4 w-20 max-w-full" />
+                                                    </div>
+                                                    <Skeleton className="h-7 w-14 rounded-lg flex-shrink-0" />
+                                                    <div className="flex-1 min-w-0 flex flex-col gap-1.5 items-end">
+                                                        <Skeleton className="h-4 w-24" />
+                                                        <Skeleton className="h-2 w-full rounded-full" />
+                                                    </div>
+                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                        <Skeleton className="h-10 w-28 rounded-lg" />
+                                                        <Skeleton className="h-10 w-10 rounded-lg" />
+                                                        <Skeleton className="h-10 w-10 rounded-lg" />
+                                                    </div>
+                                                </div>
+                                                {/* Mobile stacked */}
+                                                <div className="flex sm:hidden flex-col gap-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <Skeleton className="w-12 h-12 rounded-xl flex-shrink-0" />
+                                                        <div className="min-w-0 flex-1 space-y-2">
+                                                            <Skeleton className="h-5 w-28 max-w-full" />
+                                                            <Skeleton className="h-4 w-20 max-w-full" />
+                                                        </div>
+                                                        <Skeleton className="h-7 w-14 rounded-lg flex-shrink-0" />
+                                                    </div>
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <Skeleton className="h-4 w-24 self-end" />
+                                                        <Skeleton className="h-2 w-full rounded-full" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 ) : systems.length === 0 ? (
                                     <div className="text-center py-6">
                                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">No systems data available.</p>
-                                        <div className="flex gap-2 justify-center">
-                                            <button
-                                                onClick={() => setShowAddDefaultsModal(true)}
-                                                className="flex items-center gap-1.5 text-xs font-medium text-[#E8730A] hover:text-orange-700 px-3 py-1.5 rounded-lg border border-[#E8730A]/30 hover:bg-[#E8730A]/5"
-                                            >
-                                                <Settings className="w-3.5 h-3.5" />
-                                                Add Defaults
-                                            </button>
-                                            <button
-                                                onClick={() => setShowAddManualModal(true)}
-                                                className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200"
-                                            >
-                                                <Plus className="w-3.5 h-3.5" />
-                                                Add Manual
-                                            </button>
-                                        </div>
+                                        {!isReadOnly && (
+                                            <div className="flex gap-2 justify-center">
+                                                <button
+                                                    onClick={() => setShowAddDefaultsModal(true)}
+                                                    className="flex items-center gap-1.5 text-xs font-medium text-[#E8730A] hover:text-orange-700 px-3 py-1.5 rounded-lg border border-[#E8730A]/30 hover:bg-[#E8730A]/5"
+                                                >
+                                                    <Settings className="w-3.5 h-3.5" />
+                                                    Add Defaults
+                                                </button>
+                                                <button
+                                                    onClick={() => setShowAddManualModal(true)}
+                                                    className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200"
+                                                >
+                                                    <Plus className="w-3.5 h-3.5" />
+                                                    Add Manual
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-gray-100 dark:divide-white/20">
@@ -590,12 +654,13 @@ export function PropertyDetailPanel({
                                                         </div>
                                                     ) : (
                                                         <span className="text-sm text-amber-600">
-                                                            Age unknown — <button onClick={() => handleOpenSetAgeModal(system)} className="underline">Set Age</button>
+                                                            Age unknown{!isReadOnly && <> — <button onClick={() => handleOpenSetAgeModal(system)} className="underline">Set Age</button></>}
                                                         </span>
                                                     )}
                                                 </div>
 
                                                 {/* Action Buttons */}
+                                                {!isReadOnly && (
                                                 <div className="flex items-center gap-2 flex-shrink-0">
                                                     {system.replacement_history && system.replacement_history.length > 0 && (
                                                         <button
@@ -628,6 +693,7 @@ export function PropertyDetailPanel({
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
+                                                )}
                                             </div>
 
                                             {/* Mobile: stacked rows */}
@@ -666,12 +732,13 @@ export function PropertyDetailPanel({
                                                         </div>
                                                     ) : (
                                                         <span className="text-sm text-amber-600">
-                                                            Age unknown — <button onClick={() => handleOpenSetAgeModal(system)} className="underline">Set Age</button>
+                                                            Age unknown{!isReadOnly && <> — <button onClick={() => handleOpenSetAgeModal(system)} className="underline">Set Age</button></>}
                                                         </span>
                                                     )}
                                                 </div>
 
                                                 {/* Row 3: Action Buttons */}
+                                                {!isReadOnly && (
                                                 <div className="flex items-center gap-2">
                                                     {system.replacement_history && system.replacement_history.length > 0 && (
                                                         <button
@@ -704,6 +771,7 @@ export function PropertyDetailPanel({
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
+                                                )}
                                             </div>
                                         </div>
                                     )

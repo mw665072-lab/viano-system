@@ -5,6 +5,7 @@ import { X, ChevronRight, AlertTriangle, AlertCircle, ArrowRight, Loader2, Check
 import Link from "next/link"
 import Image from "next/image"
 import { propertyAPI, RequiringActionProperty, FlaggedSystem } from "@/lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // Determine tag color based on alert_tier and percentage_used
 function getTagStyle(alertTier: string, percentageUsed: number) {
@@ -143,14 +144,38 @@ export function RequiringActionPanel() {
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex flex-col items-center justify-center py-10">
-          <Loader2 className="w-7 h-7 animate-spin text-orange-400" />
-          <p
-            className="mt-3 text-sm text-gray-400"
-            style={{ fontFamily: "Manrope, sans-serif" }}
-          >
-            Checking for alerts...
-          </p>
+        <div className="flex flex-col">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div
+              key={index}
+              className={`grid grid-cols-[52px_1fr_120px_1fr_28px] items-center gap-4 py-[10px] ${
+                index < 4 ? "border-b border-[#E8ECF0] dark:border-white/10" : ""
+              } px-2 -mx-2`}
+            >
+              {/* Property Image */}
+              <Skeleton className="w-[52px] h-[52px] rounded-xl" />
+
+              {/* Address + Location */}
+              <div className="min-w-0 flex flex-col gap-1.5">
+                <Skeleton className="h-4 w-3/4 rounded" />
+                <Skeleton className="h-3 w-1/2 rounded" />
+              </div>
+
+              {/* System Tag */}
+              <div className="w-[120px] flex items-center justify-center">
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+
+              {/* Action Label + Timeframe */}
+              <div className="min-w-0 flex flex-col gap-1.5">
+                <Skeleton className="h-4 w-3/4 rounded" />
+                <Skeleton className="h-3 w-1/2 rounded" />
+              </div>
+
+              {/* Dismiss */}
+              <Skeleton className="w-7 h-7 rounded-full" />
+            </div>
+          ))}
         </div>
       )}
 

@@ -1,7 +1,8 @@
 "use client"
 
-import { Eye, EyeOff, Home, Loader2, Trash2, Search, ChevronDown, Users } from "lucide-react"
+import { Eye, EyeOff, Home, Trash2, Search, ChevronDown, Users } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,8 @@ interface Property {
   statusColor: string
   clientName?: string
   isDraft?: boolean
+  isTransferred?: boolean
+  transferredAt?: string | null
 }
 
 interface PropertyListProps {
@@ -47,6 +50,15 @@ function getInitials(name: string): string {
   if (parts.length === 0) return '??'
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
+/** Small pill marking a property whose registration was handed to another agent. */
+function TransferredBadge() {
+  return (
+    <span className="flex-shrink-0 inline-flex items-center rounded-full bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5">
+      Transferred
+    </span>
+  )
 }
 
 /** Build a compact list of page items with ellipses, e.g. [1, 2, 3, 'ellipsis', 9] */
@@ -126,9 +138,23 @@ export function PropertyList({
           </div>
         )}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <p className="mt-3 text-sm text-gray-500">Loading properties...</p>
+          <div>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className={`px-4 py-3 flex items-center gap-3 ${i !== 5 ? "border-b border-gray-100 dark:border-white/10" : ""}`}
+              >
+                {/* Avatar */}
+                <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
+                {/* Name + address */}
+                <div className="flex-1 min-w-0 space-y-2">
+                  <Skeleton className="h-4 w-32 max-w-full" />
+                  <Skeleton className="h-3 w-40 max-w-full" />
+                </div>
+                {/* View toggle */}
+                <Skeleton className="h-8 w-[100px] rounded-lg flex-shrink-0" />
+              </div>
+            ))}
           </div>
         ) : properties.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
@@ -160,18 +186,24 @@ export function PropertyList({
                 {/* Client Name + Address */}
                 {expanded ? (
                   <div className="hidden lg:grid flex-1 min-w-0 grid-cols-3 gap-4 items-center">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                      {property.clientName || 'No Client'}
-                    </h3>
+                    <div className="min-w-0 flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                        {property.clientName || 'No Client'}
+                      </h3>
+                      {property.isTransferred && <TransferredBadge />}
+                    </div>
                     <p className="text-xs text-gray-600 dark:text-gray-300 truncate">{property.name || '—'}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{property.location || '—'}</p>
                   </div>
                 ) : null}
                 {/* Stacked layout (narrow panel, and mobile when expanded) */}
                 <div className={`flex-1 min-w-0 ${expanded ? "lg:hidden" : ""}`}>
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                    {property.clientName || 'No Client'}
-                  </h3>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                      {property.clientName || 'No Client'}
+                    </h3>
+                    {property.isTransferred && <TransferredBadge />}
+                  </div>
                   <p className="text-xs text-gray-500 truncate">{property.name || property.location}</p>
                   {property.location && property.location !== property.name && (
                     <p className="text-xs text-gray-400 truncate">{property.location}</p>

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const BillingSuccessContent = () => {
     const searchParams = useSearchParams();
@@ -94,7 +95,15 @@ const BillingSuccessPage = () => {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <Card className="max-w-[500px] w-full bg-white/80 backdrop-blur-xl border-0 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] rounded-[40px] p-8 md:p-12 flex flex-col items-center gap-6">
+                    <Skeleton className="w-24 h-24 rounded-full" />
+                    <Skeleton className="h-8 w-64" />
+                    <div className="w-full space-y-2 flex flex-col items-center">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-4/5" />
+                    </div>
+                    <Skeleton className="h-14 w-full rounded-2xl mt-2" />
+                </Card>
             </div>
         }>
             <BillingSuccessContent />
