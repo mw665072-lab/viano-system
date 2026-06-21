@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-06-21] — Agent-to-Agent Property Conflict & Transfer
+
+### Added
+- **Property conflict confirmation on Add Property.** Confirming a draft whose address is already registered to another agent's active plan now surfaces the backend `409` as a modal showing the verbatim prompt and the existing vs. your inspection dates, instead of failing. When `can_override` is true a **"Yes, my buyers purchased this"** action re-confirms with `confirm_conflict: true` (transferring the registration); when false the modal explains the inspection on file is the same or newer and offers only **"Got it"** (set a newer inspection date and retry). Endpoint: `POST /api/property/my-properties/{id}/confirm`.
+- **Takeover warning on the success screen.** When a transfer terminates the previous agent's plan, the backend `warning` (e.g. Twilio messages already dispatched that cannot be recalled) is shown on the Add Property success screen.
+- **Transferred-property display.** A property handed to another agent now renders read-only for the previous agent: a **"Transferred"** pill in the clients list, a **"Transferred on {date}"** badge in the detail header, and all mutating controls hidden (Edit, Delete, Add System, Reset/Edit/Delete System, Set Age, History/Undo). The report **Download** remains available.
+- **`ApiError` class** (`lib/api.ts`) thrown by `apiRequest` for all non-OK responses, carrying the HTTP `status` and parsed `detail` alongside a human-readable `message`. It extends `Error`, so existing `instanceof Error` / `.message` handling is unchanged.
+- New types: `PropertyConflict`, `TerminatedProperty`; `confirm_conflict` on `ConfirmPropertyRequest`; `ownership_transferred`, `terminated_properties`, and `warning` on `ConfirmPropertyResponse`; `status` (`"active" | "transferred"`) and `transferred_at` on `PropertyResponse`.
+
+### Fixed
+- **`[object Object]` error banner on confirm.** `apiRequest` previously did `error.detail || error.message` and threw `new Error(<object>)`, stringifying a structured `detail` (such as the conflict body) to `"[object Object]"`. It now extracts a readable message from a string, an object (`message`/`prompt`/`detail`/`error`), or a FastAPI validation-array detail, and preserves the raw payload on `ApiError.detail`. Applies to every endpoint, not just confirm.
+- **Expected conflict no longer logged as an error.** The handled `409` conflict was passed to `console.error`, which Next.js 16 dev surfaces as a red "Console ApiError" overlay even though the modal handled it correctly. Logging now runs only in the unexpected-error branch.
+
 ## [2026-06-21] — Add Property UX & Skeleton Loaders
 
 ### Added
