@@ -532,10 +532,10 @@ const AddPropertyPage = () => {
     // Loading state while checking limit
     if (isCheckingLimit) {
         return (
-            <div className="flex h-screen items-center justify-center bg-gray-50">
+            <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-[#0f0f0f]">
                 <div className="flex flex-col items-center gap-3">
                     <Loader2 className="h-8 w-8 animate-spin text-[#E8730A]" />
-                    <p className="text-gray-500 text-sm">Verifying subscription status...</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Verifying subscription status...</p>
                 </div>
             </div>
         );
@@ -544,13 +544,13 @@ const AddPropertyPage = () => {
     // Limit reached state
     if (canAddProperty && !canAddProperty.allowed) {
         return (
-            <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
-                <Card className="max-w-md w-full p-8 rounded-[32px] border-0 shadow-xl text-center">
-                    <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f0f] p-6 flex items-center justify-center">
+                <Card className="max-w-md w-full p-8 rounded-[32px] border-0 dark:bg-[#1a1a1a] dark:border dark:border-white/10 shadow-xl text-center">
+                    <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/15 rounded-full flex items-center justify-center mx-auto mb-6">
                         <ShieldAlert className="w-8 h-8 text-amber-500" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Limit Reached</h2>
-                    <p className="text-gray-600 mb-8 whitespace-pre-wrap">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Limit Reached</h2>
+                    <p className="text-gray-600 dark:text-gray-300 mb-8 whitespace-pre-wrap">
                         {canAddProperty.reason || "You have reached the limit of properties for your current plan."}
                     </p>
 
@@ -574,7 +574,7 @@ const AddPropertyPage = () => {
                         <Button
                             variant="ghost"
                             onClick={() => router.push('/manage-properties')}
-                            className="w-full text-gray-500 hover:text-gray-700 rounded-full h-12"
+                            className="w-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded-full h-12"
                         >
                             Back to Properties
                         </Button>
@@ -589,11 +589,11 @@ const AddPropertyPage = () => {
         return (
             <div className="flex flex-col h-full items-center justify-center">
                 <div className="text-center p-8">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-green-100 dark:bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckCircle className="w-8 h-8 text-green-600" />
                     </div>
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-2">Property Added Successfully!</h2>
-                    <p className="text-gray-600">Redirecting to your properties...</p>
+                    <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Property Added Successfully!</h2>
+                    <p className="text-gray-600 dark:text-gray-300">Redirecting to your properties...</p>
                 </div>
             </div>
         );
@@ -606,8 +606,8 @@ const AddPropertyPage = () => {
                 <div className="w-16 h-16 bg-[#E8730A]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <FileUp className="w-8 h-8 text-[#E8730A]" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Property Document</h3>
-                <p className="text-sm text-gray-500 max-w-md mx-auto">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Upload Property Document</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
                     Select the document type and upload a PDF. We will automatically extract the property details for you.
                 </p>
             </div>
@@ -620,7 +620,7 @@ const AddPropertyPage = () => {
                     className={`py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all ${
                         pdfDocType === '4point'
                             ? 'border-[#E8730A] bg-[#E8730A]/10 text-[#E8730A]'
-                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                            : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:border-gray-300'
                     }`}
                 >
                     4-Point Inspection
@@ -631,7 +631,7 @@ const AddPropertyPage = () => {
                     className={`py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all ${
                         pdfDocType === 'home_inspection'
                             ? 'border-[#E8730A] bg-[#E8730A]/10 text-[#E8730A]'
-                            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                            : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:border-gray-300'
                     }`}
                 >
                     Home Inspection
@@ -652,7 +652,7 @@ const AddPropertyPage = () => {
                     type="button"
                     onClick={() => pdfInputRef.current?.click()}
                     disabled={isExtracting}
-                    className={`w-full h-[200px] rounded-[16px] border-2 border-dashed border-[#E8730A] bg-white hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed ${isFormShaking ? 'animate-shake' : ''}`}
+                    className={`w-full h-[200px] rounded-[16px] border-2 border-dashed border-[#E8730A] dark:border-white/15 bg-white dark:bg-white/5 hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed ${isFormShaking ? 'animate-shake' : ''}`}
                 >
                     <Upload className="w-10 h-10 text-[#E8730A]" />
                     <span className="text-base font-medium text-[#E8730A]">Click to Upload PDF</span>
@@ -674,7 +674,7 @@ const AddPropertyPage = () => {
                         <FileText className="w-10 h-10 text-[#10B981]" />
                         <div>
                             <p className="text-sm font-medium text-[#10B981]">{pdfFile.name}</p>
-                            <p className="text-xs text-gray-500">{(pdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{(pdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
                         </div>
                     </div>
                 </div>
@@ -687,7 +687,7 @@ const AddPropertyPage = () => {
                         <span className="text-sm text-[#E8730A]">{processingMessage || 'Extracting data from PDF...'}</span>
                     </div>
                     {processingMessage && (
-                        <p className="text-xs text-gray-500">This may take up to a minute. Your document is being processed in the background.</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">This may take up to a minute. Your document is being processed in the background.</p>
                     )}
                 </div>
             )}
@@ -716,7 +716,7 @@ const AddPropertyPage = () => {
         <>
             {/* Row 1: Client Name and Address */}
             <div>
-                <label className="block text-sm font-medium text-[#374151] mb-2">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
                     Client Name <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -726,11 +726,11 @@ const AddPropertyPage = () => {
                     value={formData.clientName}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
-                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
+                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-4 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
                 />
             </div>
             <div>
-                <label className="block text-sm font-medium text-[#374151] mb-2">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
                     Address <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -740,13 +740,13 @@ const AddPropertyPage = () => {
                     value={formData.address}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
-                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
+                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-4 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
                 />
             </div>
 
             {/* Row 2: City and State */}
             <div>
-                <label className="block text-sm font-medium text-[#374151] mb-2">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
                     City <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -756,11 +756,11 @@ const AddPropertyPage = () => {
                     value={formData.city}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
-                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
+                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-4 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
                 />
             </div>
             <div>
-                <label className="block text-sm font-medium text-[#374151] mb-2">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
                     State <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -770,13 +770,13 @@ const AddPropertyPage = () => {
                     value={formData.state}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
-                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
+                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-4 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
                 />
             </div>
 
             {/* Row 3: Zip Code and Inspection Date */}
             <div>
-                <label className="block text-sm font-medium text-[#374151] mb-2">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
                     Zip Code <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -786,11 +786,11 @@ const AddPropertyPage = () => {
                     value={formData.zipCode}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
-                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
+                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-4 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
                 />
             </div>
             <div>
-                <label className="block text-sm font-medium text-[#374151] mb-2">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
                     Inspection Date
                 </label>
                 <Input
@@ -799,13 +799,13 @@ const AddPropertyPage = () => {
                     value={formData.inspectionDate}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
-                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] bg-white px-4 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
+                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-4 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
                 />
             </div>
 
             {/* Negotiated Wins */}
             <div className="col-span-1 md:col-span-2 mt-4">
-                <label className="block text-sm font-medium text-[#374151] mb-2">
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
                     Negotiated Wins
                 </label>
                 <NegotiatedWinsForm
@@ -813,7 +813,7 @@ const AddPropertyPage = () => {
                     onChange={(value) => setFormData(prev => ({ ...prev, negotiatedWins: value }))}
                     disabled={isSubmitting}
                 />
-                <p className="text-xs text-[#9CA3AF] mt-1">Document any specific wins achieved during negotiation.</p>
+                <p className="text-xs text-[#9CA3AF] dark:text-gray-400 mt-1">Document any specific wins achieved during negotiation.</p>
             </div>
         </>
     );
@@ -850,19 +850,19 @@ const AddPropertyPage = () => {
             </button>
 
             <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">Review Extracted Data</h3>
-                <p className="text-sm text-gray-500">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Review Extracted Data</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                     We have extracted the following information from your PDF. Please review and edit as needed before confirming.
                 </p>
             </div>
 
             {draftProperty && (
-                <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-500/15 rounded-xl border border-blue-100 dark:border-blue-500/30">
                     <div className="flex items-center gap-2 mb-2">
                         <FileText className="w-4 h-4 text-[#E8730A]" />
                         <span className="text-sm font-medium text-[#E8730A]">{uploadFilename}</span>
                     </div>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-500/15 text-blue-800 dark:text-blue-400 capitalize">
                         {pdfDocType.replace('_', ' ')}
                     </span>
                 </div>
@@ -873,7 +873,7 @@ const AddPropertyPage = () => {
 
                 {/* Second Document Upload */}
                 <div className="col-span-1 md:col-span-2">
-                    <p className="text-sm text-[#6B7280] mb-3">Upload Second Document (Optional)</p>
+                    <p className="text-sm text-[#6B7280] dark:text-gray-400 mb-3">Upload Second Document (Optional)</p>
                     <input
                         ref={secondDocInputRef}
                         type="file"
@@ -890,7 +890,7 @@ const AddPropertyPage = () => {
                                 <span className="text-sm font-medium text-[#10B981] capitalize">
                                     {pdfDocType.replace('_', ' ')}
                                 </span>
-                                <span className="text-xs text-[#6B7280] truncate max-w-[90%] px-2">{uploadFilename}</span>
+                                <span className="text-xs text-[#6B7280] dark:text-gray-400 truncate max-w-[90%] px-2">{uploadFilename}</span>
                             </div>
                         )}
                         {/* Second document upload slot */}
@@ -899,13 +899,13 @@ const AddPropertyPage = () => {
                                 type="button"
                                 onClick={() => secondDocInputRef.current?.click()}
                                 disabled={isSubmitting}
-                                className="w-full h-[120px] rounded-[16px] border-2 border-dashed border-[#E8730A] bg-white hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full h-[120px] rounded-[16px] border-2 border-dashed border-[#E8730A] dark:border-white/15 bg-white dark:bg-white/5 hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Upload className="w-6 h-6 text-[#E8730A]" />
                                 <span className="text-sm font-medium text-[#E8730A]">
                                     {pdfDocType === 'home_inspection' ? 'Upload 4-Point File' : 'Upload Home Inspection'}
                                 </span>
-                                <span className="text-xs text-[#9CA3AF]">PDF format only</span>
+                                <span className="text-xs text-[#9CA3AF] dark:text-gray-400">PDF format only</span>
                             </button>
                         ) : (
                             <div className="w-full h-[120px] rounded-[16px] border-2 border-solid border-[#10B981] bg-[#F0FDF4] flex flex-col items-center justify-center gap-2 relative">
@@ -921,7 +921,7 @@ const AddPropertyPage = () => {
                                 <span className="text-sm font-medium text-[#10B981]">
                                     {pdfDocType === 'home_inspection' ? '4-Point File' : 'Home Inspection'}
                                 </span>
-                                <span className="text-xs text-[#6B7280] truncate max-w-[90%] px-2">{secondDocFile.name}</span>
+                                <span className="text-xs text-[#6B7280] dark:text-gray-400 truncate max-w-[90%] px-2">{secondDocFile.name}</span>
                             </div>
                         )}
                     </div>
@@ -971,7 +971,7 @@ const AddPropertyPage = () => {
 
                 {/* Document Upload Section */}
                 <div className="col-span-1 md:col-span-2">
-                    <p className="text-sm text-[#6B7280] mb-3">Upload Documents (PDF only)</p>
+                    <p className="text-sm text-[#6B7280] dark:text-gray-400 mb-3">Upload Documents (PDF only)</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* 4-Point File Upload */}
                         <div>
@@ -989,11 +989,11 @@ const AddPropertyPage = () => {
                                     type="button"
                                     onClick={() => fourPointInputRef.current?.click()}
                                     disabled={isSubmitting}
-                                    className="w-full h-[120px] rounded-[16px] border-2 border-dashed border-[#E8730A] bg-white hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full h-[120px] rounded-[16px] border-2 border-dashed border-[#E8730A] dark:border-white/15 bg-white dark:bg-white/5 hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Upload className="w-6 h-6 text-[#E8730A]" />
                                     <span className="text-sm font-medium text-[#E8730A]">Upload 4-Point File</span>
-                                    <span className="text-xs text-[#9CA3AF]">PDF format only</span>
+                                    <span className="text-xs text-[#9CA3AF] dark:text-gray-400">PDF format only</span>
                                 </button>
                             ) : (
                                 <div className="w-full h-[120px] rounded-[16px] border-2 border-solid border-[#10B981] bg-[#F0FDF4] flex flex-col items-center justify-center gap-2 relative">
@@ -1007,7 +1007,7 @@ const AddPropertyPage = () => {
                                     </button>
                                     <FileText className="w-6 h-6 text-[#10B981]" />
                                     <span className="text-sm font-medium text-[#10B981]">4-Point File</span>
-                                    <span className="text-xs text-[#6B7280] truncate max-w-[90%] px-2">{fourPointFile.name}</span>
+                                    <span className="text-xs text-[#6B7280] dark:text-gray-400 truncate max-w-[90%] px-2">{fourPointFile.name}</span>
                                 </div>
                             )}
                         </div>
@@ -1028,11 +1028,11 @@ const AddPropertyPage = () => {
                                     type="button"
                                     onClick={() => homeInspectionInputRef.current?.click()}
                                     disabled={isSubmitting}
-                                    className="w-full h-[120px] rounded-[16px] border-2 border-dashed border-[#E8730A] bg-white hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full h-[120px] rounded-[16px] border-2 border-dashed border-[#E8730A] dark:border-white/15 bg-white dark:bg-white/5 hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <Upload className="w-6 h-6 text-[#E8730A]" />
                                     <span className="text-sm font-medium text-[#E8730A]">Upload Home Inspection File</span>
-                                    <span className="text-xs text-[#9CA3AF]">PDF format only</span>
+                                    <span className="text-xs text-[#9CA3AF] dark:text-gray-400">PDF format only</span>
                                 </button>
                             ) : (
                                 <div className="w-full h-[120px] rounded-[16px] border-2 border-solid border-[#10B981] bg-[#F0FDF4] flex flex-col items-center justify-center gap-2 relative">
@@ -1046,7 +1046,7 @@ const AddPropertyPage = () => {
                                     </button>
                                     <FileText className="w-6 h-6 text-[#10B981]" />
                                     <span className="text-sm font-medium text-[#10B981]">Home Inspection File</span>
-                                    <span className="text-xs text-[#6B7280] truncate max-w-[90%] px-2">{homeInspectionFile.name}</span>
+                                    <span className="text-xs text-[#6B7280] dark:text-gray-400 truncate max-w-[90%] px-2">{homeInspectionFile.name}</span>
                                 </div>
                             )}
                         </div>
@@ -1087,9 +1087,9 @@ const AddPropertyPage = () => {
     );
 
     return (
-        <div className="min-h-full bg-[#EBF0F7]">
+        <div className="min-h-full bg-[#EBF0F7] dark:bg-[#0f0f0f]">
             <div
-                className="bg-white min-h-full rounded-t-[24px] md:rounded-tl-[32px] md:rounded-tr-none"
+                className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 min-h-full rounded-t-[24px] md:rounded-tl-[32px] md:rounded-tr-none"
                 style={{ marginTop: '0' }}
             >
                 <div className="p-4 md:pt-[41px] md:px-[56px]">
@@ -1099,14 +1099,14 @@ const AddPropertyPage = () => {
                     </h2>
 
                     {/* Flow Selector Tabs */}
-                    <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-xl max-w-lg">
+                    <div className="flex gap-2 mb-6 bg-gray-100 dark:bg-white/10 p-1 rounded-xl max-w-lg">
                         <button
                             type="button"
                             onClick={() => setActiveFlow('pdf')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                                 activeFlow === 'pdf'
-                                    ? 'bg-white text-[#E8730A] shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                    ? 'bg-white dark:bg-[#1a1a1a] text-[#E8730A] shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                         >
                             <FileUp className="w-4 h-4" />
@@ -1117,8 +1117,8 @@ const AddPropertyPage = () => {
                             onClick={() => setActiveFlow('bulk')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                                 activeFlow === 'bulk'
-                                    ? 'bg-white text-[#E8730A] shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                    ? 'bg-white dark:bg-[#1a1a1a] text-[#E8730A] shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                         >
                             <Upload className="w-4 h-4" />
@@ -1129,8 +1129,8 @@ const AddPropertyPage = () => {
                             onClick={() => setActiveFlow('manual')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                                 activeFlow === 'manual'
-                                    ? 'bg-white text-[#E8730A] shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                    ? 'bg-white dark:bg-[#1a1a1a] text-[#E8730A] shadow-sm'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                         >
                             <Eye className="w-4 h-4" />
@@ -1140,9 +1140,9 @@ const AddPropertyPage = () => {
 
                     {/* Error Message */}
                     {error && (
-                        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 max-w-[838px]">
+                        <div className="mb-4 p-4 bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded-lg flex items-center gap-3 max-w-[838px]">
                             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                            <p className="text-red-700 text-sm">{error}</p>
+                            <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
                             <button onClick={() => setError(null)} className="ml-auto text-red-600 hover:text-red-800">
                                 <X className="w-4 h-4" />
                             </button>
@@ -1163,17 +1163,17 @@ const AddPropertyPage = () => {
             {/* Error Modal */}
             {showErrorModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl max-w-md w-full shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-2xl max-w-md w-full shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="p-6">
-                            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <AlertTriangle className="w-8 h-8 text-amber-600" />
                             </div>
 
-                            <h3 className="text-xl font-semibold text-gray-900 text-center mb-3">
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white text-center mb-3">
                                 {errorModalTitle}
                             </h3>
 
-                            <p className="text-gray-600 text-center whitespace-pre-line mb-6">
+                            <p className="text-gray-600 dark:text-gray-300 text-center whitespace-pre-line mb-6">
                                 {errorModalMessage}
                             </p>
 
@@ -1206,10 +1206,10 @@ const AddPropertyPage = () => {
 const AddPropertyPageWrapper = () => {
     return (
         <Suspense fallback={
-            <div className="flex h-screen items-center justify-center bg-gray-50">
+            <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-[#0f0f0f]">
                 <div className="flex flex-col items-center gap-3">
                     <Loader2 className="h-8 w-8 animate-spin text-[#E8730A]" />
-                    <p className="text-gray-500 text-sm">Loading...</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Loading...</p>
                 </div>
             </div>
         }>

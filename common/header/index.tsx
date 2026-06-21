@@ -8,6 +8,7 @@ import { ArrowLeft, Plus, Menu } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { getStoredUserInfo, authAPI } from "@/lib/api"
+import { ThemeToggle } from "@/common/theme/theme-toggle"
 import Image from "next/image"
 
 interface UserData {
@@ -131,19 +132,19 @@ export function PageHeader({
             <Button
                 onClick={() => router.push('/profile')}
                 variant="ghost"
-                className="flex items-center gap-3 px-3 py-2 h-auto rounded-full hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 px-3 py-2 h-auto rounded-full hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
             >
-                <Avatar className="h-9 w-9 border border-gray-200">
+                <Avatar className="h-9 w-9 border border-gray-200 dark:border-white/15">
                     {userData.profileImage ? (
                         <AvatarImage src={userData.profileImage} alt={userData.fullName} />
                     ) : null}
-                    <AvatarFallback className="bg-gray-100 text-gray-600 text-sm font-medium">
+                    <AvatarFallback className="bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 text-sm font-medium">
                         {userData.initials}
                     </AvatarFallback>
                 </Avatar>
                 <div className="hidden sm:flex flex-col items-start">
-                    <span className="text-sm font-semibold text-[#0C1D38] leading-tight">{fullDisplayName}</span>
-                    <span className="text-xs text-[#6B7280] leading-tight">View Profile</span>
+                    <span className="text-sm font-semibold text-[#0C1D38] dark:text-white leading-tight">{fullDisplayName}</span>
+                    <span className="text-xs text-[#6B7280] dark:text-gray-400 leading-tight">View Profile</span>
                 </div>
             </Button>
 
@@ -151,16 +152,24 @@ export function PageHeader({
     )
 
     return (
-        <div className="w-full bg-white border-b border-gray-100">
+        <div className="w-full bg-white dark:bg-[#1a1a1a] border-b border-gray-100 dark:border-white/10">
             {/* Mobile header with logo and menu */}
-            <div className="flex lg:hidden items-center justify-between px-4 py-3 border-b border-gray-100">
+            <div className="flex lg:hidden items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10">
                 <Image
                     src="/logo-dark.svg"
                     alt="Viano Systems"
                     width={155}
                     height={52}
                     priority
-                    className="h-11 w-auto"
+                    className="h-11 w-auto dark:hidden"
+                />
+                <Image
+                    src="/Logo.svg"
+                    alt="Viano Systems"
+                    width={155}
+                    height={52}
+                    priority
+                    className="h-11 w-auto hidden dark:block"
                 />
                 <div className="flex items-center gap-2.5">
                     {/* Primary action */}
@@ -189,7 +198,7 @@ export function PageHeader({
                     <button
                         onClick={onToggleSidebar}
                         aria-label="Open menu"
-                        className="h-11 w-11 flex items-center justify-center rounded-xl text-gray-900 hover:bg-gray-100 transition-colors"
+                        className="h-11 w-11 flex items-center justify-center rounded-xl text-gray-900 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
                     >
                         <Menu className="h-6 w-6" />
                     </button>
@@ -201,12 +210,13 @@ export function PageHeader({
                 <div className="flex items-center gap-4">
                     {showBack && (backHref ? backLink : backButton)}
                     {/* Title */}
-                    <h1 className="text-2xl lg:text-3xl font-bold text-[#1a1a2e]">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-[#1a1a2e] dark:text-white">
                         {title}
                     </h1>
                 </div>
 
                 <div className="flex items-center gap-4">
+                    <ThemeToggle variant="light" />
                     {/* Primary action */}
                     {actionLabel && (
                         actionHref ? (

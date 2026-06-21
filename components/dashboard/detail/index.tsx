@@ -169,7 +169,7 @@ export function PropertyDetail({ property }: PropertyDetailProps) {
                 <div className="relative w-full h-[220px] md:h-[280px] bg-gradient-to-br from-sky-100 via-blue-50 to-emerald-50 overflow-hidden rounded-t-[32px] lg:rounded-none">
                     <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 50%)' }} />
                     <img
-                        src="/property-default.png"
+                        src="/property-default-v2.png"
                         alt="Property"
                         className="w-full h-full object-cover"
                     />

@@ -93,23 +93,23 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+                <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between sticky top-0 bg-white dark:bg-[#1a1a1a] rounded-t-2xl">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-[#E8730A] to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-orange-100">
                             <Plus className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-[#0C1D38]">Add Manual System</h2>
-                            <p className="text-xs text-[#64748B] font-medium">
+                            <h2 className="text-lg font-bold text-[#0C1D38] dark:text-white">Add Manual System</h2>
+                            <p className="text-xs text-[#64748B] dark:text-gray-400 font-medium">
                                 Add a system manually to this property
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     >
                         <X className="h-6 w-6" />
                     </button>
@@ -119,20 +119,20 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                 <div className="p-6 space-y-5">
                     {/* Error */}
                     {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+                        <div className="bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded-xl p-3 text-sm text-red-700 dark:text-red-400">
                             {error}
                         </div>
                     )}
 
                     {/* System Type */}
                     <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                        <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
                             System Type <span className="text-red-500">*</span>
                         </label>
                         <select
                             value={systemType}
                             onChange={(e) => setSystemType(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all appearance-none"
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all appearance-none"
                         >
                             <option value="">Select a system type...</option>
                             {VALID_SYSTEM_TYPES.map((type) => (
@@ -145,36 +145,36 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
 
                     {/* Name */}
                     <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
-                            Name <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                        <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
+                            Name <span className="text-gray-400 dark:text-gray-400 font-normal normal-case">(optional)</span>
                         </label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g. Unit 2"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                         />
                     </div>
 
                     {/* Brand */}
                     <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
-                            Brand <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                        <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
+                            Brand <span className="text-gray-400 dark:text-gray-400 font-normal normal-case">(optional)</span>
                         </label>
                         <input
                             type="text"
                             value={brand}
                             onChange={(e) => setBrand(e.target.value)}
                             placeholder="e.g. Trane"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                         />
                     </div>
 
                     {/* Age Mode Selector */}
                     <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
-                            Age Information <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                        <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
+                            Age Information <span className="text-gray-400 dark:text-gray-400 font-normal normal-case">(optional)</span>
                         </label>
                         <div className="flex gap-2">
                             <button
@@ -183,7 +183,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                                 className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                     ageMode === 'mfg_year'
                                         ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
-                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                        : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                 }`}
                             >
                                 MFG Year
@@ -194,7 +194,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                                 className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                     ageMode === 'age'
                                         ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
-                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                        : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                 }`}
                             >
                                 Direct Age
@@ -205,7 +205,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                                 className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                     ageMode === 'none'
                                         ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
-                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                        : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                 }`}
                             >
                                 Unknown
@@ -216,7 +216,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                     {/* MFG Year input */}
                     {ageMode === 'mfg_year' && (
                         <div>
-                            <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                            <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
                                 Manufacturing Year
                             </label>
                             <input
@@ -226,7 +226,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                                 placeholder="e.g. 2020"
                                 min={1900}
                                 max={new Date().getFullYear()}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                             />
                         </div>
                     )}
@@ -234,7 +234,7 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                     {/* Age input */}
                     {ageMode === 'age' && (
                         <div>
-                            <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                            <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
                                 Current Age (years)
                             </label>
                             <input
@@ -244,14 +244,14 @@ export function AddManualSystemModal({ propertyId, onClose, onSuccess }: AddManu
                                 placeholder="e.g. 5.5"
                                 min={0}
                                 step={0.1}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                             />
                         </div>
                     )}
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-gray-100 flex gap-3 sticky bottom-0 bg-white rounded-b-2xl">
+                <div className="p-6 border-t border-gray-100 dark:border-white/10 flex gap-3 sticky bottom-0 bg-white dark:bg-[#1a1a1a] rounded-b-2xl">
                     <Button
                         variant="outline"
                         onClick={onClose}

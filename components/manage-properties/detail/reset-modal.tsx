@@ -67,23 +67,23 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-[#1a1a1a] border border-transparent dark:border-white/10 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+                <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between sticky top-0 bg-white dark:bg-[#1a1a1a] rounded-t-2xl">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-[#E8730A] to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-orange-100">
                             <Calendar className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-[#0C1D38]">Log Replacement</h2>
-                            <p className="text-xs text-[#64748B] font-medium">
+                            <h2 className="text-lg font-bold text-[#0C1D38] dark:text-white">Log Replacement</h2>
+                            <p className="text-xs text-[#64748B] dark:text-gray-400 font-medium">
                                 {formattedSystemType}{system.brand ? ` — ${system.brand}` : ''}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                     >
                         <X className="h-6 w-6" />
                     </button>
@@ -93,28 +93,28 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                 <div className="p-6 space-y-5">
                     {/* Error */}
                     {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+                        <div className="bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded-xl p-3 text-sm text-red-700 dark:text-red-400">
                             {error}
                         </div>
                     )}
 
                     {/* Replacement Date */}
                     <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                        <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
                             Replacement Date
                         </label>
                         <input
                             type="date"
                             value={replacementDate}
                             onChange={(e) => setReplacementDate(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                         />
-                        <p className="text-[10px] text-gray-400 mt-1.5">Defaults to today. Change if the replacement happened on a different date.</p>
+                        <p className="text-[10px] text-gray-400 dark:text-gray-400 mt-1.5">Defaults to today. Change if the replacement happened on a different date.</p>
                     </div>
 
                     {/* Event Type */}
                     <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                        <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
                             Event Type
                         </label>
                         <div className="flex gap-2">
@@ -124,7 +124,7 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
                                     eventType === 'full_replacement'
                                         ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
-                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                        : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                 }`}
                             >
                                 <Wrench className="w-4 h-4" />
@@ -136,7 +136,7 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
                                     eventType === 'age_adjustment'
                                         ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
-                                        : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                        : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                 }`}
                             >
                                 <Calendar className="w-4 h-4" />
@@ -148,7 +148,7 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                     {/* Adjusted Age - only for age_adjustment */}
                     {eventType === 'age_adjustment' && (
                         <div>
-                            <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                            <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
                                 Adjusted Age (years) <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -158,9 +158,9 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
                                 placeholder="e.g. 3.5"
                                 min={0}
                                 step={0.1}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                             />
-                            <p className="text-[10px] text-gray-400 mt-1.5">
+                            <p className="text-[10px] text-gray-400 dark:text-gray-400 mt-1.5">
                                 Set the new age for this system. Use 0 for brand new.
                             </p>
                         </div>
@@ -168,21 +168,21 @@ export function ResetModal({ propertyId, system, onClose, onSuccess }: ResetModa
 
                     {/* Notes */}
                     <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
-                            Notes <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                        <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
+                            Notes <span className="text-gray-400 dark:text-gray-400 font-normal normal-case">(optional)</span>
                         </label>
                         <textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             placeholder="e.g. Replaced after leak..."
                             rows={3}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all resize-none"
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all resize-none"
                         />
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-gray-100 flex gap-3 sticky bottom-0 bg-white rounded-b-2xl">
+                <div className="p-6 border-t border-gray-100 dark:border-white/10 flex gap-3 sticky bottom-0 bg-white dark:bg-[#1a1a1a] rounded-b-2xl">
                     <Button
                         variant="outline"
                         onClick={onClose}

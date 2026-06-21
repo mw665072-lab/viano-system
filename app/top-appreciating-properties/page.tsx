@@ -46,12 +46,12 @@ export default function TopAppreciatingPropertiesPage() {
       {/* Single clean title with count badge */}
       <div className="flex items-center gap-3 mb-6">
         <h1
-          className="text-xl md:text-2xl font-bold text-[#0C1D38]"
+          className="text-xl md:text-2xl font-bold text-[#0C1D38] dark:text-white"
           style={{ fontFamily: "Manrope, sans-serif" }}
         >
           Top Appreciating Properties
         </h1>
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400">
           {properties.length}
         </span>
       </div>
@@ -79,7 +79,7 @@ export default function TopAppreciatingPropertiesPage() {
       {/* Empty */}
       {!isLoading && !error && properties.length === 0 && (
         <div className="py-8 text-center">
-          <p className="text-sm text-gray-400">No appreciating properties found</p>
+          <p className="text-sm text-gray-400 dark:text-gray-400">No appreciating properties found</p>
         </div>
       )}
 
@@ -91,8 +91,8 @@ export default function TopAppreciatingPropertiesPage() {
               <div
                 key={property.property_id}
                 className={`group grid grid-cols-[52px_52px_1fr_1fr_20px] items-center gap-4 py-[10px] ${
-                  index < displayItems.length - 1 ? "border-b border-gray-100" : ""
-                } hover:bg-emerald-50/60 transition-colors`}
+                  index < displayItems.length - 1 ? "border-b border-gray-100 dark:border-white/10" : ""
+                } hover:bg-emerald-50/60 dark:hover:bg-white/5 transition-colors`}
               >
                 {/* Rank Badge */}
                 <div className="w-[52px] flex items-center justify-center">
@@ -107,9 +107,9 @@ export default function TopAppreciatingPropertiesPage() {
                 </div>
 
                 {/* Property Image */}
-                <div className="relative w-[52px] h-[52px] flex-shrink-0 rounded-xl overflow-hidden bg-gray-200">
+                <div className="relative w-[52px] h-[52px] flex-shrink-0 rounded-xl overflow-hidden bg-gray-200 dark:bg-white/10">
                   <Image
-                    src="/property-default.png"
+                    src="/property-default-v2.png"
                     alt={property.address}
                     fill
                     className="object-cover"
@@ -119,7 +119,7 @@ export default function TopAppreciatingPropertiesPage() {
                 {/* Address + Location + Bought Date */}
                 <div className="min-w-0">
                   <h3
-                    className="text-sm font-bold text-[#0C1D38] truncate"
+                    className="text-sm font-bold text-[#0C1D38] dark:text-white truncate"
                     style={{ fontFamily: "Manrope, sans-serif" }}
                   >
                     {property.address}
@@ -153,11 +153,11 @@ export default function TopAppreciatingPropertiesPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-100 dark:border-white/10">
               <button
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-white/10 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
@@ -168,7 +168,7 @@ export default function TopAppreciatingPropertiesPage() {
                   className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
                     page === currentPage
                       ? "bg-emerald-500 text-white"
-                      : "border border-gray-200 hover:bg-gray-50 text-gray-600"
+                      : "border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300"
                   }`}
                 >
                   {page}
@@ -177,7 +177,7 @@ export default function TopAppreciatingPropertiesPage() {
               <button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-white/10 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>
@@ -185,13 +185,13 @@ export default function TopAppreciatingPropertiesPage() {
           )}
 
           {/* Footer */}
-          <div className="mt-1 pt-1 border-t border-gray-100">
+          <div className="mt-1 pt-1 border-t border-gray-100 dark:border-white/10">
             <p
-              className="text-xs text-black flex items-center gap-1 leading-tight"
+              className="text-xs text-black dark:text-gray-400 flex items-center gap-1 leading-tight"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Estimates provided by
-              <span className="inline-flex items-center gap-1 font-bold text-black">
+              <span className="inline-flex items-center gap-1 font-bold text-black dark:text-gray-200">
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
                   <path d="M8 12l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

@@ -116,10 +116,10 @@ export function OTPInput({ value, onChange, disabled = false, length = 6 }: OTPI
             rounded-xl border-2
             outline-none transition-all duration-200
             ${disabled
-              ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
+              ? "bg-gray-100 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-400 cursor-not-allowed"
               : digits[index]
-                ? "border-primary bg-white text-slate-900"
-                : "border-gray-200 bg-white text-slate-900 hover:border-gray-300"
+                ? "border-primary bg-white dark:bg-white/10 text-slate-900 dark:text-white"
+                : "border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white hover:border-gray-300 dark:hover:border-white/20"
             }
             focus:border-primary focus:ring-2 focus:ring-primary/20
           `}

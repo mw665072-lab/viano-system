@@ -691,7 +691,7 @@ const Page = () => {
     };
 
     return (
-        <div className="h-full flex flex-col bg-[#F8F9FB]">
+        <div className="h-full flex flex-col bg-[#F8F9FB] dark:bg-[#0f0f0f]">
             {/* Error Message */}
             {error && (
                 <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
@@ -721,7 +721,7 @@ const Page = () => {
             {/* Content Layout */}
             <div className="flex flex-1 overflow-hidden gap-4 p-4">
                 {/* Left Panel - Property List */}
-                <div className={`flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden h-full transition-all duration-300 ${
+                <div className={`flex flex-col bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-white/10 rounded-2xl overflow-hidden h-full transition-all duration-300 ${
                     selectedProperty && selectedDetail
                         ? 'lg:w-125'
                         : 'w-full'
@@ -749,7 +749,7 @@ const Page = () => {
                 {selectedProperty && selectedDetail && (
                     <>
                         {/* Desktop Detail Panel */}
-                        <div className="hidden lg:flex lg:flex-col flex-1 bg-white border border-gray-100 rounded-2xl overflow-hidden relative">
+                        <div className="hidden lg:flex lg:flex-col flex-1 bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-white/10 rounded-2xl overflow-hidden relative">
                             <PropertyDetailPanel
                                 property={selectedDetail}
                                 onClose={handleCloseDetail}
@@ -767,7 +767,7 @@ const Page = () => {
                         </div>
 
                         {/* Mobile Full-Screen Overlay */}
-                        <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
+                        <div className="lg:hidden fixed inset-0 z-50 bg-white dark:bg-[#1a1a1a] overflow-y-auto">
                             <PropertyDetailPanel
                                 property={selectedDetail}
                                 onClose={handleCloseDetail}

@@ -12,20 +12,20 @@ function getTagStyle(alertTier: string, percentageUsed: number) {
 
   if (isTier2) {
     // Critical — always red
-    return { bg: "bg-red-50", text: "text-red-600", border: "border-red-200" }
+    return { bg: "bg-red-50 dark:bg-red-500/15", text: "text-red-600 dark:text-red-400", border: "border-red-200" }
   }
 
   // Tier 1 — color based on percentage_used
   if (percentageUsed >= 80) {
-    return { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-200" }
+    return { bg: "bg-orange-50 dark:bg-orange-500/15", text: "text-orange-600 dark:text-orange-400", border: "border-orange-200" }
   }
   if (percentageUsed >= 60) {
-    return { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-200" }
+    return { bg: "bg-amber-50 dark:bg-amber-500/15", text: "text-amber-600 dark:text-amber-400", border: "border-amber-200" }
   }
   if (percentageUsed >= 40) {
-    return { bg: "bg-blue-50", text: "text-blue-600", border: "border-blue-200" }
+    return { bg: "bg-blue-50 dark:bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", border: "border-blue-200" }
   }
-  return { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-200" }
+  return { bg: "bg-emerald-50 dark:bg-emerald-500/15", text: "text-emerald-600 dark:text-emerald-400", border: "border-emerald-200" }
 }
 
 // Human-readable system type label
@@ -119,9 +119,9 @@ export function RequiringActionPanel() {
   const hiddenCount = items.length - 5
 
   return (
-    <div className="bg-white w-full rounded-[32px] p-4 md:p-6 lg:p-[32px]">
+    <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 w-full rounded-[32px] p-4 md:p-6 lg:p-[32px]">
       {/* Header */}
-      <div className="flex items-center justify-between pb-2 md:pb-3 mb-0 border-b border-gray-100">
+      <div className="flex items-center justify-between pb-2 md:pb-3 mb-0 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-3">
           <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-[#BB0000] flex-shrink-0" />
           <h2
@@ -133,11 +133,11 @@ export function RequiringActionPanel() {
         </div>
         <Link
           href="/requiring-action"
-          className="inline-flex items-center gap-2 bg-[#F9F9F7] border border-[#F3F4F4] rounded-xl px-4 py-2 text-sm font-semibold text-[#1F1F1F] hover:bg-gray-100 transition-colors whitespace-nowrap"
+          className="inline-flex items-center gap-2 bg-[#F9F9F7] dark:bg-white/5 border border-[#F3F4F4] dark:border-white/10 rounded-xl px-4 py-2 text-sm font-semibold text-[#1F1F1F] dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors whitespace-nowrap"
           style={{ fontFamily: "Manrope, sans-serif" }}
         >
           View All
-          <ArrowRight className="w-4 h-4 text-[#1F1F1F]" />
+          <ArrowRight className="w-4 h-4 text-[#1F1F1F] dark:text-gray-200" />
         </Link>
       </div>
 
@@ -174,7 +174,7 @@ export function RequiringActionPanel() {
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
           </div>
           <p
-            className="text-sm font-semibold text-[#0C1D38]"
+            className="text-sm font-semibold text-[#0C1D38] dark:text-white"
             style={{ fontFamily: "Manrope, sans-serif" }}
           >
             No properties require action
@@ -200,13 +200,13 @@ export function RequiringActionPanel() {
               <div
                 key={system.system_id}
                 className={`group grid grid-cols-[52px_1fr_120px_1fr_28px] items-center gap-4 py-[10px] ${
-                  index < displayItems.length - 1 ? "border-b border-[#E8ECF0]" : ""
-                } hover:bg-orange-50 transition-colors px-2 -mx-2 rounded-lg`}
+                  index < displayItems.length - 1 ? "border-b border-[#E8ECF0] dark:border-white/10" : ""
+                } hover:bg-orange-50 dark:hover:bg-white/5 transition-colors px-2 -mx-2 rounded-lg`}
               >
                 {/* Property Image */}
-                <div className="relative w-[52px] h-[52px] flex-shrink-0 rounded-xl overflow-hidden bg-gray-200">
+                <div className="relative w-[52px] h-[52px] flex-shrink-0 rounded-xl overflow-hidden bg-gray-200 dark:bg-white/10">
                   <Image
-                    src="/property-default.png"
+                    src="/property-default-v2.png"
                     alt={property.property_name}
                     fill
                     className="object-cover"
@@ -216,7 +216,7 @@ export function RequiringActionPanel() {
                 {/* Address + Location */}
                 <div className="min-w-0">
                   <h3
-                    className="text-sm font-bold text-[#0C1D38] truncate"
+                    className="text-sm font-bold text-[#0C1D38] dark:text-white truncate"
                     style={{ fontFamily: "Manrope, sans-serif" }}
                   >
                     {property.address || property.property_name}
@@ -242,7 +242,7 @@ export function RequiringActionPanel() {
                 {/* Action Label + Timeframe */}
                 <div className="min-w-0">
                   <p
-                    className="text-sm font-semibold text-[#0C1D38] truncate"
+                    className="text-sm font-semibold text-[#0C1D38] dark:text-white truncate"
                     style={{ fontFamily: "Manrope, sans-serif" }}
                   >
                     {system.action_label}

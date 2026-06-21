@@ -8,15 +8,15 @@ import { propertyAPI, ScheduledAlert } from "@/lib/api"
 const ITEMS_PER_PAGE = 15
 
 const PRIORITY_STYLES: Record<number, { bg: string; text: string; border: string; label: string }> = {
-  3: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", label: "Low" },
-  2: { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-200", label: "Medium" },
-  1: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200", label: "High" },
+  3: { bg: "bg-emerald-50 dark:bg-emerald-500/15", text: "text-emerald-700 dark:text-emerald-400", border: "border-emerald-200 dark:border-emerald-500/30", label: "Low" },
+  2: { bg: "bg-orange-50 dark:bg-orange-500/15", text: "text-orange-700 dark:text-orange-400", border: "border-orange-200 dark:border-orange-500/30", label: "Medium" },
+  1: { bg: "bg-red-50 dark:bg-red-500/15", text: "text-red-700 dark:text-red-400", border: "border-red-200 dark:border-red-500/30", label: "High" },
 }
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  scheduled_twilio: { bg: "bg-orange-50", text: "text-orange-700", label: "Sent" },
-  sent: { bg: "bg-blue-50", text: "text-blue-700", label: "Sent" },
-  completed: { bg: "bg-gray-100", text: "text-gray-600", label: "Completed" },
+  scheduled_twilio: { bg: "bg-orange-50 dark:bg-orange-500/15", text: "text-orange-700 dark:text-orange-400", label: "Sent" },
+  sent: { bg: "bg-blue-50 dark:bg-blue-500/15", text: "text-blue-700 dark:text-blue-400", label: "Sent" },
+  completed: { bg: "bg-gray-100 dark:bg-white/10", text: "text-gray-600 dark:text-gray-300", label: "Completed" },
 }
 
 function formatDate(dateString: string): string {
@@ -75,12 +75,12 @@ export default function RecentAlertsPage() {
       {/* Single clean title with count badge */}
       <div className="flex items-center gap-3 mb-6">
         <h1
-          className="text-xl md:text-2xl font-bold text-[#0C1D38]"
+          className="text-xl md:text-2xl font-bold text-[#0C1D38] dark:text-white"
           style={{ fontFamily: "Manrope, sans-serif" }}
         >
           Property Alerts
         </h1>
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400">
           {alerts.length}
         </span>
       </div>
@@ -89,26 +89,26 @@ export default function RecentAlertsPage() {
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-10">
           <Loader2 className="w-7 h-7 animate-spin text-orange-400" />
-          <p className="mt-3 text-sm text-gray-400">Loading alerts...</p>
+          <p className="mt-3 text-sm text-gray-400 dark:text-gray-400">Loading alerts...</p>
         </div>
       )}
 
       {/* Error */}
       {error && !isLoading && (
-        <div className="flex items-center gap-3 py-4 px-4 bg-red-50 rounded-xl border border-red-100">
-          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="flex items-center gap-3 py-4 px-4 bg-red-50 dark:bg-red-500/10 rounded-xl border border-red-100 dark:border-red-500/30">
+          <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
 
       {/* Empty */}
       {!isLoading && !error && alerts.length === 0 && (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center mb-2">
-            <Check className="w-5 h-5 text-emerald-500" />
+          <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-2">
+            <Check className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
           </div>
-          <p className="text-sm font-semibold text-[#0C1D38]">No scheduled alerts</p>
-          <p className="text-xs text-gray-400 mt-0.5 max-w-[220px]">
+          <p className="text-sm font-semibold text-[#0C1D38] dark:text-white">No scheduled alerts</p>
+          <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5 max-w-[220px]">
             All alerts have been sent or resolved.
           </p>
         </div>
@@ -121,18 +121,18 @@ export default function RecentAlertsPage() {
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-100">
+                <tr className="border-b border-gray-100 dark:border-white/10">
                   {[
                     { label: "Property", align: "pl-3" },
                     { label: "Alert Type", align: "" },
                     { label: "Priority", align: "" },
                     { label: "Date", align: "" },
                     { label: "Status", align: "" },
-                    { label: "Was this helpful?", align: "text-center pr-3" },
+                    { label: "Feedback", align: "pr-3" },
                   ].map((col) => (
                     <th
                       key={col.label}
-                      className={`text-left text-[11px] uppercase tracking-wider text-gray-500 font-semibold pb-3 pt-2 ${col.align}`}
+                      className={`text-left text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400 font-semibold pb-3 pt-2 ${col.align}`}
                       style={{ fontFamily: "Manrope, sans-serif" }}
                     >
                       {col.label}
@@ -149,26 +149,26 @@ export default function RecentAlertsPage() {
                   return (
                     <tr
                       key={alert.message_id}
-                      className="group border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors"
+                      className="group border-b border-gray-50 dark:border-white/10 last:border-0 hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors"
                     >
                       <td className="py-[10px] pl-3">
                         <div className="flex items-center gap-3">
-                          <div className="relative w-[52px] h-[52px] flex-shrink-0 rounded-xl overflow-hidden bg-gray-200">
-                            <Image src="/property-default.png" alt={alert.property_address} fill className="object-cover" />
+                          <div className="relative w-[52px] h-[52px] flex-shrink-0 rounded-xl overflow-hidden bg-gray-200 dark:bg-white/10">
+                            <Image src="/property-default-v2.png" alt={alert.property_address} fill className="object-cover" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-[#0C1D38] truncate max-w-[180px]" style={{ fontFamily: "Manrope, sans-serif" }}>
+                            <p className="text-sm font-semibold text-[#0C1D38] dark:text-white truncate max-w-[180px]" style={{ fontFamily: "Manrope, sans-serif" }}>
                               {alert.property_address}
                             </p>
-                            <p className="text-xs text-gray-500" style={{ fontFamily: "Manrope, sans-serif" }}>
+                            <p className="text-xs text-gray-500 dark:text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>
                               {alert.client_name}
                             </p>
                           </div>
                         </div>
                       </td>
                       <td className="py-[10px]">
-                        <p className="text-sm font-medium text-[#0C1D38]" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.alert_type}</p>
-                        <p className="text-xs text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.trigger}</p>
+                        <p className="text-sm font-medium text-[#0C1D38] dark:text-white" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.alert_type}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.trigger}</p>
                       </td>
                       <td className="py-[10px]">
                         <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg border ${priority.bg} ${priority.text} ${priority.border}`}>
@@ -176,7 +176,7 @@ export default function RecentAlertsPage() {
                         </span>
                       </td>
                       <td className="py-[10px]">
-                        <p className="text-sm text-gray-600" style={{ fontFamily: "Manrope, sans-serif" }}>{formatDate(alert.scheduled_for)}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300" style={{ fontFamily: "Manrope, sans-serif" }}>{formatDate(alert.scheduled_for)}</p>
                       </td>
                       <td className="py-[10px]">
                         <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg ${status.bg} ${status.text}`}>
@@ -184,19 +184,22 @@ export default function RecentAlertsPage() {
                         </span>
                       </td>
                       <td className="py-[10px] pr-3">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex flex-col items-start gap-1.5">
+                          <span className="text-xs text-gray-500 dark:text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>
+                            Was this helpful?
+                          </span>
                           {userFeedback ? (
-                            <div className="flex items-center gap-1.5 text-emerald-600">
+                            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                               <Check className="w-4 h-4" />
                               <span className="text-xs font-medium" style={{ fontFamily: "Manrope, sans-serif" }}>Thanks!</span>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-1.5">
-                              <button onClick={() => handleFeedback(alert.message_id, "yes")} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors">
-                                <ThumbsUp className="w-3.5 h-3.5" /> Yes
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => handleFeedback(alert.message_id, "yes")} aria-label="Helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+                                <ThumbsUp className="w-4 h-4" />
                               </button>
-                              <button onClick={() => handleFeedback(alert.message_id, "no")} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors">
-                                <ThumbsDown className="w-3.5 h-3.5" /> No
+                              <button onClick={() => handleFeedback(alert.message_id, "no")} aria-label="Not helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+                                <ThumbsDown className="w-4 h-4" />
                               </button>
                             </div>
                           )}
@@ -217,33 +220,33 @@ export default function RecentAlertsPage() {
               const userFeedback = feedback[alert.message_id]
 
               return (
-                <div key={alert.message_id} className="p-4 rounded-2xl border border-gray-100 hover:border-gray-200 transition-all bg-white">
+                <div key={alert.message_id} className="p-4 rounded-2xl border border-gray-100 dark:border-white/10 hover:border-gray-200 dark:hover:border-white/10 transition-all bg-white dark:bg-[#1a1a1a]">
                   <div className="flex items-start gap-3">
-                    <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
-                      <Image src="/property-default.png" alt={alert.property_address} fill className="object-cover" />
+                    <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-white/10">
+                      <Image src="/property-default-v2.png" alt={alert.property_address} fill className="object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[#0C1D38] truncate" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.property_address}</p>
-                      <p className="text-xs text-gray-500" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.client_name}</p>
+                      <p className="text-sm font-semibold text-[#0C1D38] dark:text-white truncate" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.property_address}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.client_name}</p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
                     <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md border ${priority.bg} ${priority.text} ${priority.border}`}>{priority.label}</span>
                     <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md ${status.bg} ${status.text}`}>{status.label}</span>
-                    <span className="text-[11px] text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>{formatDate(alert.scheduled_for)}</span>
+                    <span className="text-[11px] text-gray-400 dark:text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>{formatDate(alert.scheduled_for)}</span>
                   </div>
-                  <p className="mt-2 text-sm font-medium text-[#0C1D38]" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.alert_type}</p>
-                  <p className="text-xs text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.trigger}</p>
+                  <p className="mt-2 text-sm font-medium text-[#0C1D38] dark:text-white" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.alert_type}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>{alert.trigger}</p>
                   {userFeedback ? (
-                    <div className="mt-3 flex items-center gap-1.5 text-emerald-600">
+                    <div className="mt-3 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                       <Check className="w-4 h-4" />
                       <span className="text-xs font-medium" style={{ fontFamily: "Manrope, sans-serif" }}>Thanks for your feedback!</span>
                     </div>
                   ) : (
                     <div className="mt-3 flex items-center gap-2">
-                      <span className="text-xs text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>Helpful?</span>
-                      <button onClick={() => handleFeedback(alert.message_id, "yes")} className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200"><ThumbsUp className="w-3 h-3" /> Yes</button>
-                      <button onClick={() => handleFeedback(alert.message_id, "no")} className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200"><ThumbsDown className="w-3 h-3" /> No</button>
+                      <span className="text-xs text-gray-500 dark:text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>Was this helpful?</span>
+                      <button onClick={() => handleFeedback(alert.message_id, "yes")} aria-label="Helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"><ThumbsUp className="w-4 h-4" /></button>
+                      <button onClick={() => handleFeedback(alert.message_id, "no")} aria-label="Not helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"><ThumbsDown className="w-4 h-4" /></button>
                     </div>
                   )}
                 </div>
@@ -253,12 +256,12 @@ export default function RecentAlertsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-100">
-              <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Previous</button>
+            <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-100 dark:border-white/10">
+              <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Previous</button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button key={page} onClick={() => goToPage(page)} className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${page === currentPage ? "bg-orange-500 text-white" : "border border-gray-200 hover:bg-gray-50 text-gray-600"}`}>{page}</button>
+                <button key={page} onClick={() => goToPage(page)} className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors ${page === currentPage ? "bg-orange-500 text-white" : "border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300"}`}>{page}</button>
               ))}
-              <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Next</button>
+              <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Next</button>
             </div>
           )}
         </>

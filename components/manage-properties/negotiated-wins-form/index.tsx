@@ -122,11 +122,11 @@ const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange
   return (
     <div className="space-y-4">
       {wins.map((win, index) => (
-        <div key={index} className="p-4 border border-[#D9D9D9] rounded-[8px] bg-white space-y-3">
+        <div key={index} className="p-4 border border-[#D9D9D9] dark:border-white/10 rounded-[8px] bg-white dark:bg-[#1a1a1a] space-y-3">
           {/* Row 1: Item and Value */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">
+              <label className="block text-xs font-medium text-[#374151] dark:text-gray-300 mb-1">
                 Win Description <span className="text-red-500">*</span>
               </label>
               <input
@@ -135,11 +135,11 @@ const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange
                 value={win.item}
                 onChange={(e) => handleWinChange(index, 'item', e.target.value)}
                 disabled={disabled}
-                className="w-full h-[40px] rounded-[6px] border border-[#D9D9D9] bg-white px-3 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
+                className="w-full h-[40px] rounded-[6px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-3 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] dark:placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">
+              <label className="block text-xs font-medium text-[#374151] dark:text-gray-300 mb-1">
                 Value
               </label>
               <input
@@ -148,7 +148,7 @@ const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange
                 value={win.value}
                 onChange={(e) => handleWinChange(index, 'value', e.target.value)}
                 disabled={disabled}
-                className="w-full h-[40px] rounded-[6px] border border-[#D9D9D9] bg-white px-3 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
+                className="w-full h-[40px] rounded-[6px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-3 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] dark:placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
               />
             </div>
           </div>
@@ -156,14 +156,14 @@ const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange
           {/* Row 2: Category and System Type */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">
+              <label className="block text-xs font-medium text-[#374151] dark:text-gray-300 mb-1">
                 Category
               </label>
               <select
                 value={win.category || ''}
                 onChange={(e) => handleWinChange(index, 'category', e.target.value)}
                 disabled={disabled}
-                className="w-full h-[40px] rounded-[6px] border border-[#D9D9D9] bg-white px-3 text-sm text-[#1E1E1E] focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
+                className="w-full h-[40px] rounded-[6px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-3 text-sm text-[#1E1E1E] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
               >
                 {CATEGORY_OPTIONS.map(option => (
                   <option key={option.value} value={option.value}>
@@ -173,14 +173,14 @@ const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">
+              <label className="block text-xs font-medium text-[#374151] dark:text-gray-300 mb-1">
                 System Type
               </label>
               <select
                 value={win.system_type || ''}
                 onChange={(e) => handleWinChange(index, 'system_type', e.target.value)}
                 disabled={disabled || win.category !== 'new_major_update'}
-                className="w-full h-[40px] rounded-[6px] border border-[#D9D9D9] bg-white px-3 text-sm text-[#1E1E1E] focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
+                className="w-full h-[40px] rounded-[6px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-3 text-sm text-[#1E1E1E] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
               >
                 {SYSTEM_TYPE_OPTIONS.map(option => (
                   <option key={option.value} value={option.value}>
@@ -189,7 +189,7 @@ const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange
                 ))}
               </select>
               {win.category !== 'new_major_update' && (
-                <p className="text-xs text-[#9CA3AF] mt-1">Only available for "Major/New Update"</p>
+                <p className="text-xs text-[#9CA3AF] dark:text-gray-400 mt-1">Only available for "Major/New Update"</p>
               )}
             </div>
           </div>
@@ -198,7 +198,7 @@ const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange
           {win.category === 'new_major_update' &&
            (win.system_type === 'hvac' || win.system_type === 'water_heater') && (
             <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">
+              <label className="block text-xs font-medium text-[#374151] dark:text-gray-300 mb-1">
                 Unit Name (Optional)
               </label>
               <input
@@ -207,15 +207,15 @@ const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange
                 value={win.unit_name || ''}
                 onChange={(e) => handleWinChange(index, 'unit_name', e.target.value)}
                 disabled={disabled}
-                className="w-full h-[40px] rounded-[6px] border border-[#D9D9D9] bg-white px-3 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
+                className="w-full h-[40px] rounded-[6px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-3 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] dark:placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
               />
-              <p className="text-xs text-[#9CA3AF] mt-1">Leave empty to reset all units of this type</p>
+              <p className="text-xs text-[#9CA3AF] dark:text-gray-400 mt-1">Leave empty to reset all units of this type</p>
             </div>
           )}
 
           {/* Row 3: Notes */}
           <div>
-            <label className="block text-xs font-medium text-[#374151] mb-1">
+            <label className="block text-xs font-medium text-[#374151] dark:text-gray-300 mb-1">
               Notes
             </label>
             <textarea
@@ -223,7 +223,7 @@ const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange
               value={win.notes || ''}
               onChange={(e) => handleWinChange(index, 'notes', e.target.value)}
               disabled={disabled}
-              className="w-full min-h-[60px] rounded-[6px] border border-[#D9D9D9] bg-white px-3 py-2 text-sm text-[#1E1E1E] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
+              className="w-full min-h-[60px] rounded-[6px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] dark:placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E8730A] disabled:opacity-50"
             />
           </div>
 
@@ -246,14 +246,14 @@ const NegotiatedWinsForm: React.FC<NegotiatedWinsFormProps> = ({ value, onChange
         type="button"
         onClick={handleAddWin}
         disabled={disabled}
-        className="w-full h-[40px] rounded-[8px] border-2 border-dashed border-[#E8730A] bg-white hover:bg-[#F8FAFC] text-[#E8730A] text-sm font-medium disabled:opacity-50"
+        className="w-full h-[40px] rounded-[8px] border-2 border-dashed border-[#E8730A] bg-white dark:bg-white/5 hover:bg-[#F8FAFC] dark:hover:bg-white/10 text-[#E8730A] text-sm font-medium disabled:opacity-50"
       >
         <Plus className="w-4 h-4 mr-2" />
         Add Negotiated Win
       </Button>
 
       {wins.length === 0 && (
-        <p className="text-xs text-[#9CA3AF] text-center">No negotiated wins added yet. Click the button above to add one.</p>
+        <p className="text-xs text-[#9CA3AF] dark:text-gray-400 text-center">No negotiated wins added yet. Click the button above to add one.</p>
       )}
     </div>
   );

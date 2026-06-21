@@ -2,6 +2,7 @@
 import { Home, Building2, User, LogOut, Shield, Lock, LayoutDashboard } from "lucide-react";
 import { useRouter, usePathname } from 'next/navigation';
 import { clearAuth, getStoredUserInfo } from '@/lib/api';
+import { ThemeToggle } from '@/common/theme/theme-toggle';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 
@@ -155,6 +156,12 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
       {/* Bottom Section - Profile card (hover or click to reveal menu) */}
       <div className="px-3 pb-4">
+        {/* Theme toggle */}
+        <div className="flex items-center justify-between px-2 mb-3">
+          <span className="text-xs font-medium text-gray-400">Theme</span>
+          <ThemeToggle variant="dark" className="w-9 h-9" />
+        </div>
+
         <div
           className="relative"
           onMouseEnter={openMenu}

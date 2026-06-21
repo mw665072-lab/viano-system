@@ -81,10 +81,10 @@ export function PropertyList({
   return (
     <div className="flex flex-col h-full">
       {/* Header: title + search + status */}
-      <div className="px-4 pt-4 pb-3 flex-shrink-0 border-b border-gray-100">
+      <div className="px-4 pt-4 pb-3 flex-shrink-0 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-2 mb-3">
-          <Users className="w-5 h-5 text-gray-700" />
-          <h2 className="text-base font-semibold text-gray-900">Clients</h2>
+          <Users className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white">Clients</h2>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative flex-1 min-w-0">
@@ -93,12 +93,12 @@ export function PropertyList({
               placeholder="Search clients"
               value={searchQuery}
               onChange={(e) => onSearchChange?.(e.target.value)}
-              className="pl-9 h-10 rounded-lg border-gray-200 bg-white w-full"
+              className="pl-9 h-10 rounded-lg border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 dark:text-white dark:placeholder:text-gray-500 w-full"
             />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1.5 px-3 h-10 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex-shrink-0">
+              <button className="flex items-center gap-1.5 px-3 h-10 rounded-lg border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex-shrink-0">
                 <span className="whitespace-nowrap">{statusFilter}</span>
                 <ChevronDown className="w-4 h-4 text-gray-400" />
               </button>
@@ -115,7 +115,7 @@ export function PropertyList({
       {/* List area */}
       <div className="flex-1 overflow-y-auto min-h-0">
         {expanded && !isLoading && properties.length > 0 && (
-          <div className="hidden lg:flex items-center gap-3 px-4 py-2 border-b border-gray-100 bg-gray-50/60 sticky top-0 z-10">
+          <div className="hidden lg:flex items-center gap-3 px-4 py-2 border-b border-gray-100 dark:border-white/10 bg-gray-50/60 dark:bg-white/5 sticky top-0 z-10">
             <div className="w-10 flex-shrink-0" />
             <div className="flex-1 min-w-0 grid grid-cols-3 gap-4">
               <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Client</span>
@@ -132,10 +132,10 @@ export function PropertyList({
           </div>
         ) : properties.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+            <div className="w-14 h-14 bg-gray-100 dark:bg-white/10 rounded-xl flex items-center justify-center mb-3">
               <Home className="w-7 h-7 text-gray-400" />
             </div>
-            <h3 className="text-base font-semibold text-gray-900 mb-1">No properties found</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">No properties found</h3>
             <p className="text-sm text-gray-500">Add a new property to get started</p>
           </div>
         ) : (
@@ -147,12 +147,12 @@ export function PropertyList({
                 key={property.id}
                 onClick={() => onSelectProperty?.(property)}
                 className={`cursor-pointer transition-all duration-150 px-4 py-3 flex items-center gap-3 ${
-                  isSelected ? "bg-orange-50/50" : "bg-white hover:bg-gray-50/50"
-                } ${!isLast ? "border-b border-gray-100" : ""}`}
+                  isSelected ? "bg-orange-50/50 dark:bg-[#E8730A]/10" : "bg-white dark:bg-transparent hover:bg-gray-50/50 dark:hover:bg-white/5"
+                } ${!isLast ? "border-b border-gray-100 dark:border-white/10" : ""}`}
               >
                 {/* Client Initials Avatar */}
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                  isSelected ? "bg-gray-200 text-gray-700" : "bg-gray-100 text-gray-600"
+                  isSelected ? "bg-gray-200 text-gray-700 dark:bg-white/15 dark:text-gray-200" : "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300"
                 }`}>
                   {getInitials(property.clientName || 'Unknown')}
                 </div>
@@ -160,16 +160,16 @@ export function PropertyList({
                 {/* Client Name + Address */}
                 {expanded ? (
                   <div className="hidden lg:grid flex-1 min-w-0 grid-cols-3 gap-4 items-center">
-                    <h3 className="text-sm font-semibold text-gray-900 truncate">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                       {property.clientName || 'No Client'}
                     </h3>
-                    <p className="text-xs text-gray-600 truncate">{property.name || '—'}</p>
-                    <p className="text-xs text-gray-500 truncate">{property.location || '—'}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-300 truncate">{property.name || '—'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{property.location || '—'}</p>
                   </div>
                 ) : null}
                 {/* Stacked layout (narrow panel, and mobile when expanded) */}
                 <div className={`flex-1 min-w-0 ${expanded ? "lg:hidden" : ""}`}>
-                  <h3 className="text-sm font-semibold text-gray-900 truncate">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                     {property.clientName || 'No Client'}
                   </h3>
                   <p className="text-xs text-gray-500 truncate">{property.name || property.location}</p>
@@ -204,7 +204,7 @@ export function PropertyList({
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium whitespace-nowrap transition-colors ${
                       isSelected
                         ? "border-[#E8730A] text-[#E8730A] bg-[#E8730A]/5 hover:bg-[#E8730A]/10"
-                        : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                        : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
                     }`}
                   >
                     {isSelected ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -218,7 +218,7 @@ export function PropertyList({
       </div>
 
       {/* Pagination - always at bottom */}
-      <div className="flex flex-wrap items-center justify-center sm:justify-between gap-x-2 gap-y-2 px-4 py-3 border-t border-gray-100 flex-shrink-0 mt-auto">
+      <div className="flex flex-wrap items-center justify-center sm:justify-between gap-x-2 gap-y-2 px-4 py-3 border-t border-gray-100 dark:border-white/10 flex-shrink-0 mt-auto">
         <div className="flex items-center gap-1">
           {getPageItems(currentPage, totalPages).map((item, i) =>
             item === 'ellipsis' ? (
@@ -228,7 +228,7 @@ export function PropertyList({
                 key={item}
                 onClick={() => onPageChange?.(item)}
                 className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                  currentPage === item ? "bg-[#E8730A] text-white" : "text-gray-600 hover:bg-gray-100"
+                  currentPage === item ? "bg-[#E8730A] text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
                 }`}
               >
                 {item}
@@ -240,7 +240,7 @@ export function PropertyList({
           <button
             onClick={() => onPageChange?.(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className="text-sm font-medium text-gray-500 px-3 py-2 rounded-lg hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+            className="text-sm font-medium text-gray-500 dark:text-gray-400 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
           >
             Previous
           </button>

@@ -652,7 +652,7 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-gray-600">Loading profile...</p>
+          <p className="text-gray-600 dark:text-gray-300">Loading profile...</p>
         </div>
       </div>
     );
@@ -712,8 +712,8 @@ export default function ProfilePage() {
 
                     {/* Info Section */}
                     <div className="flex-1 text-center sm:text-left">
-                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{profile.name}</h2>
-                      <p className="text-gray-500 mt-1">{profile.role}</p>
+                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{profile.name}</h2>
+                      <p className="text-gray-500 dark:text-gray-400 mt-1">{profile.role}</p>
 
                       {/* Contact Grid */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-6">
@@ -735,7 +735,7 @@ export default function ProfilePage() {
                               </button>
                             )}
                           </div>
-                          <p className="text-sm text-gray-900 mt-1 break-all">{profile.email}</p>
+                          <p className="text-sm text-gray-900 dark:text-white mt-1 break-all">{profile.email}</p>
                         </div>
                         <div>
                           <div className="flex items-center justify-between">
@@ -755,7 +755,7 @@ export default function ProfilePage() {
                               </button>
                             )}
                           </div>
-                          <p className="text-sm text-gray-900 mt-1">{profile.phone}</p>
+                          <p className="text-sm text-gray-900 dark:text-white mt-1">{profile.phone}</p>
                         </div>
                       </div>
 
@@ -775,10 +775,10 @@ export default function ProfilePage() {
                 {/* Audit History Container */}
                 <Card className="p-5 md:p-8 rounded-3xl">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-900">Audit History</h2>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Audit History</h2>
                     <button
                       onClick={() => setIsAuditModalOpen(true)}
-                      className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-white/10 rounded-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                     >
                       View All
                       <ChevronRight className="w-4 h-4" />
@@ -786,7 +786,7 @@ export default function ProfilePage() {
                   </div>
 
                   {audits.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                       <p>No audit history yet.</p>
                       <p className="text-sm mt-1">Your completed audits will appear here.</p>
                     </div>
@@ -797,15 +797,15 @@ export default function ProfilePage() {
                         return (
                           <div
                             key={index}
-                            className={`flex items-center gap-4 p-4 rounded-2xl border ${isPending ? 'bg-amber-50/60 border-amber-100' : 'bg-white border-gray-100'}`}
+                            className={`flex items-center gap-4 p-4 rounded-2xl border ${isPending ? 'bg-amber-50/60 dark:bg-amber-500/15 border-amber-100' : 'bg-white dark:bg-white/5 border-gray-100 dark:border-white/10'}`}
                           >
-                            <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center">
-                              <span className="text-lg font-bold text-gray-600">{audit.initial}</span>
+                            <div className="flex-shrink-0 w-12 h-12 bg-gray-100 dark:bg-white/10 rounded-xl flex items-center justify-center">
+                              <span className="text-lg font-bold text-gray-600 dark:text-gray-300">{audit.initial}</span>
                             </div>
 
                             <div className="flex-1 min-w-0">
-                              <h3 className="text-sm font-semibold text-gray-900">{audit.name}</h3>
-                              <p className="text-xs text-gray-500 mt-0.5">{audit.type}</p>
+                              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{audit.name}</h3>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{audit.type}</p>
                               <p className="text-xs text-gray-400 mt-0.5">{audit.date}</p>
                             </div>
 
@@ -822,7 +822,7 @@ export default function ProfilePage() {
               <div className="w-full lg:w-[326px] flex flex-col gap-6">
                 {/* Quick Stats Container */}
                 <Card className="p-6 rounded-3xl">
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Stats</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Quick Stats</h2>
 
                   <div className="space-y-6">
                     {stats.map((stat, index) => {
@@ -833,9 +833,9 @@ export default function ProfilePage() {
                         <div key={index}>
                           <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{stat.label}</p>
                           <div className="flex items-center justify-between gap-4 mt-1">
-                            <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                             {stat.indicator ? (
-                              <div className="flex-1 max-w-[140px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="flex-1 max-w-[140px] h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                                 <div
                                   className={`h-full rounded-full ${stat.indicator} transition-all duration-500`}
                                   style={{ width: `${pct}%` }}
@@ -856,28 +856,28 @@ export default function ProfilePage() {
                 {/* Subscription & Billing Container */}
                 <Card className="p-6 rounded-3xl">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-900">Subscription</h2>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Subscription</h2>
                     <CreditCard className="w-5 h-5 text-gray-400" />
                   </div>
 
                   {billingStatus?.has_subscription ? (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                      <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/30">
                         <div>
-                          <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Active Plan</p>
-                          <p className="text-lg font-bold text-emerald-900 mt-1">$49/month Pro Plan</p>
+                          <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Active Plan</p>
+                          <p className="text-lg font-bold text-emerald-900 dark:text-emerald-300 mt-1">$49/month Pro Plan</p>
                         </div>
                         <ShieldCheck className="w-8 h-8 text-emerald-500" />
                       </div>
 
                       <div className="space-y-3 px-1">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">Status</span>
+                          <span className="text-gray-500 dark:text-gray-400">Status</span>
                           <span className="font-semibold text-emerald-600 capitalize">{billingStatus.subscription?.status}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">Next Invoice</span>
-                          <span className="font-semibold text-gray-900">
+                          <span className="text-gray-500 dark:text-gray-400">Next Invoice</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">
                             {billingStatus.subscription?.current_period_end
                               ? new Date(billingStatus.subscription.current_period_end).toLocaleDateString()
                               : 'N/A'}
@@ -896,30 +896,30 @@ export default function ProfilePage() {
                         ) : (
                           <>
                             Manage Billing
-                            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:text-gray-300" />
                           </>
                         )}
                       </Button>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Free Plan</p>
-                        <p className="text-sm font-medium text-gray-600 mt-2">
+                      <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10">
+                        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Free Plan</p>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mt-2">
                           Upgrade to Pro to unlock unlimited properties and advanced features.
                         </p>
                       </div>
 
                       <div className="space-y-4 pt-2">
-                        <div className="flex items-start gap-3 text-sm text-gray-600">
+                        <div className="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
                           <Zap className="w-4 h-4 text-amber-500 mt-0.5" />
                           <span>Unlimited properties analyze</span>
                         </div>
-                        <div className="flex items-start gap-3 text-sm text-gray-600">
+                        <div className="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
                           <Zap className="w-4 h-4 text-amber-500 mt-0.5" />
                           <span>Personalized negotiation messages</span>
                         </div>
-                        <div className="flex items-start gap-3 text-sm text-gray-600">
+                        <div className="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-300">
                           <Zap className="w-4 h-4 text-amber-500 mt-0.5" />
                           <span>Priority AI processing</span>
                         </div>
@@ -961,16 +961,16 @@ export default function ProfilePage() {
 
           {/* Modal Content */}
           <Card className="relative w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-6 md:p-8 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Edit Profile</h2>
-                <p className="text-sm text-gray-500 mt-1">Update your personal information</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Profile</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Update your personal information</p>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleCloseEditModal}
-                className="rounded-full hover:bg-gray-100"
+                className="rounded-full hover:bg-gray-100 dark:bg-white/10"
               >
                 <ArrowLeft className="w-6 h-6 text-gray-400 rotate-90 sm:rotate-0" />
               </Button>
@@ -984,40 +984,40 @@ export default function ProfilePage() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">First Name</label>
                 <Input
                   type="text"
                   value={editForm.first_name}
                   onChange={(e) => handleEditFormChange('first_name', e.target.value)}
                   placeholder="Enter first name"
-                  className="h-11 rounded-xl border-gray-200 focus:border-[#E8730A] focus:ring-[#E8730A]"
+                  className="h-11 rounded-xl border-gray-200 dark:border-white/10 focus:border-[#E8730A] focus:ring-[#E8730A]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Last Name</label>
                 <Input
                   type="text"
                   value={editForm.last_name}
                   onChange={(e) => handleEditFormChange('last_name', e.target.value)}
                   placeholder="Enter last name"
-                  className="h-11 rounded-xl border-gray-200 focus:border-[#E8730A] focus:ring-[#E8730A]"
+                  className="h-11 rounded-xl border-gray-200 dark:border-white/10 focus:border-[#E8730A] focus:ring-[#E8730A]"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Phone Number</label>
                 <Input
                   type="tel"
                   value={editForm.mobile_number}
                   onChange={(e) => handleEditFormChange('mobile_number', e.target.value)}
                   placeholder="Enter phone number"
-                  className="h-11 rounded-xl border-gray-200 focus:border-[#E8730A] focus:ring-[#E8730A]"
+                  className="h-11 rounded-xl border-gray-200 dark:border-white/10 focus:border-[#E8730A] focus:ring-[#E8730A]"
                 />
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+            <div className="p-6 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 flex gap-3">
               <Button
                 onClick={handleCloseEditModal}
                 variant="outline"
@@ -1052,12 +1052,12 @@ export default function ProfilePage() {
             onClick={closeOtpModal}
           />
           <Card className="relative w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-6 md:p-8 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Verify {otpModal.type === 'email' ? 'Email' : 'Phone Number'}
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Enter the 6-digit code sent to your {otpModal.type === 'email' ? 'email' : 'phone number'}
                 </p>
               </div>
@@ -1065,7 +1065,7 @@ export default function ProfilePage() {
                 variant="ghost"
                 size="icon"
                 onClick={closeOtpModal}
-                className="rounded-full hover:bg-gray-100"
+                className="rounded-full hover:bg-gray-100 dark:bg-white/10"
               >
                 <ArrowLeft className="w-6 h-6 text-gray-400 rotate-90 sm:rotate-0" />
               </Button>
@@ -1073,7 +1073,7 @@ export default function ProfilePage() {
 
             <div className="p-6 md:p-8 space-y-5">
               {otpModal.isSending && (
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-600 py-4">
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-300 py-4">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Sending verification code...
                 </div>
@@ -1117,7 +1117,7 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+            <div className="p-6 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 flex gap-3">
               <Button
                 onClick={closeOtpModal}
                 variant="outline"
@@ -1153,10 +1153,10 @@ export default function ProfilePage() {
             onClick={closePhoneUpdateOtpModal}
           />
           <Card className="relative w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-6 md:p-8 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Update Phone Number</h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Update Phone Number</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Enter the 6-digit code sent to {phoneUpdateOtpModal.newPhone}
                 </p>
               </div>
@@ -1164,7 +1164,7 @@ export default function ProfilePage() {
                 variant="ghost"
                 size="icon"
                 onClick={closePhoneUpdateOtpModal}
-                className="rounded-full hover:bg-gray-100"
+                className="rounded-full hover:bg-gray-100 dark:bg-white/10"
               >
                 <ArrowLeft className="w-6 h-6 text-gray-400 rotate-90 sm:rotate-0" />
               </Button>
@@ -1172,7 +1172,7 @@ export default function ProfilePage() {
 
             <div className="p-6 md:p-8 space-y-5">
               {phoneUpdateOtpModal.isSending && (
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-600 py-4">
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-300 py-4">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Sending verification code...
                 </div>
@@ -1216,7 +1216,7 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+            <div className="p-6 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 flex gap-3">
               <Button
                 onClick={closePhoneUpdateOtpModal}
                 variant="outline"
@@ -1255,16 +1255,16 @@ export default function ProfilePage() {
 
           {/* Modal Content */}
           <Card className="relative w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-6 md:p-8 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+            <div className="p-6 md:p-8 border-b border-gray-100 dark:border-white/10 flex items-center justify-between sticky top-0 bg-white dark:bg-white/5 z-10">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Full Audit History</h2>
-                <p className="text-sm text-gray-500 mt-1">Total {allAudits.length} evaluations recorded</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Full Audit History</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Total {allAudits.length} evaluations recorded</p>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsAuditModalOpen(false)}
-                className="rounded-full hover:bg-gray-100"
+                className="rounded-full hover:bg-gray-100 dark:bg-white/10"
               >
                 <ArrowLeft className="w-6 h-6 text-gray-400 rotate-90 sm:rotate-0" />
               </Button>
@@ -1272,22 +1272,22 @@ export default function ProfilePage() {
 
             <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4">
               {allAudits.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <p>No audit history found.</p>
                 </div>
               ) : (
                 allAudits.map((audit, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200"
+                    className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl hover:bg-gray-100 dark:bg-white/10 transition-colors border border-transparent hover:border-gray-200 dark:border-white/10"
                   >
-                    <div className="flex-shrink-0 w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                      <span className="text-lg font-bold text-gray-600">{audit.initial}</span>
+                    <div className="flex-shrink-0 w-12 h-12 bg-white dark:bg-white/5 rounded-xl flex items-center justify-center shadow-sm">
+                      <span className="text-lg font-bold text-gray-600 dark:text-gray-300">{audit.initial}</span>
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-gray-900">{audit.name}</h3>
-                      <p className="text-xs text-gray-500 mt-0.5">{audit.type}</p>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{audit.name}</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{audit.type}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{audit.date}</p>
                     </div>
 
@@ -1297,7 +1297,7 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end sticky bottom-0">
+            <div className="p-6 border-t border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 flex justify-end sticky bottom-0">
               <Button
                 onClick={() => setIsAuditModalOpen(false)}
                 className="px-8 rounded-full"

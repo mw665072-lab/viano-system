@@ -73,23 +73,23 @@ export function EditSystemModal({ propertyId, system, onClose, onSuccess }: Edit
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-[#1a1a1a] border border-transparent dark:border-white/10 rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+                <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between sticky top-0 bg-white dark:bg-[#1a1a1a] rounded-t-2xl">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-[#E8730A] to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-orange-100">
                             <Pencil className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-[#0C1D38]">Edit System</h2>
-                            <p className="text-xs text-[#64748B] font-medium">
+                            <h2 className="text-lg font-bold text-[#0C1D38] dark:text-white">Edit System</h2>
+                            <p className="text-xs text-[#64748B] dark:text-gray-400 font-medium">
                                 Update this system&apos;s details
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                     >
                         <X className="h-6 w-6" />
                     </button>
@@ -98,20 +98,20 @@ export function EditSystemModal({ propertyId, system, onClose, onSuccess }: Edit
                 {/* Body */}
                 <div className="p-6 space-y-5">
                     {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+                        <div className="bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded-xl p-3 text-sm text-red-700 dark:text-red-400">
                             {error}
                         </div>
                     )}
 
                     {/* System Type */}
                     <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+                        <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
                             System Type
                         </label>
                         <select
                             value={systemType}
                             onChange={(e) => setSystemType(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all appearance-none"
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all appearance-none"
                         >
                             {VALID_SYSTEM_TYPES.map((type) => (
                                 <option key={type.value} value={type.value}>
@@ -123,10 +123,10 @@ export function EditSystemModal({ propertyId, system, onClose, onSuccess }: Edit
 
                     {/* Tankless toggle (water heaters only) */}
                     {isWaterHeater && (
-                        <label className="flex items-center justify-between gap-3 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer">
+                        <label className="flex items-center justify-between gap-3 px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl cursor-pointer">
                             <div>
-                                <span className="block text-sm font-semibold text-[#0C1D38]">Tankless</span>
-                                <span className="block text-xs text-[#64748B]">Changes expected lifespan (8 → 20 yrs)</span>
+                                <span className="block text-sm font-semibold text-[#0C1D38] dark:text-white">Tankless</span>
+                                <span className="block text-xs text-[#64748B] dark:text-gray-400">Changes expected lifespan (8 → 20 yrs)</span>
                             </div>
                             <input
                                 type="checkbox"
@@ -139,39 +139,39 @@ export function EditSystemModal({ propertyId, system, onClose, onSuccess }: Edit
 
                     {/* Name */}
                     <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
-                            Name <span className="text-gray-400 font-normal normal-case">(leave blank to clear)</span>
+                        <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
+                            Name <span className="text-gray-400 dark:text-gray-400 font-normal normal-case">(leave blank to clear)</span>
                         </label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g. Unit 1"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                         />
                     </div>
 
                     {/* Brand */}
                     <div>
-                        <label className="block text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
-                            Brand <span className="text-gray-400 font-normal normal-case">(leave blank to clear)</span>
+                        <label className="block text-[10px] font-bold text-[#64748B] dark:text-gray-400 uppercase tracking-wider mb-2">
+                            Brand <span className="text-gray-400 dark:text-gray-400 font-normal normal-case">(leave blank to clear)</span>
                         </label>
                         <input
                             type="text"
                             value={brand}
                             onChange={(e) => setBrand(e.target.value)}
                             placeholder="e.g. Rheem"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                         />
                     </div>
 
-                    <p className="text-xs text-[#94A3B8]">
+                    <p className="text-xs text-[#94A3B8] dark:text-gray-400">
                         To change the system&apos;s age, use Reset System instead.
                     </p>
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-gray-100 flex gap-3 sticky bottom-0 bg-white rounded-b-2xl">
+                <div className="p-6 border-t border-gray-100 dark:border-white/10 flex gap-3 sticky bottom-0 bg-white dark:bg-[#1a1a1a] rounded-b-2xl">
                     <Button
                         variant="outline"
                         onClick={onClose}

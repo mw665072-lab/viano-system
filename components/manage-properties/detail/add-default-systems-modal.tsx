@@ -134,23 +134,23 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
+                <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between sticky top-0 bg-white dark:bg-[#1a1a1a] rounded-t-2xl z-10">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-[#E8730A] to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-orange-100">
                             <Home className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-[#0C1D38]">Add Default Systems</h2>
-                            <p className="text-xs text-[#64748B] font-medium">
+                            <h2 className="text-lg font-bold text-[#0C1D38] dark:text-white">Add Default Systems</h2>
+                            <p className="text-xs text-[#64748B] dark:text-gray-400 font-medium">
                                 Water Heater, A/C, and Roof
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     >
                         <X className="h-6 w-6" />
                     </button>
@@ -160,7 +160,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                 <div className="p-6 space-y-8">
                     {/* Error */}
                     {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+                        <div className="bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded-xl p-3 text-sm text-red-700 dark:text-red-400">
                             {error}
                         </div>
                     )}
@@ -168,10 +168,10 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                     {/* Water Heater Section */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <span className="text-xs font-bold text-orange-600">WH</span>
+                            <div className="w-8 h-8 bg-orange-100 dark:bg-orange-500/15 rounded-lg flex items-center justify-center">
+                                <span className="text-xs font-bold text-orange-600 dark:text-orange-400">WH</span>
                             </div>
-                            <h3 className="text-sm font-bold text-[#0C1D38]">Water Heater</h3>
+                            <h3 className="text-sm font-bold text-[#0C1D38] dark:text-white">Water Heater</h3>
                         </div>
 
                         <div className="pl-10 space-y-3">
@@ -182,7 +182,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         whAgeMode === 'mfg_year'
                                             ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
-                                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                            : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                     }`}
                                 >
                                     MFG Year
@@ -193,7 +193,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         whAgeMode === 'age'
                                             ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
-                                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                            : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                     }`}
                                 >
                                     Age
@@ -204,7 +204,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         whAgeMode === 'none'
                                             ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
-                                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                            : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                     }`}
                                 >
                                     Unknown
@@ -219,7 +219,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     placeholder="MFG Year e.g. 2020"
                                     min={1900}
                                     max={new Date().getFullYear()}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                 />
                             )}
                             {whAgeMode === 'age' && (
@@ -230,7 +230,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     placeholder="Age in years e.g. 5"
                                     min={0}
                                     step={0.1}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                 />
                             )}
 
@@ -247,21 +247,21 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                     {/* HVAC Section */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
-                                <span className="text-xs font-bold text-sky-600">AC</span>
+                            <div className="w-8 h-8 bg-sky-100 dark:bg-sky-500/15 rounded-lg flex items-center justify-center">
+                                <span className="text-xs font-bold text-sky-600 dark:text-sky-400">AC</span>
                             </div>
-                            <h3 className="text-sm font-bold text-[#0C1D38]">HVAC Units</h3>
+                            <h3 className="text-sm font-bold text-[#0C1D38] dark:text-white">HVAC Units</h3>
                         </div>
 
                         <div className="pl-10 space-y-3">
                             {hvacUnits.map((unit, index) => (
-                                <div key={unit.id} className="bg-gray-50 rounded-xl border border-gray-100 p-3 space-y-2">
+                                <div key={unit.id} className="bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/10 p-3 space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-semibold text-[#64748B]">Unit {index + 1}</span>
+                                        <span className="text-xs font-semibold text-[#64748B] dark:text-gray-400">Unit {index + 1}</span>
                                         {hvacUnits.length > 1 && (
                                             <button
                                                 onClick={() => removeHvacUnit(unit.id)}
-                                                className="text-red-400 hover:text-red-600 transition-colors"
+                                                className="text-red-400 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
@@ -272,7 +272,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                         value={unit.name}
                                         onChange={(e) => updateHvacUnit(unit.id, 'name', e.target.value)}
                                         placeholder="Name e.g. Unit 1"
-                                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                                        className="w-full px-3 py-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                     />
                                     <div className="flex gap-2">
                                         <input
@@ -282,14 +282,14 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                             placeholder="MFG Year"
                                             min={1900}
                                             max={new Date().getFullYear()}
-                                            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                                            className="flex-1 px-3 py-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                         />
                                         <input
                                             type="text"
                                             value={unit.brand}
                                             onChange={(e) => updateHvacUnit(unit.id, 'brand', e.target.value)}
                                             placeholder="Brand"
-                                            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                                            className="flex-1 px-3 py-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                         />
                                     </div>
                                 </div>
@@ -307,17 +307,17 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                     {/* Roof Section */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-stone-100 rounded-lg flex items-center justify-center">
-                                <span className="text-xs font-bold text-stone-600">RF</span>
+                            <div className="w-8 h-8 bg-stone-100 dark:bg-stone-500/15 rounded-lg flex items-center justify-center">
+                                <span className="text-xs font-bold text-stone-600 dark:text-stone-400">RF</span>
                             </div>
-                            <h3 className="text-sm font-bold text-[#0C1D38]">Roof</h3>
+                            <h3 className="text-sm font-bold text-[#0C1D38] dark:text-white">Roof</h3>
                         </div>
 
                         <div className="pl-10 space-y-3">
                             <select
                                 value={roofType}
                                 onChange={(e) => setRoofType(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all appearance-none"
+                                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all appearance-none"
                             >
                                 {ROOF_TYPES.map((type) => (
                                     <option key={type.value} value={type.value}>
@@ -333,7 +333,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         roofAgeMode === 'mfg_year'
                                             ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
-                                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                            : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                     }`}
                                 >
                                     MFG Year
@@ -344,7 +344,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         roofAgeMode === 'age'
                                             ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
-                                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                            : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                     }`}
                                 >
                                     Age
@@ -355,7 +355,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                                         roofAgeMode === 'none'
                                             ? 'bg-[#E8730A]/10 border-[#E8730A]/40 text-[#E8730A]'
-                                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                                            : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5'
                                     }`}
                                 >
                                     Unknown
@@ -370,7 +370,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     placeholder="MFG Year e.g. 2015"
                                     min={1900}
                                     max={new Date().getFullYear()}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                 />
                             )}
                             {roofAgeMode === 'age' && (
@@ -381,7 +381,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                                     placeholder="Age in years e.g. 10"
                                     min={0}
                                     step={0.1}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-[#0C1D38] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
+                                    className="w-full px-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-sm text-[#0C1D38] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E8730A]/20 focus:border-[#E8730A] transition-all"
                                 />
                             )}
                         </div>
@@ -389,7 +389,7 @@ export function AddDefaultSystemsModal({ propertyId, onClose, onSuccess }: AddDe
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-gray-100 flex gap-3 sticky bottom-0 bg-white rounded-b-2xl">
+                <div className="p-6 border-t border-gray-100 dark:border-white/10 flex gap-3 sticky bottom-0 bg-white dark:bg-[#1a1a1a] rounded-b-2xl">
                     <Button
                         variant="outline"
                         onClick={onClose}
