@@ -109,8 +109,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: #E8730A;
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -120,7 +120,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: #E8730A;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -215,4 +215,20 @@
 * {
   scrollbar-width: thin;
   scrollbar-color: #D1D5DB transparent;
+}
+
+/* Dark-theme autofill: stop the browser's light-blue/yellow autofill background
+   from overriding dark inputs (login/signup and any globally-dark form). */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+  /* Solid inset shadow paints over the autofill background; #242424 ≈ white/5 over #1a1a1a */
+  -webkit-box-shadow: 0 0 0 1000px #242424 inset;
+  box-shadow: 0 0 0 1000px #242424 inset;
+  border-color: rgba(255, 255, 255, 0.1);
+  /* Defer the autofill bg repaint effectively forever so it never flashes light */
+  transition: background-color 9999s ease-in-out 0s;
 }

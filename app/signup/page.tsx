@@ -363,7 +363,7 @@ export default function SignupPage() {
                 ? "bg-primary text-white"
                 : currentStep > step
                   ? "bg-green-500 text-white"
-                  : "bg-gray-200 text-gray-500"
+                  : "bg-white/10 text-gray-400"
             }`}
           >
             {currentStep > step ? <CheckCircle size={16} /> : step}
@@ -371,7 +371,7 @@ export default function SignupPage() {
           {step < 3 && (
             <div
               className={`w-8 h-0.5 transition-all ${
-                currentStep > step ? "bg-green-500" : "bg-gray-200"
+                currentStep > step ? "bg-green-500" : "bg-white/10"
               }`}
             />
           )}
@@ -381,14 +381,14 @@ export default function SignupPage() {
   );
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center bg-gray-50 p-4 py-10">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
+    <div className="dark relative min-h-screen w-full flex items-center justify-center bg-[#0f0f0f] p-4 py-10">
+      <div className="w-full max-w-md rounded-2xl bg-[#1a1a1a] border border-white/10 shadow-2xl">
         <div className="flex flex-col p-6 sm:p-8">
           <div className="mx-auto w-full">
             {/* Logo */}
             <div className="mb-6 flex justify-center">
               <Image
-                src="/logo-dark.svg"
+                src="/Logo.svg"
                 alt="Viano Systems"
                 width={155}
                 height={52}
@@ -397,7 +397,7 @@ export default function SignupPage() {
               />
             </div>
 
-            <h2 className="mb-4 text-center text-2xl font-semibold text-slate-400">
+            <h2 className="mb-4 text-center text-2xl font-semibold text-gray-300">
               Create Account
             </h2>
 
@@ -405,7 +405,7 @@ export default function SignupPage() {
 
             {/* Success Message */}
             {success && (
-              <div className="mb-3 rounded-lg bg-green-50 border border-green-200 px-4 py-2.5 text-sm text-green-600 flex items-center gap-2 animate-in fade-in duration-200">
+              <div className="mb-3 rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-2.5 text-sm text-green-400 flex items-center gap-2 animate-in fade-in duration-200">
                 <CheckCircle size={16} />
                 Account created! Redirecting...
               </div>
@@ -413,7 +413,7 @@ export default function SignupPage() {
 
             {/* Error Messages */}
             {errors.length > 0 && (
-              <div className="mb-3 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-600 animate-in fade-in duration-200">
+              <div className="mb-3 rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-sm text-red-400 animate-in fade-in duration-200">
                 <div className="flex items-start gap-2">
                   <XCircle size={16} className="mt-0.5 flex-shrink-0" />
                   <div className="flex flex-col gap-1">
@@ -441,7 +441,7 @@ export default function SignupPage() {
                       onChange={(e) => { setFirstName(e.target.value); clearErrors(); }}
                       disabled={isLoading}
                       autoComplete="given-name"
-                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-gray-400 outline-none transition-all focus:border-[#E8730A] focus:ring-2 focus:ring-[#E8730A]/30 disabled:bg-white/5 disabled:cursor-not-allowed"
                     />
                   </div>
                   <div className="flex-1">
@@ -454,7 +454,7 @@ export default function SignupPage() {
                       onChange={(e) => { setLastName(e.target.value); clearErrors(); }}
                       disabled={isLoading}
                       autoComplete="family-name"
-                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-gray-400 outline-none transition-all focus:border-[#E8730A] focus:ring-2 focus:ring-[#E8730A]/30 disabled:bg-white/5 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -468,7 +468,7 @@ export default function SignupPage() {
                   onChange={(e) => { setEmail(e.target.value); clearErrors(); }}
                   disabled={isLoading}
                   autoComplete="email"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-gray-400 outline-none transition-all focus:border-[#E8730A] focus:ring-2 focus:ring-[#E8730A]/30 disabled:bg-white/5 disabled:cursor-not-allowed"
                 />
 
                 <input
@@ -480,7 +480,7 @@ export default function SignupPage() {
                   onChange={(e) => { setUsername(e.target.value); clearErrors(); }}
                   disabled={isLoading}
                   autoComplete="username"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-gray-400 outline-none transition-all focus:border-[#E8730A] focus:ring-2 focus:ring-[#E8730A]/30 disabled:bg-white/5 disabled:cursor-not-allowed"
                 />
 
                 <input
@@ -492,7 +492,7 @@ export default function SignupPage() {
                   onChange={(e) => { setMobileNumber(e.target.value); clearErrors(); }}
                   disabled={isLoading}
                   autoComplete="tel"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-gray-400 outline-none transition-all focus:border-[#E8730A] focus:ring-2 focus:ring-[#E8730A]/30 disabled:bg-white/5 disabled:cursor-not-allowed"
                 />
 
                 <button
@@ -522,20 +522,20 @@ export default function SignupPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Smartphone size={18} className="text-primary" />
-                    <p className="text-sm font-medium text-slate-700">
+                    <p className="text-sm font-medium text-gray-200">
                       Phone Verification
                     </p>
-                    <span className="text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded-full font-medium">
+                    <span className="text-xs text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full font-medium">
                       Required
                     </span>
                     {phoneOtpSent && (
-                      <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                      <span className="text-xs text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">
                         Sent
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500">
-                    Enter the 6-digit code sent to <span className="font-medium text-slate-700">{mobileNumber}</span>
+                  <p className="text-xs text-gray-400">
+                    Enter the 6-digit code sent to <span className="font-medium text-gray-200">{mobileNumber}</span>
                   </p>
                   <OTPInput
                     value={phoneOtp}
@@ -559,24 +559,24 @@ export default function SignupPage() {
                 {/* Email OTP - Optional, hidden when unavailable */}
                 {emailOtpAvailable && (
                   <>
-                    <div className="border-t border-gray-100" />
+                    <div className="border-t border-white/10" />
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Mail size={18} className="text-primary" />
-                        <p className="text-sm font-medium text-slate-700">
+                        <p className="text-sm font-medium text-gray-200">
                           Email Verification
                         </p>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        <span className="text-xs text-gray-400 bg-white/10 px-2 py-0.5 rounded-full">
                           Optional
                         </span>
                         {emailOtpSent && (
-                          <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                          <span className="text-xs text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">
                             Sent
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500">
-                        Enter the 6-digit code sent to <span className="font-medium text-slate-700">{email}</span>
+                      <p className="text-xs text-gray-400">
+                        Enter the 6-digit code sent to <span className="font-medium text-gray-200">{email}</span>
                       </p>
                       <OTPInput
                         value={emailOtp}
@@ -605,7 +605,7 @@ export default function SignupPage() {
                     type="button"
                     onClick={handleBack}
                     disabled={isLoading}
-                    className="flex items-center justify-center gap-2 rounded-full border border-gray-200 px-6 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-gray-50 disabled:opacity-70"
+                    className="flex items-center justify-center gap-2 rounded-full border border-white/10 px-6 py-2.5 text-sm font-semibold text-gray-200 transition-all hover:bg-white/5 disabled:opacity-70"
                   >
                     <ArrowLeft size={16} />
                     Back
@@ -637,12 +637,12 @@ export default function SignupPage() {
                     onBlur={() => setTimeout(() => setShowPasswordRequirements(false), 200)}
                     disabled={isLoading || success}
                     autoComplete="new-password"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pr-12 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed relative z-0"
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 pr-12 text-sm text-white placeholder:text-gray-400 outline-none transition-all focus:border-[#E8730A] focus:ring-2 focus:ring-[#E8730A]/30 disabled:bg-white/5 disabled:cursor-not-allowed relative z-0"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-2 text-gray-400 hover:text-gray-600 transition-colors pointer-events-auto inline-flex w-auto"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-2 text-gray-400 hover:text-gray-200 transition-colors pointer-events-auto inline-flex w-auto"
                     tabIndex={-1}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
@@ -652,18 +652,18 @@ export default function SignupPage() {
 
                 {/* Password Requirements */}
                 {(showPasswordRequirements || password.length > 0) && (
-                  <div className="mt-1 p-3 bg-slate-50 rounded-lg border border-slate-200 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <p className="text-xs font-medium text-slate-600 mb-2">Password must include:</p>
+                  <div className="mt-1 p-3 bg-white/5 rounded-lg border border-white/10 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <p className="text-xs font-medium text-gray-400 mb-2">Password must include:</p>
                     <ul className="space-y-1">
                       {passwordValidation.map((req, index) => (
                         <li
                           key={index}
-                          className={`flex items-center gap-2 text-xs transition-colors ${req.passed ? 'text-green-600' : 'text-slate-500'}`}
+                          className={`flex items-center gap-2 text-xs transition-colors ${req.passed ? 'text-green-400' : 'text-gray-400'}`}
                         >
                           {req.passed ? (
-                            <CheckCircle size={14} className="text-green-500 flex-shrink-0" />
+                            <CheckCircle size={14} className="text-green-400 flex-shrink-0" />
                           ) : (
-                            <XCircle size={14} className="text-slate-400 flex-shrink-0" />
+                            <XCircle size={14} className="text-gray-300 flex-shrink-0" />
                           )}
                           <span>{req.label}</span>
                         </li>
@@ -682,12 +682,12 @@ export default function SignupPage() {
                     onChange={(e) => { setConfirmPassword(e.target.value); clearErrors(); }}
                     disabled={isLoading || success}
                     autoComplete="new-password"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 pr-12 text-sm text-slate-900 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed relative z-0"
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 pr-12 text-sm text-white placeholder:text-gray-400 outline-none transition-all focus:border-[#E8730A] focus:ring-2 focus:ring-[#E8730A]/30 disabled:bg-white/5 disabled:cursor-not-allowed relative z-0"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-2 text-gray-400 hover:text-gray-600 transition-colors pointer-events-auto inline-flex w-auto"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-2 text-gray-400 hover:text-gray-200 transition-colors pointer-events-auto inline-flex w-auto"
                     tabIndex={-1}
                     aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                   >
@@ -700,7 +700,7 @@ export default function SignupPage() {
                     type="button"
                     onClick={handleBack}
                     disabled={isLoading}
-                    className="flex items-center justify-center gap-2 rounded-full border border-gray-200 px-6 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-gray-50 disabled:opacity-70"
+                    className="flex items-center justify-center gap-2 rounded-full border border-white/10 px-6 py-2.5 text-sm font-semibold text-gray-200 transition-all hover:bg-white/5 disabled:opacity-70"
                   >
                     <ArrowLeft size={16} />
                     Back
@@ -732,11 +732,11 @@ export default function SignupPage() {
             )}
 
             {/* Login Link */}
-            <p className="mt-4 text-center text-sm text-slate-600">
+            <p className="mt-4 text-center text-sm text-gray-400">
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="font-semibold text-slate-800 underline decoration-slate-400 underline-offset-2 hover:text-blue-900 transition-colors"
+                className="font-semibold text-white underline decoration-gray-500 underline-offset-2 hover:text-[#E8730A] transition-colors"
               >
                 Login
               </Link>

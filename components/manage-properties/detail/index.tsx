@@ -54,10 +54,10 @@ function getInitials(name: string): string {
 
 function getSystemIcon(type: string) {
     const t = type.toLowerCase()
-    if (t.includes('water')) return <Droplets className="w-5 h-5 text-gray-700" />
-    if (t.includes('hvac') || t.includes('air')) return <Wind className="w-5 h-5 text-gray-700" />
-    if (t.includes('roof')) return <Home className="w-5 h-5 text-gray-700" />
-    return <Wrench className="w-5 h-5 text-gray-700" />
+    if (t.includes('water')) return <Droplets className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+    if (t.includes('hvac') || t.includes('air')) return <Wind className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+    if (t.includes('roof')) return <Home className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+    return <Wrench className="w-5 h-5 text-gray-700 dark:text-gray-300" />
 }
 
 /** Format system age for display, e.g. "7 mo / 8 Yrs" or "6 / 10 Yrs" */
@@ -73,13 +73,13 @@ function formatAge(currentAge: number | null, lifespanMax: number | string | nul
 function getSystemStatus(percentageUsed: number | null): { label: string; bgColor: string; textColor: string; borderColor: string } {
     const pct = percentageUsed ?? 0
     if (pct < 50) {
-        return { label: 'Good', bgColor: 'bg-[#34C759]/15', textColor: 'text-[#006C1B]', borderColor: 'border-transparent' }
+        return { label: 'Good', bgColor: 'bg-[#34C759]/15', textColor: 'text-[#006C1B] dark:text-[#34C759]', borderColor: 'border-transparent' }
     } else if (pct < 75) {
-        return { label: 'Fair', bgColor: 'bg-amber-50', textColor: 'text-amber-600', borderColor: 'border-amber-200' }
+        return { label: 'Fair', bgColor: 'bg-amber-50 dark:bg-amber-500/15', textColor: 'text-amber-600 dark:text-amber-400', borderColor: 'border-amber-200' }
     } else if (pct < 90) {
-        return { label: 'Warning', bgColor: 'bg-orange-50', textColor: 'text-orange-600', borderColor: 'border-orange-200' }
+        return { label: 'Warning', bgColor: 'bg-orange-50 dark:bg-orange-500/15', textColor: 'text-orange-600 dark:text-orange-400', borderColor: 'border-orange-200' }
     } else {
-        return { label: 'Critical', bgColor: 'bg-red-50', textColor: 'text-red-600', borderColor: 'border-red-200' }
+        return { label: 'Critical', bgColor: 'bg-red-50 dark:bg-red-500/15', textColor: 'text-red-600 dark:text-red-400', borderColor: 'border-red-200' }
     }
 }
 
@@ -377,19 +377,19 @@ export function PropertyDetailPanel({
                                     <button
                                         onClick={onClose}
                                         aria-label="Back"
-                                        className="p-2 -ml-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors flex-shrink-0"
+                                        className="p-2 -ml-2 rounded-lg text-gray-400 hover:text-gray-600 dark:text-gray-300 hover:bg-gray-50 transition-colors flex-shrink-0"
                                     >
                                         <ArrowLeft className="w-5 h-5" />
                                     </button>
                                     {/* Avatar */}
-                                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gray-100 flex items-center justify-center text-lg sm:text-xl font-bold text-gray-500 flex-shrink-0">
+                                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-lg sm:text-xl font-bold text-gray-500 dark:text-gray-400 flex-shrink-0">
                                         {getInitials(property.client)}
                                     </div>
                                     {/* Name & Address */}
                                     <div className="min-w-0">
-                                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{property.client}</h2>
-                                        <p className="text-sm sm:text-base text-gray-500 truncate">{property.address}</p>
-                                        <p className="text-sm sm:text-base text-gray-500 truncate">{property.location}</p>
+                                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">{property.client}</h2>
+                                        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 truncate">{property.address}</p>
+                                        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 truncate">{property.location}</p>
                                     </div>
                                 </div>
 
@@ -411,7 +411,7 @@ export function PropertyDetailPanel({
                                                 onClick={onDownload}
                                                 aria-label="Download report"
                                                 title="Download report"
-                                                className="w-11 h-10 rounded-xl border border-gray-100 bg-white flex items-center justify-center text-gray-800 hover:bg-gray-50 transition-colors"
+                                                className="w-11 h-10 rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/5 flex items-center justify-center text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
                                             >
                                                 <Download className="w-5 h-5" />
                                             </button>
@@ -419,7 +419,7 @@ export function PropertyDetailPanel({
                                                 onClick={onEdit}
                                                 aria-label="Edit"
                                                 title="Edit"
-                                                className="w-11 h-10 rounded-xl border border-gray-100 bg-white flex items-center justify-center text-gray-800 hover:bg-gray-50 transition-colors"
+                                                className="w-11 h-10 rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/5 flex items-center justify-center text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
                                             >
                                                 <Pencil className="w-5 h-5" />
                                             </button>
@@ -429,7 +429,7 @@ export function PropertyDetailPanel({
                                         onClick={onDelete}
                                         aria-label="Delete"
                                         title="Delete"
-                                        className="w-11 h-10 rounded-xl border border-red-100 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors"
+                                        className="w-11 h-10 rounded-xl border border-red-100 dark:border-red-500/30 bg-white dark:bg-white/5 flex items-center justify-center text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                                     >
                                         <Trash2 className="w-5 h-5" />
                                     </button>
@@ -437,9 +437,9 @@ export function PropertyDetailPanel({
                             </div>
 
                             {/* Home Value */}
-                            <div className="rounded-2xl border border-gray-100 bg-[#FCFCFC] p-5 w-full lg:w-[300px] lg:flex-shrink-0 flex flex-col justify-center">
+                            <div className="rounded-2xl border border-gray-100 dark:border-white/10 bg-[#FCFCFC] dark:bg-white/5 p-5 w-full lg:w-[300px] lg:flex-shrink-0 flex flex-col justify-center">
                                 <div className="flex items-start justify-between gap-3">
-                                    <p className="text-sm sm:text-base text-gray-500">Current Home Value</p>
+                                    <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">Current Home Value</p>
                                     <div className="w-9 h-9 rounded-xl border-[1.5px] border-[#E8730A] flex items-center justify-center flex-shrink-0">
                                         <TrendingUp className="w-4 h-4 text-[#E8730A]" />
                                     </div>
@@ -448,7 +448,7 @@ export function PropertyDetailPanel({
                                     <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin mt-2" />
                                 ) : cmaData ? (
                                     <>
-                                        <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{cmaData.formatted}</p>
+                                        <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">{cmaData.formatted}</p>
                                         <p className="text-xs sm:text-sm text-gray-400 mt-1">Estimated Range: ${cmaData.low.toLocaleString()} - ${cmaData.high.toLocaleString()}</p>
                                     </>
                                 ) : (
@@ -459,34 +459,34 @@ export function PropertyDetailPanel({
                     </div>
 
                     {/* Divider */}
-                    <div className="border-t border-gray-100" />
+                    <div className="border-t border-gray-100 dark:border-white/10" />
 
                     {/* Property Info Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-0 px-4 sm:px-6 py-4">
                         <div className="flex flex-col gap-3 sm:pr-6">
                             <div className="flex items-center gap-2">
-                                <Calendar className="w-5 h-5 text-gray-900 flex-shrink-0" />
-                                <p className="text-sm sm:text-base text-gray-900">Viano Activated on</p>
+                                <Calendar className="w-5 h-5 text-gray-900 dark:text-white flex-shrink-0" />
+                                <p className="text-sm sm:text-base text-gray-900 dark:text-white">Viano Activated on</p>
                             </div>
                             <span className="rounded-full bg-[#E8730A]/15 border border-[#E8730A]/30 text-[#895000] text-sm sm:text-base font-medium text-center px-4 py-2.5">
                                 {property.createdAt || 'N/A'}
                             </span>
                         </div>
-                        <div className="flex flex-col gap-3 sm:border-l sm:border-gray-100 sm:px-6">
+                        <div className="flex flex-col gap-3 sm:border-l sm:border-gray-100 dark:border-white/10 sm:px-6">
                             <div className="flex items-center gap-2">
-                                <Home className="w-5 h-5 text-gray-900 flex-shrink-0" />
-                                <p className="text-sm sm:text-base text-gray-900">Property Type</p>
+                                <Home className="w-5 h-5 text-gray-900 dark:text-white flex-shrink-0" />
+                                <p className="text-sm sm:text-base text-gray-900 dark:text-white">Property Type</p>
                             </div>
                             <span className="rounded-full bg-[#666666] text-white text-sm sm:text-base font-medium text-center px-4 py-2.5">
                                 Single Family
                             </span>
                         </div>
-                        <div className="flex flex-col gap-3 sm:border-l sm:border-gray-100 sm:pl-6">
+                        <div className="flex flex-col gap-3 sm:border-l sm:border-gray-100 dark:border-white/10 sm:pl-6">
                             <div className="flex items-center gap-2">
-                                <Hammer className="w-5 h-5 text-gray-900 flex-shrink-0" />
-                                <p className="text-sm sm:text-base text-gray-900">Inspection Date</p>
+                                <Hammer className="w-5 h-5 text-gray-900 dark:text-white flex-shrink-0" />
+                                <p className="text-sm sm:text-base text-gray-900 dark:text-white">Inspection Date</p>
                             </div>
-                            <span className="rounded-full bg-white border border-gray-200 text-gray-900 text-sm sm:text-base font-medium text-center px-4 py-2.5">
+                            <span className="rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-sm sm:text-base font-medium text-center px-4 py-2.5">
                                 {inspectionDate ? new Date(inspectionDate).toLocaleDateString() : 'N/A'}
                             </span>
                         </div>
@@ -496,11 +496,11 @@ export function PropertyDetailPanel({
                     {!property.isDraft && (
                         <>
                             {/* Divider */}
-                            <div className="border-t border-gray-100" />
+                            <div className="border-t border-gray-100 dark:border-white/10" />
 
                             <div className="px-4 sm:px-6 py-4">
                                 <div className="flex items-center justify-between gap-2 mb-4">
-                                    <h3 className="text-sm sm:text-base font-semibold text-gray-500 uppercase tracking-wide">System Age & Lifespan</h3>
+                                    <h3 className="text-sm sm:text-base font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">System Age & Lifespan</h3>
                                     <div className="flex items-center gap-2 flex-shrink-0">
                                         <button
                                             onClick={() => setShowAddManualModal(true)}
@@ -509,7 +509,7 @@ export function PropertyDetailPanel({
                                             <Plus className="w-4 h-4" />
                                             Add System
                                         </button>
-                                        <span className="text-sm text-gray-500 border border-gray-100 rounded-lg px-3 py-1.5 whitespace-nowrap">{systems.length} Systems Total</span>
+                                        <span className="text-sm text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-white/10 rounded-lg px-3 py-1.5 whitespace-nowrap">{systems.length} Systems Total</span>
                                     </div>
                                 </div>
 
@@ -519,7 +519,7 @@ export function PropertyDetailPanel({
                                     </div>
                                 ) : systems.length === 0 ? (
                                     <div className="text-center py-6">
-                                        <p className="text-sm text-gray-500 mb-3">No systems data available.</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">No systems data available.</p>
                                         <div className="flex gap-2 justify-center">
                                             <button
                                                 onClick={() => setShowAddDefaultsModal(true)}
@@ -538,7 +538,7 @@ export function PropertyDetailPanel({
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="divide-y divide-gray-100">
+                                    <div className="divide-y divide-gray-100 dark:divide-white/20">
                                 {systems.map((system) => {
                                     const isAgeUnknown = system.age_unknown
                                     const progressPercent = system.percentage_used != null
@@ -550,22 +550,22 @@ export function PropertyDetailPanel({
                                     return (
                                         <div
                                             key={system.system_id}
-                                            className="bg-white px-2 py-4"
+                                            className="bg-white dark:bg-transparent px-2 py-4"
                                         >
                                             {/* Desktop: single row */}
                                             <div className="hidden sm:flex items-center gap-4">
                                                 {/* Icon */}
-                                                <div className="w-12 h-12 rounded-xl bg-[#F9F8F7] border border-[#D9D9D9] flex items-center justify-center flex-shrink-0">
+                                                <div className="w-12 h-12 rounded-xl bg-[#F9F8F7] dark:bg-white/5 border border-[#D9D9D9] dark:border-white/10 flex items-center justify-center flex-shrink-0">
                                                     {getSystemIcon(system.system_type)}
                                                 </div>
 
                                                 {/* System Name + Brand */}
                                                 <div className="flex-shrink-0 w-40">
-                                                    <h4 className="text-base font-semibold text-[#3C4653] truncate">
+                                                    <h4 className="text-base font-semibold text-[#3C4653] dark:text-gray-200 truncate">
                                                         {formatSystemType(system.system_type)}
                                                     </h4>
                                                     {system.brand && (
-                                                        <span className="inline-block mt-1 max-w-full truncate text-xs text-gray-600 bg-white border border-gray-200 rounded-md px-2 py-0.5">{system.brand}</span>
+                                                        <span className="inline-block mt-1 max-w-full truncate text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-md px-2 py-0.5">{system.brand}</span>
                                                     )}
                                                 </div>
 
@@ -578,10 +578,10 @@ export function PropertyDetailPanel({
                                                 <div className="flex-1 min-w-0">
                                                     {!isAgeUnknown ? (
                                                         <div className="flex flex-col gap-1.5">
-                                                            <span className="text-sm text-gray-600 text-right whitespace-nowrap">
+                                                            <span className="text-sm text-gray-600 dark:text-gray-300 text-right whitespace-nowrap">
                                                                 {formatAge(system.current_age, system.lifespan_max)}
                                                             </span>
-                                                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                            <div className="h-2 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                                                                 <div
                                                                     className={`h-full ${barColor} rounded-full transition-all duration-500`}
                                                                     style={{ width: `${progressPercent}%` }}
@@ -600,14 +600,14 @@ export function PropertyDetailPanel({
                                                     {system.replacement_history && system.replacement_history.length > 0 && (
                                                         <button
                                                             onClick={() => handleOpenHistoryModal(system)}
-                                                            className="text-sm font-medium text-gray-700 hover:text-gray-900 whitespace-nowrap px-4 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                                                            className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-white whitespace-nowrap px-4 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:bg-gray-50 transition-colors"
                                                         >
                                                             History
                                                         </button>
                                                     )}
                                                     <button
                                                         onClick={() => handleOpenResetModal(system)}
-                                                        className="text-sm font-medium text-[#1F1F1F] whitespace-nowrap px-4 py-2.5 rounded-lg bg-[#F3F4F4] hover:bg-gray-200 transition-colors"
+                                                        className="text-sm font-medium text-[#1F1F1F] dark:text-gray-200 whitespace-nowrap px-4 py-2.5 rounded-lg bg-[#F3F4F4] dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
                                                     >
                                                         Reset System
                                                     </button>
@@ -615,7 +615,7 @@ export function PropertyDetailPanel({
                                                         onClick={() => handleOpenEditModal(system)}
                                                         aria-label="Edit system"
                                                         title="Edit system"
-                                                        className="p-2.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                                                        className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 transition-colors"
                                                     >
                                                         <Pencil className="w-4 h-4" />
                                                     </button>
@@ -634,15 +634,15 @@ export function PropertyDetailPanel({
                                             <div className="flex sm:hidden flex-col gap-3">
                                                 {/* Row 1: Icon, Name+Brand, Badge */}
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-12 h-12 rounded-xl bg-[#F9F8F7] border border-[#D9D9D9] flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-12 h-12 rounded-xl bg-[#F9F8F7] dark:bg-white/5 border border-[#D9D9D9] dark:border-white/10 flex items-center justify-center flex-shrink-0">
                                                         {getSystemIcon(system.system_type)}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
-                                                        <h4 className="text-base font-semibold text-[#3C4653] truncate">
+                                                        <h4 className="text-base font-semibold text-[#3C4653] dark:text-gray-200 truncate">
                                                             {formatSystemType(system.system_type)}
                                                         </h4>
                                                         {system.brand && (
-                                                            <span className="inline-block mt-1 max-w-full truncate text-xs text-gray-600 bg-white border border-gray-200 rounded-md px-2 py-0.5">{system.brand}</span>
+                                                            <span className="inline-block mt-1 max-w-full truncate text-xs text-gray-600 dark:text-gray-300 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-md px-2 py-0.5">{system.brand}</span>
                                                         )}
                                                     </div>
                                                     <span className={`text-xs font-medium px-3 py-1.5 rounded-lg ${status.bgColor} ${status.textColor} flex-shrink-0`}>
@@ -654,10 +654,10 @@ export function PropertyDetailPanel({
                                                 <div>
                                                     {!isAgeUnknown ? (
                                                         <div className="flex flex-col gap-1.5">
-                                                            <span className="text-sm text-gray-600 text-right whitespace-nowrap">
+                                                            <span className="text-sm text-gray-600 dark:text-gray-300 text-right whitespace-nowrap">
                                                                 {formatAge(system.current_age, system.lifespan_max)}
                                                             </span>
-                                                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                                            <div className="h-2 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                                                                 <div
                                                                     className={`h-full ${barColor} rounded-full transition-all duration-500`}
                                                                     style={{ width: `${progressPercent}%` }}
@@ -676,7 +676,7 @@ export function PropertyDetailPanel({
                                                     {system.replacement_history && system.replacement_history.length > 0 && (
                                                         <button
                                                             onClick={() => handleOpenHistoryModal(system)}
-                                                            className="flex-1 text-center text-sm font-medium text-gray-700 hover:text-gray-900 whitespace-nowrap px-3 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                                                            className="flex-1 text-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-white whitespace-nowrap px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 hover:bg-gray-50 transition-colors"
                                                         >
                                                             History
                                                         </button>
@@ -691,7 +691,7 @@ export function PropertyDetailPanel({
                                                         onClick={() => handleOpenEditModal(system)}
                                                         aria-label="Edit system"
                                                         title="Edit system"
-                                                        className="p-2.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors flex-shrink-0"
+                                                        className="p-2.5 rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 transition-colors flex-shrink-0"
                                                     >
                                                         <Pencil className="w-4 h-4" />
                                                     </button>
@@ -716,23 +716,23 @@ export function PropertyDetailPanel({
 
                     {/* Property Insights */}
                     <div className="px-4 sm:px-6 py-4">
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Property Insights</h3>
+                        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Property Insights</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="rounded-xl border border-gray-100 bg-white p-5">
-                                <p className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide mb-2">Total Touch Points</p>
-                                <p className="text-3xl sm:text-4xl font-bold text-gray-900">{isLoadingMessages ? "..." : messageCount}</p>
+                            <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/5 p-5">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Total Touch Points</p>
+                                <p className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">{isLoadingMessages ? "..." : messageCount}</p>
                             </div>
-                            <div className="rounded-xl border border-gray-100 bg-white p-5">
-                                <p className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide mb-2">High Priority Issues</p>
+                            <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/5 p-5">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">High Priority Issues</p>
                                 <p className="text-3xl sm:text-4xl font-bold text-[#BB0000]">{tierBreakdown.high}</p>
                             </div>
-                            <div className="rounded-xl border border-gray-100 bg-white p-5">
-                                <p className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide mb-2">Medium Priority Issues</p>
+                            <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/5 p-5">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Medium Priority Issues</p>
                                 <p className="text-3xl sm:text-4xl font-bold text-[#A38601]">{tierBreakdown.medium}</p>
                             </div>
-                            <div className="rounded-xl border border-gray-100 bg-white p-5">
-                                <p className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide mb-2">Low Priority Issues</p>
-                                <p className="text-3xl sm:text-4xl font-bold text-gray-700">{tierBreakdown.low}</p>
+                            <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-white/5 p-5">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Low Priority Issues</p>
+                                <p className="text-3xl sm:text-4xl font-bold text-gray-700 dark:text-gray-300">{tierBreakdown.low}</p>
                             </div>
                         </div>
                     </div>

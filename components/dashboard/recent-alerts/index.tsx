@@ -6,42 +6,41 @@ import Link from "next/link"
 import Image from "next/image"
 import { propertyAPI, ScheduledAlert } from "@/lib/api"
 
-const PRIORITY_STYLES: Record<number, { bg: string; text: string; border: string; label: string }> = {
+const PRIORITY_STYLES: Record<number, { text: string; border: string; label: string }> = {
   3: {
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
-    border: "border-emerald-200",
+    text: "text-green-600 dark:text-green-400",
+    border: "border-green-500/50",
     label: "Low",
   },
   2: {
-    bg: "bg-orange-50",
-    text: "text-orange-700",
-    border: "border-orange-200",
+    text: "text-orange-500 dark:text-orange-400",
+    border: "border-orange-500/60",
     label: "Medium",
   },
   1: {
-        bg: "bg-red-50",
-    text: "text-red-700",
-    border: "border-red-200",
+    text: "text-red-500 dark:text-red-400",
+    border: "border-red-500/60",
     label: "High",
-
   },
 }
 
-const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+const STATUS_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
   scheduled_twilio: {
-    bg: "bg-orange-50",
-    text: "text-orange-700",
+    bg: "bg-orange-50 dark:bg-orange-500/10",
+    text: "text-orange-600 dark:text-orange-400",
+    border: "border-orange-300 dark:border-orange-500/40",
     label: "Sent",
   },
   sent: {
-    bg: "bg-blue-50",
-    text: "text-blue-700",
+    bg: "bg-blue-50 dark:bg-blue-500/10",
+    text: "text-blue-600 dark:text-blue-400",
+    border: "border-blue-300 dark:border-blue-500/40",
     label: "Sent",
   },
   completed: {
-    bg: "bg-gray-100",
-    text: "text-gray-600",
+    bg: "bg-emerald-50 dark:bg-emerald-500/10",
+    text: "text-emerald-600 dark:text-emerald-400",
+    border: "border-emerald-300 dark:border-emerald-500/40",
     label: "Completed",
   },
 }
@@ -93,9 +92,9 @@ export function RecentPropertyAlerts() {
   }
 
   return (
-    <div className="bg-white w-full rounded-[32px] p-4 md:p-6 lg:p-[32px]">
+    <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 w-full rounded-[32px] p-4 md:p-6 lg:p-[32px]">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 md:pb-4 mb-0 border-b border-gray-100">
+      <div className="flex items-center justify-between pb-3 md:pb-4 mb-0 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 md:w-6 md:h-6 text-[#6E6355] flex-shrink-0" />
           <h2
@@ -107,11 +106,11 @@ export function RecentPropertyAlerts() {
         </div>
         <Link
           href="/recent-alerts"
-          className="inline-flex items-center gap-2 bg-[#F9F9F7] border border-[#F3F4F4] rounded-xl px-4 py-2 text-sm font-semibold text-[#1F1F1F] hover:bg-gray-100 transition-colors whitespace-nowrap"
+          className="inline-flex items-center gap-2 bg-[#F9F9F7] dark:bg-white/5 border border-[#F3F4F4] dark:border-white/10 rounded-xl px-4 py-2 text-sm font-semibold text-[#1F1F1F] dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors whitespace-nowrap"
           style={{ fontFamily: "Manrope, sans-serif" }}
         >
           View All
-          <ArrowRight className="w-4 h-4 text-[#1F1F1F]" />
+          <ArrowRight className="w-4 h-4 text-[#1F1F1F] dark:text-gray-200" />
         </Link>
       </div>
 
@@ -148,7 +147,7 @@ export function RecentPropertyAlerts() {
             <Check className="w-7 h-7 text-emerald-500" />
           </div>
           <p
-            className="text-base font-semibold text-[#0C1D38]"
+            className="text-base font-semibold text-[#0C1D38] dark:text-white"
             style={{ fontFamily: "Manrope, sans-serif" }}
           >
             No scheduled alerts
@@ -167,18 +166,18 @@ export function RecentPropertyAlerts() {
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-gray-100 dark:border-white/10">
                 {[
                   { label: "Property", align: "pl-3" },
                   { label: "Alert Type", align: "" },
                   { label: "Priority", align: "" },
                   { label: "Date", align: "" },
                   { label: "Status", align: "" },
-                  { label: "Was this helpful?", align: "text-center pr-3" },
+                  { label: "Feedback", align: "pr-3" },
                 ].map((col) => (
                   <th
                     key={col.label}
-                    className={`text-left text-[11px] uppercase tracking-wider text-gray-600 font-bold pb-3 pt-2 ${col.align}`}
+                    className={`text-left text-[11px] uppercase tracking-wider text-gray-600 dark:text-gray-400 font-bold pb-3 pt-2 ${col.align}`}
                     style={{ fontFamily: "Manrope, sans-serif" }}
                   >
                     {col.label}
@@ -195,14 +194,14 @@ export function RecentPropertyAlerts() {
                 return (
                   <tr
                     key={alert.message_id}
-                    className="group border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors"
+                    className="group border-b border-gray-50 dark:border-white/10 last:border-0 hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors"
                   >
                     {/* Property */}
                     <td className="py-[10px] pl-3">
                       <div className="flex items-center gap-3">
-                        <div className="relative w-[52px] h-[52px] flex-shrink-0 rounded-xl overflow-hidden bg-gray-200">
+                        <div className="relative w-[52px] h-[52px] flex-shrink-0 rounded-xl overflow-hidden bg-gray-200 dark:bg-white/10">
                           <Image
-                            src="/property-default.png"
+                            src="/property-default-v2.png"
                             alt={alert.property_address}
                             fill
                             className="object-cover"
@@ -210,13 +209,13 @@ export function RecentPropertyAlerts() {
                         </div>
                         <div className="min-w-0">
                           <p
-                            className="text-sm font-semibold text-[#0C1D38] truncate max-w-[180px]"
+                            className="text-sm font-semibold text-[#0C1D38] dark:text-white truncate max-w-[180px]"
                             style={{ fontFamily: "Manrope, sans-serif" }}
                           >
                             {alert.property_address}
                           </p>
                           <p
-                            className="text-xs text-gray-500"
+                            className="text-xs text-gray-500 dark:text-gray-400"
                             style={{ fontFamily: "Manrope, sans-serif" }}
                           >
                             {alert.client_name}
@@ -228,7 +227,7 @@ export function RecentPropertyAlerts() {
                     {/* Alert Type */}
                     <td className="py-[10px]">
                       <p
-                        className="text-sm font-medium text-[#0C1D38]"
+                        className="text-sm font-medium text-[#0C1D38] dark:text-white"
                         style={{ fontFamily: "Manrope, sans-serif" }}
                       >
                         {alert.alert_type}
@@ -244,7 +243,7 @@ export function RecentPropertyAlerts() {
                     {/* Priority */}
                     <td className="py-[10px]">
                       <span
-                        className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg border ${priority.bg} ${priority.text} ${priority.border}`}
+                        className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full border ${priority.text} ${priority.border}`}
                         style={{ fontFamily: "Manrope, sans-serif" }}
                       >
                         {priority.label}
@@ -254,7 +253,7 @@ export function RecentPropertyAlerts() {
                     {/* Date */}
                     <td className="py-[10px]">
                       <p
-                        className="text-sm text-gray-600"
+                        className="text-sm text-gray-600 dark:text-gray-300"
                         style={{ fontFamily: "Manrope, sans-serif" }}
                       >
                         {formatDate(alert.scheduled_for)}
@@ -264,7 +263,7 @@ export function RecentPropertyAlerts() {
                     {/* Status */}
                     <td className="py-[10px]">
                       <span
-                        className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-lg ${status.bg} ${status.text}`}
+                        className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full border ${status.bg} ${status.text} ${status.border}`}
                         style={{ fontFamily: "Manrope, sans-serif" }}
                       >
                         {status.label}
@@ -273,9 +272,15 @@ export function RecentPropertyAlerts() {
 
                     {/* Feedback */}
                     <td className="py-[10px] pr-3">
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex flex-col items-start gap-1.5">
+                        <span
+                          className="text-xs text-gray-500 dark:text-gray-400"
+                          style={{ fontFamily: "Manrope, sans-serif" }}
+                        >
+                          Was this helpful?
+                        </span>
                         {userFeedback ? (
-                          <div className="flex items-center gap-1.5 text-emerald-600">
+                          <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                             <Check className="w-4 h-4" />
                             <span
                               className="text-xs font-medium"
@@ -285,22 +290,20 @@ export function RecentPropertyAlerts() {
                             </span>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleFeedback(alert.message_id, "yes")}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"
-                              style={{ fontFamily: "Manrope, sans-serif" }}
+                              aria-label="Helpful"
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
                             >
-                              <ThumbsUp className="w-3.5 h-3.5" />
-                              Yes
+                              <ThumbsUp className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleFeedback(alert.message_id, "no")}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
-                              style={{ fontFamily: "Manrope, sans-serif" }}
+                              aria-label="Not helpful"
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
                             >
-                              <ThumbsDown className="w-3.5 h-3.5" />
-                              No
+                              <ThumbsDown className="w-4 h-4" />
                             </button>
                           </div>
                         )}
@@ -325,12 +328,12 @@ export function RecentPropertyAlerts() {
             return (
               <div
                 key={alert.message_id}
-                className="p-4 rounded-2xl border border-gray-100 hover:border-gray-200 transition-all"
+                className="p-4 rounded-2xl border border-gray-100 dark:border-white/10 hover:border-gray-200 dark:border-white/10 transition-all"
               >
                 <div className="flex items-start gap-3">
-                  <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
+                  <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-white/10">
                     <Image
-                      src="/property-default.png"
+                      src="/property-default-v2.png"
                       alt={alert.property_address}
                       fill
                       className="object-cover"
@@ -338,13 +341,13 @@ export function RecentPropertyAlerts() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p
-                      className="text-sm font-semibold text-[#0C1D38] truncate"
+                      className="text-sm font-semibold text-[#0C1D38] dark:text-white truncate"
                       style={{ fontFamily: "Manrope, sans-serif" }}
                     >
                       {alert.property_address}
                     </p>
                     <p
-                      className="text-xs text-gray-500"
+                      className="text-xs text-gray-500 dark:text-gray-400"
                       style={{ fontFamily: "Manrope, sans-serif" }}
                     >
                       {alert.client_name}
@@ -354,12 +357,12 @@ export function RecentPropertyAlerts() {
 
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md border ${priority.bg} ${priority.text} ${priority.border}`}
+                    className={`inline-flex items-center px-2.5 py-0.5 text-[11px] font-semibold rounded-full border ${priority.text} ${priority.border}`}
                   >
                     {priority.label}
                   </span>
                   <span
-                    className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-md ${status.bg} ${status.text}`}
+                    className={`inline-flex items-center px-2.5 py-0.5 text-[11px] font-semibold rounded-full border ${status.bg} ${status.text} ${status.border}`}
                   >
                     {status.label}
                   </span>
@@ -372,7 +375,7 @@ export function RecentPropertyAlerts() {
                 </div>
 
                 <p
-                  className="mt-2 text-sm font-medium text-[#0C1D38]"
+                  className="mt-2 text-sm font-medium text-[#0C1D38] dark:text-white"
                   style={{ fontFamily: "Manrope, sans-serif" }}
                 >
                   {alert.alert_type}
@@ -385,7 +388,7 @@ export function RecentPropertyAlerts() {
                 </p>
 
                 {userFeedback ? (
-                  <div className="mt-3 flex items-center gap-1.5 text-emerald-600">
+                  <div className="mt-3 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                     <Check className="w-4 h-4" />
                     <span className="text-xs font-medium" style={{ fontFamily: "Manrope, sans-serif" }}>
                       Thanks for your feedback!
@@ -393,22 +396,22 @@ export function RecentPropertyAlerts() {
                   </div>
                 ) : (
                   <div className="mt-3 flex items-center gap-2">
-                    <span className="text-xs text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>
-                      Helpful?
+                    <span className="text-xs text-gray-500 dark:text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>
+                      Was this helpful?
                     </span>
                     <button
                       onClick={() => handleFeedback(alert.message_id, "yes")}
-                      className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200"
+                      aria-label="Helpful"
+                      className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
                     >
-                      <ThumbsUp className="w-3 h-3" />
-                      Yes
+                      <ThumbsUp className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleFeedback(alert.message_id, "no")}
-                      className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200"
+                      aria-label="Not helpful"
+                      className="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
                     >
-                      <ThumbsDown className="w-3 h-3" />
-                      No
+                      <ThumbsDown className="w-4 h-4" />
                     </button>
                   </div>
                 )}

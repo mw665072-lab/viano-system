@@ -40,21 +40,21 @@ export function DeleteSystemModal({ propertyId, system, onClose, onSuccess }: De
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+            <div className="bg-white dark:bg-[#1a1a1a] border border-transparent dark:border-white/10 rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl flex items-center justify-center shadow-md shadow-red-100">
                             <Trash2 className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-[#0C1D38]">Delete System</h2>
-                            <p className="text-xs text-[#64748B] font-medium">This action cannot be undone</p>
+                            <h2 className="text-lg font-bold text-[#0C1D38] dark:text-white">Delete System</h2>
+                            <p className="text-xs text-[#64748B] dark:text-gray-400 font-medium">This action cannot be undone</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                         disabled={isSubmitting}
                     >
                         <X className="h-6 w-6" />
@@ -64,18 +64,18 @@ export function DeleteSystemModal({ propertyId, system, onClose, onSuccess }: De
                 {/* Body */}
                 <div className="p-6 space-y-4">
                     {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+                        <div className="bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded-xl p-3 text-sm text-red-700 dark:text-red-400">
                             {error}
                         </div>
                     )}
 
-                    <p className="text-sm text-[#334155]">
-                        Are you sure you want to delete <span className="font-semibold text-[#0C1D38]">{label}</span>?
+                    <p className="text-sm text-[#334155] dark:text-gray-300">
+                        Are you sure you want to delete <span className="font-semibold text-[#0C1D38] dark:text-white">{label}</span>?
                     </p>
 
-                    <div className="flex gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
-                        <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                        <div className="text-xs text-amber-800 space-y-1">
+                    <div className="flex gap-3 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-xl p-3">
+                        <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                        <div className="text-xs text-amber-800 dark:text-amber-400 space-y-1">
                             <p>This permanently removes the system, its replacement history, and any pending alerts.</p>
                             <p>If an alert was already scheduled with the SMS provider earlier today, that one message may still send.</p>
                         </div>
@@ -83,7 +83,7 @@ export function DeleteSystemModal({ propertyId, system, onClose, onSuccess }: De
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-gray-100 flex gap-3">
+                <div className="p-6 border-t border-gray-100 dark:border-white/10 flex gap-3">
                     <Button
                         variant="outline"
                         onClick={onClose}

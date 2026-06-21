@@ -61,7 +61,7 @@ export function PropertyList({ properties, selectedProperty, onSelectProperty, i
                 <Image src={property.image} alt={property.name} fill className="object-cover" />
               ) : (
                 <img
-                  src="/property-default.png"
+                  src="/property-default-v2.png"
                   alt={property.name}
                   className="w-full h-full object-cover"
                 />

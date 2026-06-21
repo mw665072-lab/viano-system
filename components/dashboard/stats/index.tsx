@@ -20,32 +20,32 @@ const STATS_CONFIG: StatConfig[] = [
   {
     id: "active-properties",
     title: "ACTIVE PROPERTIES",
-    iconBg: "bg-[#F9F9F7]",
-    iconColor: "text-[#3C4653]",
+    iconBg: "bg-[#F9F9F7] dark:bg-white/10",
+    iconColor: "text-[#3C4653] dark:text-gray-300",
     barColor: "bg-emerald-500",
-    valueColor: "text-[#1E1E1E]",
+    valueColor: "text-[#1E1E1E] dark:text-white",
     link: null,
     linkColor: "",
   },
   {
     id: "upcoming-touchpoints",
     title: "UPCOMING TOUCHPOINTS",
-    iconBg: "bg-[#F9F9F7]",
-    iconColor: "text-[#3C4653]",
+    iconBg: "bg-[#F9F9F7] dark:bg-white/10",
+    iconColor: "text-[#3C4653] dark:text-gray-300",
     barColor: "bg-emerald-500",
-    valueColor: "text-[#1E1E1E]",
+    valueColor: "text-[#1E1E1E] dark:text-white",
     link: { label: "View Touchpoints", href: "/manage-properties" },
-    linkColor: "text-[#1E1E1E]",
+    linkColor: "text-[#1E1E1E] dark:text-gray-200",
   },
   {
     id: "property-opportunities",
     title: "TOP APPRECIATING",
-    iconBg: "bg-[#F9F9F7]",
-    iconColor: "text-[#3C4653]",
+    iconBg: "bg-[#F9F9F7] dark:bg-white/10",
+    iconColor: "text-[#3C4653] dark:text-gray-300",
     barColor: "bg-emerald-500",
-    valueColor: "text-[#1E1E1E]",
+    valueColor: "text-[#1E1E1E] dark:text-white",
     link: { label: "View Opportunities", href: "/manage-properties" },
-    linkColor: "text-[#1E1E1E]",
+    linkColor: "text-[#1E1E1E] dark:text-gray-200",
   },
 ]
 
@@ -141,7 +141,7 @@ export default function DashboardStatsCard() {
         return (
           <div
             key={stat.id}
-            className="bg-white rounded-[24px] p-5 md:p-6 flex flex-col"
+            className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-[24px] p-5 md:p-6 flex flex-col"
           >
             {/* Top: icon + title side by side */}
             <div className="flex items-center gap-4">
@@ -152,7 +152,7 @@ export default function DashboardStatsCard() {
               </div>
               <div>
                 <h3
-                  className="text-xs font-bold uppercase tracking-wider text-gray-500"
+                  className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400"
                   style={{ fontFamily: "Manrope, sans-serif" }}
                 >
                   {stat.title}
@@ -168,7 +168,7 @@ export default function DashboardStatsCard() {
                       {value}
                     </span>
                     <span
-                      className="text-sm text-gray-500 font-medium leading-tight"
+                      className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-tight"
                       style={{ fontFamily: "Manrope, sans-serif" }}
                     >
                       {getStatSubtitle(stat.id)}
@@ -181,7 +181,7 @@ export default function DashboardStatsCard() {
             {/* Progress bar - only for active-properties */}
             {stat.id === "active-properties" && (
               <div className="mt-4">
-                <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                   <div
                     className={`h-full ${stat.barColor} rounded-full transition-all duration-500`}
                     style={{ width: `${percentage}%` }}
@@ -201,7 +201,7 @@ export default function DashboardStatsCard() {
               <div className="mt-4 flex justify-start">
                 <Link
                   href={stat.link.href}
-                  className={`inline-flex items-center gap-2 bg-[#F9F9F7] border border-[#F3F4F4] rounded-xl px-4 py-2.5 text-sm font-semibold ${stat.linkColor} hover:bg-gray-100 transition-colors whitespace-nowrap`}
+                  className={`inline-flex items-center gap-2 bg-[#F9F9F7] dark:bg-white/5 border border-[#F3F4F4] dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold ${stat.linkColor} hover:bg-gray-100 dark:hover:bg-white/10 transition-colors whitespace-nowrap`}
                   style={{ fontFamily: "Manrope, sans-serif" }}
                 >
                   {stat.link.label}

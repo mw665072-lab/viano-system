@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-06-21] — Light/Dark Theme
+
+### Added
+- **Light/Dark theme toggle.** New `ThemeProvider` + `useTheme()` (`common/theme/theme-provider.tsx`) persist the choice to `localStorage` and toggle a `.dark` class on `<html>`; a no-FOUC inline script in `app/layout.tsx` applies the stored theme before paint (`suppressHydrationWarning`). New Sun/Moon `ThemeToggle` component (`common/theme/theme-toggle.tsx`) placed in both the header and the sidebar.
+
+### UI Changes
+- **App-wide dark theme.** Added `dark:` variants across the app on a consistent convention (page `#0f0f0f`; cards `#1a1a1a` with `white/10` borders; subtle `white/5`–`white/10` surfaces; `gray-300`/`gray-400` text; translucent status tints `X-500/15`): dashboard (stat cards plus the Requiring Attention, Top Appreciating, and Recent Alerts widgets), Manage Properties (page, clients list, detail panel), the Add Property flow (add-properties page, bulk-upload, negotiated-wins-form), all system modals (reset, set-age, add-manual, add-defaults, edit, delete, history), the Profile page, the three dedicated list pages (`/requiring-action`, `/top-appreciating-properties`, `/recent-alerts`), and shared UI (`status-badge`, `otp-input`).
+- **Recent Alerts page feedback** now matches the dashboard widget: a "Feedback" column with a "Was this helpful?" label and icon-only thumb buttons (replacing the text "Yes / No" pills), in both the desktop table and mobile cards.
+- **Login & Signup pages are permanently dark** regardless of the toggle — hardcoded dark colors plus a scoped `dark` root that also darkens the `OTPInput`; inputs restyled to the dark surface with orange focus rings, and a `input:-webkit-autofill` override in `app/globals.css` stops the browser's light autofill background from overriding dark inputs.
+- **Default property image** replaced and repointed app-wide to `property-default-v2.png` (versioned filename busts browser/CDN image caches); old asset removed.
+- **Favicon** switched to the Viano logo via the App Router file convention (`app/icon.png`); removed the stock `app/favicon.ico` and the `metadata.icons → /V.png` entry.
+
 ## [2026-06-21]
 
 ### Added

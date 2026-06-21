@@ -73,23 +73,23 @@ export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: His
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+                <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between sticky top-0 bg-white dark:bg-[#1a1a1a] rounded-t-2xl">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md shadow-amber-100">
                             <History className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-[#0C1D38]">Replacement History</h2>
-                            <p className="text-xs text-[#64748B] font-medium">
+                            <h2 className="text-lg font-bold text-[#0C1D38] dark:text-white">Replacement History</h2>
+                            <p className="text-xs text-[#64748B] dark:text-gray-400 font-medium">
                                 {formattedSystemType}{system.brand ? ` — ${system.brand}` : ''}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     >
                         <X className="h-6 w-6" />
                     </button>
@@ -100,19 +100,19 @@ export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: His
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-12">
                             <Loader2 className="w-8 h-8 animate-spin text-[#E8730A] mb-3" />
-                            <p className="text-sm text-gray-500">Loading history...</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Loading history...</p>
                         </div>
                     ) : error ? (
-                        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
+                        <div className="bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded-xl p-4 text-sm text-red-700 dark:text-red-400">
                             {error}
                         </div>
                     ) : history.length === 0 ? (
                         <div className="text-center py-12">
-                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Clock className="w-8 h-8 text-gray-400" />
+                            <div className="w-16 h-16 bg-gray-100 dark:bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Clock className="w-8 h-8 text-gray-400 dark:text-gray-400" />
                             </div>
-                            <h3 className="text-sm font-semibold text-gray-900 mb-1">No replacement history</h3>
-                            <p className="text-xs text-gray-500">This system has not been replaced yet.</p>
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">No replacement history</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">This system has not been replaced yet.</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -123,7 +123,7 @@ export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: His
                                 >
                                     {/* Timeline line */}
                                     {index < history.length - 1 && (
-                                        <div className="absolute left-[11px] top-6 bottom-0 w-0.5 bg-gray-200" />
+                                        <div className="absolute left-[11px] top-6 bottom-0 w-0.5 bg-gray-200 dark:bg-white/10" />
                                     )}
 
                                     {/* Timeline dot */}
@@ -132,42 +132,42 @@ export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: His
                                     </div>
 
                                     {/* Event card */}
-                                    <div className={`bg-gray-50 rounded-xl border border-gray-100 p-4 ${event.undone_at ? 'opacity-50' : ''}`}>
+                                    <div className={`bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/10 p-4 ${event.undone_at ? 'opacity-50' : ''}`}>
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-2">
-                                                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${event.undone_at ? 'bg-gray-200 text-gray-500' : 'bg-[#E8730A]/15 text-[#E8730A]'}`}>
+                                                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${event.undone_at ? 'bg-gray-200 dark:bg-white/10 text-gray-500 dark:text-gray-400' : 'bg-[#E8730A]/15 text-[#E8730A]'}`}>
                                                     {event.undone_at ? 'Undone' : formatEventType(event.event_type)}
                                                 </span>
                                                 {event.undone_at && (
-                                                    <span className="text-[10px] text-gray-400">
+                                                    <span className="text-[10px] text-gray-400 dark:text-gray-400">
                                                         {formatDate(event.undone_at)}
                                                     </span>
                                                 )}
                                             </div>
-                                            <span className="text-[10px] text-gray-500 font-medium">
+                                            <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
                                                 {formatDate(event.replacement_date)}
                                             </span>
                                         </div>
 
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className={`text-sm font-semibold ${event.undone_at ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
+                                            <span className={`text-sm font-semibold ${event.undone_at ? 'text-gray-400 dark:text-gray-400 line-through' : 'text-gray-700 dark:text-gray-300'}`}>
                                                 {event.previous_age_at_inspection} yrs
                                             </span>
-                                            <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                                            <span className={`text-sm font-bold ${event.undone_at ? 'text-gray-400 line-through' : 'text-emerald-600'}`}>
+                                            <ArrowRight className="w-3.5 h-3.5 text-gray-400 dark:text-gray-400" />
+                                            <span className={`text-sm font-bold ${event.undone_at ? 'text-gray-400 dark:text-gray-400 line-through' : 'text-emerald-600 dark:text-emerald-400'}`}>
                                                 {event.new_age_at_inspection} yrs
                                             </span>
                                         </div>
 
                                         {event.notes && (
-                                            <p className={`text-xs italic border-t border-gray-200 pt-2 mt-2 ${event.undone_at ? 'text-gray-400 line-through' : 'text-gray-500'}`}>
+                                            <p className={`text-xs italic border-t border-gray-200 dark:border-white/10 pt-2 mt-2 ${event.undone_at ? 'text-gray-400 dark:text-gray-400 line-through' : 'text-gray-500 dark:text-gray-400'}`}>
                                                 &ldquo;{event.notes}&rdquo;
                                             </p>
                                         )}
 
                                         {/* Undo button */}
                                         {!event.undone_at && (
-                                            <div className="mt-3 pt-2 border-t border-gray-200">
+                                            <div className="mt-3 pt-2 border-t border-gray-200 dark:border-white/10">
                                                 <button
                                                     onClick={() => handleUndo(event.event_id)}
                                                     disabled={undoingEventId === event.event_id}
@@ -195,7 +195,7 @@ export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: His
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-gray-100 sticky bottom-0 bg-white rounded-b-2xl">
+                <div className="p-6 border-t border-gray-100 dark:border-white/10 sticky bottom-0 bg-white dark:bg-[#1a1a1a] rounded-b-2xl">
                     <Button
                         variant="outline"
                         onClick={onClose}
