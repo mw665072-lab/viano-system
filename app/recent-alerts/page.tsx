@@ -1,9 +1,10 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from "react"
-import { ThumbsUp, ThumbsDown, Check, Loader2, AlertTriangle } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Check, AlertTriangle } from "lucide-react"
 import Image from "next/image"
 import { propertyAPI, ScheduledAlert } from "@/lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const ITEMS_PER_PAGE = 15
 
@@ -87,10 +88,101 @@ export default function RecentAlertsPage() {
 
       {/* Loading */}
       {isLoading && (
-        <div className="flex flex-col items-center justify-center py-10">
-          <Loader2 className="w-7 h-7 animate-spin text-orange-400" />
-          <p className="mt-3 text-sm text-gray-400 dark:text-gray-400">Loading alerts...</p>
-        </div>
+        <>
+          {/* Desktop Table Skeleton */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100 dark:border-white/10">
+                  {[
+                    { label: "Property", align: "pl-3" },
+                    { label: "Alert Type", align: "" },
+                    { label: "Priority", align: "" },
+                    { label: "Date", align: "" },
+                    { label: "Status", align: "" },
+                    { label: "Feedback", align: "pr-3" },
+                  ].map((col) => (
+                    <th
+                      key={col.label}
+                      className={`text-left text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400 font-semibold pb-3 pt-2 ${col.align}`}
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      {col.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-50 dark:border-white/10 last:border-0">
+                    <td className="py-[10px] pl-3">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="w-[52px] h-[52px] flex-shrink-0 rounded-xl" />
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-3.5 w-[140px]" />
+                          <Skeleton className="h-3 w-[90px]" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-[10px]">
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-3.5 w-[110px]" />
+                        <Skeleton className="h-3 w-[70px]" />
+                      </div>
+                    </td>
+                    <td className="py-[10px]">
+                      <Skeleton className="h-6 w-[56px] rounded-lg" />
+                    </td>
+                    <td className="py-[10px]">
+                      <Skeleton className="h-3.5 w-[80px]" />
+                    </td>
+                    <td className="py-[10px]">
+                      <Skeleton className="h-6 w-[64px] rounded-lg" />
+                    </td>
+                    <td className="py-[10px] pr-3">
+                      <div className="flex flex-col items-start gap-1.5">
+                        <Skeleton className="h-3 w-[80px]" />
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="w-8 h-8 rounded-lg" />
+                          <Skeleton className="w-8 h-8 rounded-lg" />
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards Skeleton */}
+          <div className="md:hidden space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="p-4 rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1a1a1a]">
+                <div className="flex items-start gap-3">
+                  <Skeleton className="w-12 h-12 flex-shrink-0 rounded-lg" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3.5 w-2/3" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <Skeleton className="h-5 w-[48px] rounded-md" />
+                  <Skeleton className="h-5 w-[56px] rounded-md" />
+                  <Skeleton className="h-3 w-[70px]" />
+                </div>
+                <div className="mt-2 space-y-1.5">
+                  <Skeleton className="h-3.5 w-[120px]" />
+                  <Skeleton className="h-3 w-[80px]" />
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <Skeleton className="h-3 w-[80px]" />
+                  <Skeleton className="w-8 h-8 rounded-lg" />
+                  <Skeleton className="w-8 h-8 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Error */}

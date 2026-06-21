@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react"
 import { X, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react"
 import Image from "next/image"
 import { propertyAPI, RequiringActionProperty, FlaggedSystem } from "@/lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const ITEMS_PER_PAGE = 15
 
@@ -132,9 +133,29 @@ export default function RequiringActionPage() {
 
       {/* Loading */}
       {isLoading && (
-        <div className="flex flex-col items-center justify-center py-10">
-          <Loader2 className="w-7 h-7 animate-spin text-orange-400" />
-          <p className="mt-3 text-sm text-gray-400 dark:text-gray-400">Checking for alerts...</p>
+        <div className="flex flex-col">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className={`grid grid-cols-[52px_1fr_120px_1fr_28px] items-center gap-4 py-[10px] ${
+                i < 5 ? "border-b border-gray-100 dark:border-white/10" : ""
+              }`}
+            >
+              <Skeleton className="w-[52px] h-[52px] flex-shrink-0 rounded-xl" />
+              <div className="min-w-0 space-y-1.5">
+                <Skeleton className="h-3.5 w-[160px] max-w-full" />
+                <Skeleton className="h-3 w-[100px] max-w-full" />
+              </div>
+              <div className="w-[120px] flex items-center justify-center">
+                <Skeleton className="h-6 w-[80px] rounded-full" />
+              </div>
+              <div className="min-w-0 space-y-1.5">
+                <Skeleton className="h-3.5 w-[140px] max-w-full" />
+                <Skeleton className="h-3 w-[90px] max-w-full" />
+              </div>
+              <Skeleton className="w-7 h-7 rounded-full flex-shrink-0" />
+            </div>
+          ))}
         </div>
       )}
 

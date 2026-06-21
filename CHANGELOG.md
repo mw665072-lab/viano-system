@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-06-21] — Add Property UX & Skeleton Loaders
+
+### Added
+- **Skeleton loaders app-wide.** New self-theming `Skeleton` component (`components/ui/skeleton.tsx`, light `bg-gray-200` / dark `bg-white/10`). Replaced data-fetch loading spinners with layout-matching skeletons across the dashboard widgets (stat cards, Requiring Attention, Top Appreciating, Recent Alerts, property list), the dedicated list pages, Manage Properties (clients list + detail panel), the Profile page, Bulk Upload (quota check), the history modal, the billing success page, and the Add Property draft-load. In-button submit spinners (Log In, Confirm, Save, Delete, etc.) intentionally remain spinners.
+- **Editable bulk-upload review.** Each draft's extracted fields — Address, Client Name, City, State, ZIP Code, and Inspection Date — are now editable inputs, pre-filled from the extracted data and submitted (per-draft and bulk) instead of the raw extracted values.
+
+### UI Changes
+- **Bulk-upload "missing document" clarity.** The optional second-document upload now names the specific complementary document (4-Point Inspection vs Home Inspection) derived from the draft's primary `doc_type`, uploads it with the correct type, and renders the chosen file as a proper card (type label + size) — replacing the generic "Upload 4-Point or Home Inspection".
+- **Bulk-upload results cleanup.** Removed the "Upload Complete" summary stat cards and the redundant "Draft Properties" heading (failure counts still surface in their dedicated sections).
+- **Add Property page is now full-bleed.** Removed the redundant in-card "Add New Property" title and the rounded "card-on-gray" container; the page now fills the full width and height of the content area as a single white (dark `#1a1a1a`) surface, with no gray gutters or collapsing height on short content.
+- **Flow tabs hidden on review pages.** The Upload PDF / Bulk Upload / Manual Entry tabs are hidden once you're reviewing extracted data (PDF review step or bulk results), preventing an accidental tab switch from discarding in-progress review.
+
+### Fixed
+- **Draft open no longer flashes the upload UI.** Opening a draft property (`?draft=`) previously rendered the PDF upload step while the draft loaded, then snapped to the review page. The page now starts in the review step and shows a skeleton/loading state until the extracted data is ready.
+
 ## [2026-06-21] — Light/Dark Theme
 
 ### Added

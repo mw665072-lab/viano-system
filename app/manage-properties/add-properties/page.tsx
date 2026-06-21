@@ -5,8 +5,9 @@ import { Upload, Loader2, X, AlertCircle, CheckCircle, FileText, AlertTriangle, 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId, BillingError, PropertyResponse } from '@/lib/api';
+import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId, BillingError, ApiError, PropertyResponse, PropertyConflict } from '@/lib/api';
 import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
 import BulkUpload from '@/components/manage-properties/bulk-upload';
 
@@ -20,7 +21,11 @@ const AddPropertyPage = () => {
 
     // Flow selection
     const [activeFlow, setActiveFlow] = useState<FlowType>('pdf');
-    const [pdfStep, setPdfStep] = useState<PdfStep>(1);
+    const [pdfStep, setPdfStep] = useState<PdfStep>(draftId ? 2 : 1);
+    // Whether the bulk-upload flow is showing its review (results) state
+    const [bulkReviewing, setBulkReviewing] = useState(false);
+    // Loading an existing draft via the ?draft= query param (avoids flashing the upload UI)
+    const [isLoadingDraft, setIsLoadingDraft] = useState<boolean>(!!draftId);
 
     // PDF-first flow state
     const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -67,6 +72,18 @@ const AddPropertyPage = () => {
     const [errorModalTitle, setErrorModalTitle] = useState('');
     const [errorModalMessage, setErrorModalMessage] = useState('');
     const [isFormShaking, setIsFormShaking] = useState(false);
+
+    // Agent-to-agent address conflict (409 from /confirm). When set, the conflict
+    // modal is shown; "Confirm New Inspection" re-submits with confirm_conflict=true.
+    const [conflict, setConflict] = useState<{
+        message: string;
+        canOverride: boolean;
+        existingDate?: string | null;
+        newDate?: string | null;
+    } | null>(null);
+    const [isOverriding, setIsOverriding] = useState(false);
+    // Non-recallable-Twilio warning returned by a successful takeover; shown on the success screen.
+    const [successWarning, setSuccessWarning] = useState<string | null>(null);
 
     const [canAddProperty, setCanAddProperty] = useState<{ allowed: boolean; reason: string; requires_subscription: boolean } | null>(null);
     const [isCheckingLimit, setIsCheckingLimit] = useState(true);
@@ -130,6 +147,7 @@ const AddPropertyPage = () => {
                     setError(err instanceof Error ? err.message : 'Failed to load draft property');
                 } finally {
                     setIsExtracting(false);
+                    setIsLoadingDraft(false);
                 }
             };
             loadDraft();
@@ -276,7 +294,7 @@ const AddPropertyPage = () => {
         }
     };
 
-    // Step 2: Confirm draft property
+    // Step 2: Confirm draft property (form submit). Validates, then confirms.
     const handlePdfConfirm = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -286,14 +304,27 @@ const AddPropertyPage = () => {
             return;
         }
 
+        await submitConfirm(false);
+    };
+
+    /**
+     * Confirms the draft property. Shared by the initial submit and the conflict
+     * override. When `confirmConflict` is true, the backend will transfer the address
+     * away from the other agent's plan (only if this inspection date is strictly newer).
+     */
+    const submitConfirm = async (confirmConflict: boolean) => {
         if (!draftPropertyId) {
             setError('No draft property found. Please start over.');
             return;
         }
 
-        setIsSubmitting(true);
+        if (confirmConflict) {
+            setIsOverriding(true);
+        } else {
+            setIsSubmitting(true);
+        }
         setError(null);
-        setConfirmProgress('Confirming property...');
+        setConfirmProgress(confirmConflict ? 'Overriding existing plan...' : 'Confirming property...');
 
         try {
             const confirmData = {
@@ -304,10 +335,15 @@ const AddPropertyPage = () => {
                 zip_code: formData.zipCode.trim(),
                 inspection_date: formData.inspectionDate || '',
                 negotiated_wins: formData.negotiatedWins.trim() || null,
+                ...(confirmConflict ? { confirm_conflict: true } : {}),
             };
 
             const result = await propertyAPI.confirm(draftPropertyId, confirmData);
             console.log('Property confirmed:', result);
+
+            setConflict(null);
+            // Surface the takeover warning (e.g. already-dispatched Twilio messages) on the success screen.
+            setSuccessWarning(result.warning ?? null);
 
             // Upload second document if provided
             if (secondDocFile && draftPropertyId) {
@@ -325,17 +361,40 @@ const AddPropertyPage = () => {
 
             setConfirmProgress('');
             setSuccess(true);
-            setIsSubmitting(false);
 
             setTimeout(() => {
                 router.push('/manage-properties');
             }, 2000);
         } catch (err) {
-            console.error('Error confirming property:', err);
-            setError(err instanceof Error ? err.message : 'Failed to confirm property. Please try again.');
             setConfirmProgress('');
+
+            const detail = err instanceof ApiError ? (err.detail as PropertyConflict | undefined) : undefined;
+            if (err instanceof ApiError && err.status === 409 && detail?.conflict) {
+                // Expected control-flow outcome — the address belongs to another agent's active
+                // plan. Surface it as the conflict modal; don't log it as an error.
+                setConflict({
+                    message: detail.message || err.message,
+                    canOverride: detail.can_override === true,
+                    existingDate: detail.existing_inspection_date ?? null,
+                    newDate: detail.new_inspection_date ?? null,
+                });
+            } else {
+                console.error('Error confirming property:', err);
+                setError(err instanceof Error ? err.message : 'Failed to confirm property. Please try again.');
+            }
+        } finally {
             setIsSubmitting(false);
+            setIsOverriding(false);
         }
+    };
+
+    // Format an inspection date for display in the conflict modal; falls back to the raw value.
+    const formatConflictDate = (value?: string | null): string | null => {
+        if (!value) return null;
+        const parsed = new Date(value);
+        return isNaN(parsed.getTime())
+            ? value
+            : parsed.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
     };
 
 
@@ -594,6 +653,12 @@ const AddPropertyPage = () => {
                     </div>
                     <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Property Added Successfully!</h2>
                     <p className="text-gray-600 dark:text-gray-300">Redirecting to your properties...</p>
+                    {successWarning && (
+                        <div className="mt-5 mx-auto max-w-md text-left p-4 rounded-lg bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 flex items-start gap-3">
+                            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <p className="text-amber-800 dark:text-amber-300 text-sm">{successWarning}</p>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -1087,18 +1152,10 @@ const AddPropertyPage = () => {
     );
 
     return (
-        <div className="min-h-full bg-[#EBF0F7] dark:bg-[#0f0f0f]">
-            <div
-                className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 min-h-full rounded-t-[24px] md:rounded-tl-[32px] md:rounded-tr-none"
-                style={{ marginTop: '0' }}
-            >
-                <div className="p-4 md:pt-[41px] md:px-[56px]">
-                    {/* Page Title */}
-                    <h2 className="text-lg md:text-[20px] font-semibold leading-tight md:leading-[30px] text-foreground mb-4 md:mb-[24px]">
-                        Add New Property
-                    </h2>
-
-                    {/* Flow Selector Tabs */}
+        <>
+            <div className="p-4 md:pt-[41px] md:px-[56px]">
+                    {/* Flow Selector Tabs — hidden on review pages (PDF review step & bulk results) */}
+                    {!(isLoadingDraft || (activeFlow === 'pdf' && pdfStep === 2) || (activeFlow === 'bulk' && bulkReviewing)) && (
                     <div className="flex gap-2 mb-6 bg-gray-100 dark:bg-white/10 p-1 rounded-xl max-w-lg">
                         <button
                             type="button"
@@ -1137,6 +1194,7 @@ const AddPropertyPage = () => {
                             Manual Entry
                         </button>
                     </div>
+                    )}
 
                     {/* Error Message */}
                     {error && (
@@ -1150,15 +1208,36 @@ const AddPropertyPage = () => {
                     )}
 
                     {/* Form Content */}
-                    {activeFlow === 'pdf' ? (
+                    {isLoadingDraft ? (
+                        <div className="w-full pb-10">
+                            <div className="mb-6 space-y-2">
+                                <Skeleton className="h-6 w-48" />
+                                <Skeleton className="h-4 w-80 max-w-full" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-4 md:gap-y-6">
+                                {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="space-y-2">
+                                        <Skeleton className="h-4 w-28" />
+                                        <Skeleton className="h-[48px] w-full rounded-[8px]" />
+                                    </div>
+                                ))}
+                                <div className="col-span-1 md:col-span-2 space-y-2 mt-4">
+                                    <Skeleton className="h-4 w-32" />
+                                    <Skeleton className="h-[96px] w-full rounded-[8px]" />
+                                </div>
+                                <div className="col-span-1 md:col-span-2">
+                                    <Skeleton className="h-[48px] w-full rounded-full" />
+                                </div>
+                            </div>
+                        </div>
+                    ) : activeFlow === 'pdf' ? (
                         pdfStep === 1 ? renderPdfUploadStep() : renderPdfReviewStep()
                     ) : activeFlow === 'bulk' ? (
-                        <BulkUpload onNavigateToDraft={(draftId) => router.push(`/manage-properties/add-properties?draft=${draftId}`)} />
+                        <BulkUpload onNavigateToDraft={(draftId) => router.push(`/manage-properties/add-properties?draft=${draftId}`)} onReviewingChange={setBulkReviewing} />
                     ) : (
                         renderManualForm()
                     )}
                 </div>
-            </div>
 
             {/* Error Modal */}
             {showErrorModal && (
@@ -1199,7 +1278,72 @@ const AddPropertyPage = () => {
                     </div>
                 </div>
             )}
-        </div>
+
+            {/* Address Conflict Modal (agent-to-agent, 409 from /confirm) */}
+            {conflict && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-2xl max-w-md w-full shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-6">
+                            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <ShieldAlert className="w-8 h-8 text-amber-600" />
+                            </div>
+
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white text-center mb-3">
+                                {conflict.canOverride ? 'Address Already Registered' : "Can't Transfer This Property"}
+                            </h3>
+
+                            <p className="text-gray-600 dark:text-gray-300 text-center whitespace-pre-line mb-4">
+                                {conflict.message}
+                            </p>
+
+                            {(conflict.existingDate || conflict.newDate) && (
+                                <div className="mb-6 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 divide-y divide-gray-200 dark:divide-white/10 text-sm">
+                                    {conflict.existingDate && (
+                                        <div className="flex items-center justify-between px-4 py-2.5">
+                                            <span className="text-gray-500 dark:text-gray-400">Existing inspection</span>
+                                            <span className="font-medium text-gray-900 dark:text-white">{formatConflictDate(conflict.existingDate)}</span>
+                                        </div>
+                                    )}
+                                    {conflict.newDate && (
+                                        <div className="flex items-center justify-between px-4 py-2.5">
+                                            <span className="text-gray-500 dark:text-gray-400">Your inspection</span>
+                                            <span className="font-medium text-gray-900 dark:text-white">{formatConflictDate(conflict.newDate)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setConflict(null)}
+                                    disabled={isOverriding}
+                                    className="flex-1"
+                                >
+                                    {conflict.canOverride ? 'Cancel' : 'Got it'}
+                                </Button>
+                                {conflict.canOverride && (
+                                    <Button
+                                        onClick={() => submitConfirm(true)}
+                                        disabled={isOverriding}
+                                        className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                                    >
+                                        {isOverriding ? (
+                                            <span className="flex items-center justify-center gap-2">
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                Overriding...
+                                            </span>
+                                        ) : (
+                                            'Yes, my buyers purchased this'
+                                        )}
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 
@@ -1207,9 +1351,10 @@ const AddPropertyPageWrapper = () => {
     return (
         <Suspense fallback={
             <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-[#0f0f0f]">
-                <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-[#E8730A]" />
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">Loading...</p>
+                <div className="w-full max-w-md flex flex-col items-center gap-4 p-6">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-4 w-32" />
                 </div>
             </div>
         }>

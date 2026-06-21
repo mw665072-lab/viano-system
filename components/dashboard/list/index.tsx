@@ -3,7 +3,8 @@
 import Image from "next/image"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { Card } from "@/components/ui/card"
-import { Home, MapPin, Loader2 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Home, MapPin } from "lucide-react"
 
 interface Property {
   id: string
@@ -25,9 +26,22 @@ interface PropertyListProps {
 export function PropertyList({ properties, selectedProperty, onSelectProperty, isLoading = false }: PropertyListProps) {
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="mt-4 text-sm text-gray-500">Loading properties...</p>
+      <div className="space-y-3">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Card
+            key={index}
+            className="min-h-[90px] md:h-[100px] rounded-[16px] bg-white p-3"
+          >
+            <div className="flex items-center justify-between gap-3 w-full">
+              <Skeleton className="w-14 h-14 md:w-[76px] md:h-[76px] flex-shrink-0 rounded-[12px]" />
+              <div className="flex-1 min-w-0 flex flex-col gap-2">
+                <Skeleton className="h-4 w-1/2 rounded" />
+                <Skeleton className="h-4 w-3/4 rounded" />
+              </div>
+              <Skeleton className="flex-shrink-0 min-w-[70px] md:w-[97px] h-7 md:h-[33px] rounded-full" />
+            </div>
+          </Card>
+        ))}
       </div>
     );
   }

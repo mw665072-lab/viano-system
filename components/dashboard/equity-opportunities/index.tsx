@@ -1,10 +1,11 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from "react"
-import { ChevronRight, TrendingUp, ArrowRight, Loader2 } from "lucide-react"
+import { ChevronRight, TrendingUp, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { propertyAPI, PropertyOpportunityItem } from "@/lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function TopEquityOpportunities() {
   const [properties, setProperties] = useState<PropertyOpportunityItem[]>([])
@@ -58,8 +59,35 @@ export function TopEquityOpportunities() {
 
       {/* Loading */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-300" />
+        <div className="flex flex-col">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div
+              key={index}
+              className={`grid grid-cols-[52px_52px_1fr_1fr_20px] items-center gap-4 py-[10px] ${
+                index < 4 ? "border-b border-[#E8ECF0] dark:border-white/10" : ""
+              } px-2 -mx-2`}
+            >
+              {/* Rank Badge */}
+              <div className="w-[52px] flex items-center justify-center">
+                <Skeleton className="w-8 h-8 rounded-full" />
+              </div>
+
+              {/* Property Image */}
+              <Skeleton className="w-[52px] h-[52px] rounded-xl" />
+
+              {/* Address + Location */}
+              <div className="min-w-0 flex flex-col gap-1.5">
+                <Skeleton className="h-4 w-3/4 rounded" />
+                <Skeleton className="h-3 w-1/2 rounded" />
+              </div>
+
+              {/* Estimated Gain */}
+              <div className="min-w-0 flex flex-col items-end gap-1.5">
+                <Skeleton className="h-4 w-16 rounded" />
+                <Skeleton className="h-3 w-12 rounded" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

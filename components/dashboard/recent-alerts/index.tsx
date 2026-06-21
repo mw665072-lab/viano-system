@@ -1,10 +1,11 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from "react"
-import { ChevronRight, Bell, ThumbsUp, ThumbsDown, Check, Loader2, AlertTriangle, ArrowRight } from "lucide-react"
+import { ChevronRight, Bell, ThumbsUp, ThumbsDown, Check, AlertTriangle, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { propertyAPI, ScheduledAlert } from "@/lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const PRIORITY_STYLES: Record<number, { text: string; border: string; label: string }> = {
   3: {
@@ -114,16 +115,70 @@ export function RecentPropertyAlerts() {
         </Link>
       </div>
 
-      {/* Loading State */}
+      {/* Loading State - Desktop */}
       {isLoading && (
-        <div className="flex flex-col items-center justify-center py-10">
-          <Loader2 className="w-7 h-7 animate-spin text-orange-400" />
-          <p
-            className="mt-3 text-sm text-gray-400"
-            style={{ fontFamily: "Manrope, sans-serif" }}
-          >
-            Loading alerts...
-          </p>
+        <div className="hidden md:block">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-[1fr_1fr_100px_120px_120px_140px] items-center gap-4 py-[14px] border-b border-gray-50 dark:border-white/10 last:border-0"
+            >
+              {/* Property */}
+              <div className="flex items-center gap-3 pl-3">
+                <Skeleton className="w-[52px] h-[52px] rounded-xl flex-shrink-0" />
+                <div className="min-w-0 flex flex-col gap-1.5">
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <Skeleton className="h-3 w-20 rounded" />
+                </div>
+              </div>
+              {/* Alert Type */}
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="h-4 w-28 rounded" />
+                <Skeleton className="h-3 w-20 rounded" />
+              </div>
+              {/* Priority */}
+              <Skeleton className="h-6 w-16 rounded-full" />
+              {/* Date */}
+              <Skeleton className="h-4 w-20 rounded" />
+              {/* Status */}
+              <Skeleton className="h-6 w-20 rounded-full" />
+              {/* Feedback */}
+              <div className="flex flex-col gap-1.5 pr-3">
+                <Skeleton className="h-3 w-24 rounded" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="w-8 h-8 rounded-lg" />
+                  <Skeleton className="w-8 h-8 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Loading State - Mobile */}
+      {isLoading && (
+        <div className="md:hidden space-y-3 mt-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="p-4 rounded-2xl border border-gray-100 dark:border-white/10"
+            >
+              <div className="flex items-start gap-3">
+                <Skeleton className="w-12 h-12 rounded-lg flex-shrink-0" />
+                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                  <Skeleton className="h-4 w-3/4 rounded" />
+                  <Skeleton className="h-3 w-1/2 rounded" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <Skeleton className="h-5 w-14 rounded-full" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-4 w-16 rounded" />
+              </div>
+              <Skeleton className="mt-3 h-4 w-2/3 rounded" />
+              <Skeleton className="mt-2 h-3 w-1/2 rounded" />
+            </div>
+          ))}
         </div>
       )}
 

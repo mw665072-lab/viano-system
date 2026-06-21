@@ -117,7 +117,9 @@ const Layout = ({ children }: LayoutProps) => {
                             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
                     )}
-                    <main className="flex-1 overflow-y-auto bg-[#F8F9FB] dark:bg-[#0f0f0f] w-full px-4 md:px-6 lg:px-8 py-4">
+                    <main className={`flex-1 overflow-y-auto w-full ${pathname === "/manage-properties/add-properties"
+                        ? "bg-white dark:bg-[#1a1a1a]"
+                        : "bg-[#F8F9FB] dark:bg-[#0f0f0f] px-4 md:px-6 lg:px-8 py-4"}`}>
                         {children}
                     </main>
                 </div>

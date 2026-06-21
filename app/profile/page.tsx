@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft, ChevronRight, Loader2, CheckCircle, XCircle, Mail, Smartphone } from "lucide-react"
 import Image from "next/image"
 import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, UpdateUserRequest, getCurrentUserId } from "@/lib/api"
@@ -649,10 +650,90 @@ export default function ProfilePage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-gray-600 dark:text-gray-300">Loading profile...</p>
+      <div className="min-h-screen">
+        <div className="px-4 sm:px-6 lg:px-10 pb-8">
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Left Column */}
+            <div className="flex-1 flex flex-col gap-6">
+              {/* Profile Info Container */}
+              <Card className="p-5 md:p-8 rounded-3xl">
+                <div className="flex flex-col sm:flex-row gap-6">
+                  {/* Avatar */}
+                  <div className="flex-shrink-0 mx-auto sm:mx-0">
+                    <Skeleton className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full" />
+                  </div>
+                  {/* Info */}
+                  <div className="flex-1 flex flex-col items-center sm:items-start gap-2">
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-4 w-56" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-6 w-full">
+                      <div className="space-y-2">
+                        <Skeleton className="h-3 w-16" />
+                        <Skeleton className="h-4 w-40" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-3 w-16" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-11 w-36 rounded-xl mt-6" />
+                  </div>
+                </div>
+              </Card>
+
+              {/* Audit History Container */}
+              <Card className="p-5 md:p-8 rounded-3xl">
+                <div className="flex items-center justify-between mb-6">
+                  <Skeleton className="h-6 w-40" />
+                  <Skeleton className="h-9 w-28 rounded-full" />
+                </div>
+                <div className="space-y-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 dark:border-white/10">
+                      <Skeleton className="flex-shrink-0 w-12 h-12 rounded-xl" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-44" />
+                        <Skeleton className="h-3 w-28" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+
+            {/* Right Column */}
+            <div className="w-full lg:w-[326px] flex flex-col gap-6">
+              {/* Quick Stats Container */}
+              <Card className="p-6 rounded-3xl">
+                <Skeleton className="h-6 w-32 mb-6" />
+                <div className="space-y-6">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-3 w-24" />
+                      <div className="flex items-center justify-between gap-4">
+                        <Skeleton className="h-8 w-12" />
+                        <Skeleton className="h-1.5 flex-1 max-w-[140px] rounded-full" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Subscription Container */}
+              <Card className="p-6 rounded-3xl">
+                <div className="flex items-center justify-between mb-6">
+                  <Skeleton className="h-6 w-28" />
+                  <Skeleton className="h-5 w-5 rounded-md" />
+                </div>
+                <div className="space-y-4">
+                  <Skeleton className="h-20 w-full rounded-2xl" />
+                  <Skeleton className="h-11 w-full rounded-full" />
+                </div>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     );

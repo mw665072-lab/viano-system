@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { X, Clock, ArrowRight, History, Loader2, Undo2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { systemsAPI, SystemResponse, ReplacementEventResponse } from "@/lib/api"
 
 interface HistoryModalProps {
@@ -98,9 +99,21 @@ export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: His
                 {/* Body */}
                 <div className="p-6">
                     {isLoading ? (
-                        <div className="flex flex-col items-center justify-center py-12">
-                            <Loader2 className="w-8 h-8 animate-spin text-[#E8730A] mb-3" />
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Loading history...</p>
+                        <div className="space-y-4">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="relative pl-6">
+                                    {/* Timeline dot */}
+                                    <Skeleton className="absolute left-0 top-1 w-6 h-6 rounded-full" />
+                                    {/* Event card */}
+                                    <div className="bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/10 p-4 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <Skeleton className="h-5 w-20 rounded-lg" />
+                                            <Skeleton className="h-3 w-16" />
+                                        </div>
+                                        <Skeleton className="h-4 w-32" />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : error ? (
                         <div className="bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded-xl p-4 text-sm text-red-700 dark:text-red-400">

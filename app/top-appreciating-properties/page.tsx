@@ -1,9 +1,10 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from "react"
-import { TrendingUp, Loader2 } from "lucide-react"
+import { TrendingUp } from "lucide-react"
 import Image from "next/image"
 import { propertyAPI, PropertyOpportunityItem } from "@/lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const ITEMS_PER_PAGE = 15
 
@@ -58,8 +59,35 @@ export default function TopAppreciatingPropertiesPage() {
 
       {/* Loading */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-300" />
+        <div className="flex flex-col">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className={`grid grid-cols-[52px_52px_1fr_1fr_20px] items-center gap-4 py-[10px] ${
+                i < 5 ? "border-b border-gray-100 dark:border-white/10" : ""
+              }`}
+            >
+              {/* Rank Badge */}
+              <div className="w-[52px] flex items-center justify-center">
+                <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
+              </div>
+
+              {/* Property Image */}
+              <Skeleton className="w-[52px] h-[52px] flex-shrink-0 rounded-xl" />
+
+              {/* Address + Location */}
+              <div className="min-w-0 space-y-1.5">
+                <Skeleton className="h-3.5 w-[170px] max-w-full" />
+                <Skeleton className="h-3 w-[120px] max-w-full" />
+              </div>
+
+              {/* Estimated Gain */}
+              <div className="min-w-0 flex flex-col items-end gap-1.5">
+                <Skeleton className="h-3.5 w-[80px]" />
+                <Skeleton className="h-2.5 w-[50px]" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
