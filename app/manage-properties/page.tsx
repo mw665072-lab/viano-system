@@ -5,7 +5,7 @@ import { PropertyList } from '@/components/manage-properties/list';
 import { PropertyDetailPanel } from '@/components/manage-properties/detail';
 import { AlertCircle, Loader2, X, Upload, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, MessageResponse, getCurrentUserId } from '@/lib/api';
+import { propertyAPI, processAPI, documentAPI, PropertyResponse, ProcessSummaryResponse, MessageResponse, CMAResponse, getCurrentUserId } from '@/lib/api';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 
 
@@ -101,6 +101,11 @@ const Page = () => {
     const [properties, setProperties] = useState<Property[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Stored CMA valuations for all active properties, fetched once via the batch endpoint
+    // (no per-property loop). Keyed by property_id; a missing entry means "valuation pending".
+    const [cmaMap, setCmaMap] = useState<Map<string, CMAResponse>>(new Map());
+    const [isCmaLoading, setIsCmaLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Status');
     const [isDownloading, setIsDownloading] = useState(false);
@@ -127,7 +132,9 @@ const Page = () => {
         setTimeout(() => setToast(null), 3000);
     };
 
-    const itemsPerPage = 25;
+    // Sized so a page fits the list panel without an inner scrollbar (the stacked detail-open
+    // layout has taller rows, so 8 is the safe fit for both). Previous/Next then drive paging.
+    const itemsPerPage = 8;
 
     // Fetch properties and their process statuses from API
     const fetchPropertiesWithStatus = useCallback(async () => {
@@ -222,6 +229,16 @@ const Page = () => {
         }
     }, []);
 
+    // Merge a freshly-refreshed valuation back into the map so the detail card stays current
+    // without re-running the batch call.
+    const handleCmaRefreshed = useCallback((cma: CMAResponse) => {
+        setCmaMap(prev => {
+            const next = new Map(prev);
+            next.set(cma.property_id, cma);
+            return next;
+        });
+    }, []);
+
     // Initial load
     useEffect(() => {
         const loadData = async () => {
@@ -231,6 +248,20 @@ const Page = () => {
             setIsLoading(false);
         };
         loadData();
+
+        // Fetch every active property's stored CMA in one batch call (a DB read, so it's cheap
+        // on load — no per-property loop). Non-fatal: the value card falls back to "pending".
+        const loadCma = async () => {
+            try {
+                const valuations = await propertyAPI.getCMABatch();
+                setCmaMap(new Map(valuations.map(v => [v.property_id, v])));
+            } catch (err) {
+                console.error('Error fetching CMA batch:', err);
+            } finally {
+                setIsCmaLoading(false);
+            }
+        };
+        loadCma();
     }, [fetchPropertiesWithStatus]);
 
     // Use ref to track if there are active processes (avoids stale closure)
@@ -760,6 +791,9 @@ const Page = () => {
                         <div className="hidden lg:flex lg:flex-col flex-1 bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-white/10 rounded-2xl overflow-hidden relative">
                             <PropertyDetailPanel
                                 property={selectedDetail}
+                                cma={cmaMap.get(selectedProperty.id) ?? null}
+                                cmaLoading={isCmaLoading}
+                                onCmaRefreshed={handleCmaRefreshed}
                                 onClose={handleCloseDetail}
                                 onEdit={() => handleOpenEditModal(selectedProperty)}
                                 onDownload={() => handleDownload(selectedProperty.id)}
@@ -778,6 +812,9 @@ const Page = () => {
                         <div className="lg:hidden fixed inset-0 z-50 bg-white dark:bg-[#1a1a1a] overflow-y-auto">
                             <PropertyDetailPanel
                                 property={selectedDetail}
+                                cma={cmaMap.get(selectedProperty.id) ?? null}
+                                cmaLoading={isCmaLoading}
+                                onCmaRefreshed={handleCmaRefreshed}
                                 onClose={handleCloseDetail}
                                 onEdit={() => handleOpenEditModal(selectedProperty)}
                                 onDownload={() => handleDownload(selectedProperty.id)}

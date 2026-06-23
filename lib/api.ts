@@ -558,12 +558,37 @@ export const propertyAPI = {
     },
 
     /**
-     * Get CMA (Comparative Market Analysis) estimate for a property
-     * Calls Rentcast API to get price estimate based on property address
-     * Returns 404 if property not found, 503 if Rentcast is down
+     * Batch-read every active property's stored CMA in a single call.
+     * This is the primary list/dashboard call: it reads from the DB only (no external API),
+     * so it's fast and free to call on every page load. `comps` is omitted (always null) to
+     * keep the payload small — use getCMA for comparables. Properties that could not be valued
+     * at all are omitted from the array, so map by `property_id` and treat a missing entry as
+     * "valuation pending / unavailable".
+     */
+    getCMABatch: () =>
+        apiRequest<CMAResponse[]>('/api/property/cma'),
+
+    /**
+     * Get the stored CMA for a single property.
+     * Reads from the DB; only does a live fetch if the property has never been valued.
+     * - 404 if the property is not found or not owned by the user
+     * - 503 if there is no stored valuation and the live fetch fails
      */
     getCMA: (propertyId: string) =>
         apiRequest<CMAResponse>(`/api/property/my-properties/${propertyId}/cma`),
+
+    /**
+     * Force a live valuation fetch ("Get latest value"), store it, and return the fresh CMA
+     * (with comps). This is the only user-facing call that hits the external API, so it's
+     * slower (~1–3s — show a spinner) and costs an API credit. Wire it to an explicit button,
+     * never an automatic refresh.
+     * - 404 if the property is not found or not owned
+     * - 503 if the live fetch failed
+     */
+    refreshCMA: (propertyId: string) =>
+        apiRequest<CMAResponse>(`/api/property/my-properties/${propertyId}/cma/refresh`, {
+            method: 'POST',
+        }),
 
     /**
      * Get bulk upload quota for the current user
@@ -1058,6 +1083,10 @@ export interface CreatePropertyRequest {
     negotiated_wins?: string | null;
     city?: string | null;
     state?: string | null;
+    /** Last recorded sale price; drives appreciation. Optional — may be entered manually. */
+    last_sale_price?: number | null;
+    /** ISO date of the last sale, e.g. "2010-04-16". */
+    last_sale_date?: string | null;
 }
 
 export interface PropertyResponse {
@@ -1078,6 +1107,10 @@ export interface PropertyResponse {
     status?: 'active' | 'transferred';
     /** ISO datetime of the handoff, or null while active. */
     transferred_at?: string | null;
+    /** Last recorded sale price (captured at extraction, editable at review). Drives appreciation. */
+    last_sale_price?: number | null;
+    /** ISO date of the last sale, e.g. "2010-04-16". May be empty when the provider has no history. */
+    last_sale_date?: string | null;
 }
 
 // PDF-First Flow Types
@@ -1088,6 +1121,10 @@ export interface ExtractedPropertyData {
     state: string;
     zip_code: string;
     inspection_date: string;
+    /** Last sale price from v3 Comps — may be empty (no provider history); editable at review. */
+    last_sale_price?: number | null;
+    /** Last sale date (ISO) from v3 Comps — may be empty; editable at review. */
+    last_sale_date?: string | null;
 }
 
 export interface UploadedDocument {
@@ -1112,6 +1149,10 @@ export interface ConfirmPropertyRequest {
     zip_code?: string;
     inspection_date?: string;
     negotiated_wins?: string | null;
+    /** Reviewed last sale price. Optional — omit to keep what was extracted. */
+    last_sale_price?: number | null;
+    /** Reviewed last sale date (ISO). Optional — omit to keep what was extracted. */
+    last_sale_date?: string | null;
     /**
      * Set true to override an existing agent's active plan for the same address.
      * Only succeeds when this inspection date is strictly newer than the existing one;
@@ -1455,11 +1496,29 @@ export interface BillingStatusResponse {
 
 // CMA Types
 export interface CMAResponse {
+    /** Subject property id — use as the list/map key. */
+    property_id: string;
+    /** The AVM (estimated value). Display this as the headline number. */
     price: number;
+    /** AVM range bounds. */
     low: number;
     high: number;
+    /** Pre-formatted range, e.g. "$735.3K–$974.7K". Prefer this for display. */
     formatted: string;
+    /** The property's street address (as stored). */
     address: string;
+    /** The full address the AVM actually matched (audit/QA), or null. */
+    matched_address: string | null;
+    /** 0–100, from the AVM. Usually present now, but still guard for null. */
+    confidence_score: number | null;
+    /** From the property (captured at extraction, editable at review). */
+    last_sale_price: number | null;
+    /** ISO date, e.g. "2010-04-16". */
+    last_sale_date: string | null;
+    /** ISO datetime the AVM was captured. Show as "as of {date}". */
+    valued_at: string | null;
+    /** "avm" (created/lazy), "monthly" (auto-refreshed), or "manual" (user-refreshed). */
+    source: string | null;
 }
 
 // Bulk Upload Types
@@ -1480,6 +1539,10 @@ export interface BulkUploadItem {
         state: string;
         zip_code: string;
         inspection_date: string;
+        /** Last sale price from v3 Comps — may be empty; editable at review. */
+        last_sale_price?: number | null;
+        /** Last sale date (ISO) from v3 Comps — may be empty; editable at review. */
+        last_sale_date?: string | null;
     } | null;
     doc_type?: string;
     document_id?: string | null;

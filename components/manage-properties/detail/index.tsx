@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Pencil, Download, Trash2, Wrench, TrendingUp, Plus, Settings, Droplets, Wind, Home, ArrowLeft, Calendar, Hammer } from "lucide-react"
+import { Pencil, Download, Trash2, Wrench, TrendingUp, Plus, Settings, Droplets, Wind, Home, ArrowLeft, Calendar, Hammer, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { processAPI, documentAPI, MessageResponse, systemsAPI, SystemResponse, propertyAPI, CMAResponse } from "@/lib/api"
 import { ResetModal } from "./reset-modal"
@@ -40,12 +40,26 @@ interface PropertyDetailData {
 
 interface PropertyDetailPanelProps {
     property: PropertyDetailData
+    /** Stored CMA for this property from the batch endpoint; null when no valuation exists yet. */
+    cma?: CMAResponse | null
+    /** True while the parent's batch CMA fetch is still in flight (shows a skeleton). */
+    cmaLoading?: boolean
+    /** Called with the fresh valuation after a manual "Get latest value" refresh. */
+    onCmaRefreshed?: (cma: CMAResponse) => void
     onClose: () => void
     onEdit?: () => void
     onDownload?: () => void
     onDelete?: () => void
     onContinueSetup?: () => void
     onShowToast?: (message: string, type: 'success' | 'error') => void
+}
+
+/** Format an ISO datetime as "Jun 23, 2026" for the "Valued {date}" freshness line. */
+function formatValuedAt(iso: string | null | undefined): string | null {
+    if (!iso) return null
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return null
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function getInitials(name: string): string {
@@ -97,6 +111,9 @@ function getProgressBarColor(percentageUsed: number | null): string {
 
 export function PropertyDetailPanel({
     property,
+    cma: cmaProp,
+    cmaLoading = false,
+    onCmaRefreshed,
     onClose,
     onEdit,
     onDownload,
@@ -122,9 +139,12 @@ export function PropertyDetailPanel({
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [selectedSystem, setSelectedSystem] = useState<SystemResponse | null>(null)
 
-    const [cmaData, setCmaData] = useState<CMAResponse | null>(null)
-    const [isLoadingCMA, setIsLoadingCMA] = useState(false)
-    const [cmaError, setCmaError] = useState<string | null>(null)
+    // CMA comes from the parent's batch fetch (cmaProp). A manual "Get latest value" refresh
+    // stashes its result here so the card updates immediately; it's tagged with property_id so
+    // it's ignored once a different property is selected (then we fall back to the batch value).
+    const [refreshedCMA, setRefreshedCMA] = useState<CMAResponse | null>(null)
+    const [isRefreshingCMA, setIsRefreshingCMA] = useState(false)
+    const cma = refreshedCMA && refreshedCMA.property_id === property.id ? refreshedCMA : (cmaProp ?? null)
 
     const [inspectionDate, setInspectionDate] = useState<string | null>(null)
 
@@ -209,34 +229,28 @@ export function PropertyDetailPanel({
         fetchSystems()
     }, [property.id, property.isDraft])
 
-    useEffect(() => {
-        const fetchCMA = async () => {
-            if (!property.id || property.isDraft) {
-                setCmaData(null)
-                setCmaError(null)
-                return
-            }
+    // "Get latest value" — the only call that hits the external valuation API (slow + costs a
+    // credit), so it's an explicit button, never automatic. Updates this card and the parent map.
+    const handleRefreshCMA = async () => {
+        if (!property.id || property.isDraft || isRefreshingCMA) return
 
-            setIsLoadingCMA(true)
-            setCmaError(null)
-            try {
-                const data = await propertyAPI.getCMA(property.id)
-                setCmaData(data)
-            } catch (err) {
-                console.error('Error fetching CMA:', err)
-                const message = err instanceof Error ? err.message : 'Failed to load CMA estimate'
-                if (message.includes('503') || message.toLowerCase().includes('rentcast') || message.toLowerCase().includes('unavailable')) {
-                    setCmaError('CMA service temporarily unavailable')
-                } else {
-                    setCmaData(null)
-                }
-            } finally {
-                setIsLoadingCMA(false)
-            }
+        setIsRefreshingCMA(true)
+        try {
+            const fresh = await propertyAPI.refreshCMA(property.id)
+            setRefreshedCMA(fresh)
+            onCmaRefreshed?.(fresh)
+            onShowToast?.('Home value updated', 'success')
+        } catch (err) {
+            console.error('Error refreshing CMA:', err)
+            const message = err instanceof Error ? err.message : ''
+            onShowToast?.(
+                message.includes('503') ? 'Valuation service temporarily unavailable' : 'Could not refresh home value',
+                'error',
+            )
+        } finally {
+            setIsRefreshingCMA(false)
         }
-
-        fetchCMA()
-    }, [property.id, property.isDraft])
+    }
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -465,18 +479,35 @@ export function PropertyDetailPanel({
                                         <TrendingUp className="w-4 h-4 text-[#E8730A]" />
                                     </div>
                                 </div>
-                                {isLoadingCMA ? (
+                                {cmaLoading && !cma ? (
                                     <>
                                         <Skeleton className="h-8 w-40 max-w-full mt-1" />
                                         <Skeleton className="h-4 w-48 max-w-full mt-2" />
                                     </>
-                                ) : cmaData ? (
+                                ) : cma ? (
                                     <>
-                                        <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">{cmaData.formatted}</p>
-                                        <p className="text-xs sm:text-sm text-gray-400 mt-1">Estimated Range: ${cmaData.low.toLocaleString()} - ${cmaData.high.toLocaleString()}</p>
+                                        <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">${cma.price.toLocaleString()}</p>
+                                        <p className="text-xs sm:text-sm text-gray-400 mt-1">Estimated Range: ${cma.low.toLocaleString()} - ${cma.high.toLocaleString()}</p>
+                                        {formatValuedAt(cma.valued_at) && (
+                                            <p className="text-[11px] text-gray-400 mt-1">Valued {formatValuedAt(cma.valued_at)}</p>
+                                        )}
                                     </>
                                 ) : (
-                                    <p className="text-xl sm:text-2xl font-bold text-gray-400 mt-1">N/A</p>
+                                    <>
+                                        <p className="text-xl sm:text-2xl font-bold text-gray-400 mt-1">N/A</p>
+                                        <p className="text-xs text-gray-400 mt-1">Valuation pending — get the latest estimate below.</p>
+                                    </>
+                                )}
+                                {!property.isDraft && !isReadOnly && (
+                                    <button
+                                        onClick={handleRefreshCMA}
+                                        disabled={isRefreshingCMA}
+                                        title="Fetches a fresh live valuation (uses an API credit)"
+                                        className="mt-3 inline-flex items-center justify-center gap-2 h-9 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingCMA ? 'animate-spin' : ''}`} />
+                                        {isRefreshingCMA ? 'Getting latest…' : 'Get latest value'}
+                                    </button>
                                 )}
                             </div>
                         </div>

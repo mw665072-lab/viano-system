@@ -22,6 +22,9 @@ interface DraftFormData {
     zipCode: string;
     inspectionDate: string;
     negotiatedWins: string;
+    // Last sale (from v3 Comps; may be empty → agent fills in). Drives appreciation.
+    lastSalePrice: string;
+    lastSaleDate: string;
     secondDocFile: File | null;
     isConfirming: boolean;
     isConfirmed: boolean;
@@ -124,6 +127,8 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                         zipCode: item.extracted?.zip_code || '',
                         inspectionDate: toDateInputValue(item.extracted?.inspection_date),
                         negotiatedWins: '',
+                        lastSalePrice: item.extracted?.last_sale_price != null ? String(item.extracted.last_sale_price) : '',
+                        lastSaleDate: toDateInputValue(item.extracted?.last_sale_date),
                         secondDocFile: null,
                         isConfirming: false,
                         isConfirmed: false,
@@ -254,7 +259,7 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
     // Build the confirm payload from the user-edited fields, falling back to extracted values
     const buildConfirmData = (item: BulkUploadItem): ConfirmPropertyRequest => {
         const fd = item.property_id ? draftFormData[item.property_id] : undefined;
-        return {
+        const data: ConfirmPropertyRequest = {
             client_name: fd?.clientName ?? item.extracted?.client_name,
             address: fd?.address ?? item.extracted?.address,
             city: fd?.city ?? item.extracted?.city,
@@ -263,6 +268,19 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
             inspection_date: fd?.inspectionDate || item.extracted?.inspection_date,
             negotiated_wins: fd?.negotiatedWins || null,
         };
+
+        // Last sale: prefer the edited field, fall back to extracted. Omit when blank so we never
+        // overwrite a stored value with null.
+        const extractedPrice = item.extracted?.last_sale_price != null ? String(item.extracted.last_sale_price) : '';
+        const priceStr = (fd?.lastSalePrice ?? extractedPrice).trim();
+        if (priceStr !== '') {
+            const n = Number(priceStr);
+            if (!isNaN(n) && n >= 0) data.last_sale_price = Math.round(n);
+        }
+        const dateStr = fd?.lastSaleDate || toDateInputValue(item.extracted?.last_sale_date);
+        if (dateStr) data.last_sale_date = dateStr;
+
+        return data;
     };
 
     // Confirm single draft
@@ -607,6 +625,30 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                                                                     disabled={formData?.isConfirming}
                                                                 />
                                                             </div>
+                                                            <div>
+                                                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Last Sale Price</label>
+                                                                <Input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    step="1"
+                                                                    placeholder="e.g. 500000"
+                                                                    value={formData?.lastSalePrice ?? ''}
+                                                                    onChange={(e) => item.property_id && updateDraftFormData(item.property_id, { lastSalePrice: e.target.value })}
+                                                                    disabled={formData?.isConfirming}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Last Sale Date</label>
+                                                                <Input
+                                                                    type="date"
+                                                                    value={formData?.lastSaleDate ?? toDateInputValue(item.extracted?.last_sale_date)}
+                                                                    onChange={(e) => item.property_id && updateDraftFormData(item.property_id, { lastSaleDate: e.target.value })}
+                                                                    disabled={formData?.isConfirming}
+                                                                />
+                                                            </div>
+                                                            <p className="col-span-2 text-[11px] text-gray-400 dark:text-gray-500">
+                                                                Used to calculate appreciation — add it if blank.
+                                                            </p>
                                                         </div>
                                                     </div>
 
