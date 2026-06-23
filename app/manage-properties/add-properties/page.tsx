@@ -14,6 +14,24 @@ import BulkUpload from '@/components/manage-properties/bulk-upload';
 type FlowType = 'pdf' | 'manual' | 'bulk';
 type PdfStep = 1 | 2;
 
+/**
+ * Build the last-sale payload from the (string) form fields. Each field is omitted when blank so
+ * we never overwrite an extracted/stored value with null (the API keeps what it has when omitted).
+ */
+function buildLastSaleFields(
+    lastSalePrice: string,
+    lastSaleDate: string,
+): { last_sale_price?: number; last_sale_date?: string } {
+    const out: { last_sale_price?: number; last_sale_date?: string } = {};
+    const priceStr = lastSalePrice.trim();
+    if (priceStr !== '') {
+        const n = Number(priceStr);
+        if (!isNaN(n) && n >= 0) out.last_sale_price = Math.round(n);
+    }
+    if (lastSaleDate) out.last_sale_date = lastSaleDate;
+    return out;
+}
+
 const AddPropertyPage = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -52,6 +70,10 @@ const AddPropertyPage = () => {
         clientName: '',
         inspectionDate: '',
         negotiatedWins: '',
+        // Last sale (captured at extraction, editable here). May be empty → agent fills in.
+        // Drives appreciation, so encourage agents to complete it.
+        lastSalePrice: '',
+        lastSaleDate: '',
     });
 
     // Separate state for each document type (manual flow only)
@@ -141,6 +163,8 @@ const AddPropertyPage = () => {
                         clientName: property.client_name || '',
                         inspectionDate: property.inspection_date ? property.inspection_date.split('T')[0] : '',
                         negotiatedWins: property.negotiated_wins || '',
+                        lastSalePrice: property.last_sale_price != null ? String(property.last_sale_price) : '',
+                        lastSaleDate: property.last_sale_date ? property.last_sale_date.split('T')[0] : '',
                     });
                 } catch (err) {
                     console.error('Error loading draft property:', err);
@@ -277,6 +301,8 @@ const AddPropertyPage = () => {
                 state: property.state || '',
                 zipCode: property.zip_code || '',
                 inspectionDate: property.inspection_date ? property.inspection_date.split('T')[0] : '',
+                lastSalePrice: property.last_sale_price != null ? String(property.last_sale_price) : '',
+                lastSaleDate: property.last_sale_date ? property.last_sale_date.split('T')[0] : '',
             }));
 
             setProcessingMessage('');
@@ -335,6 +361,7 @@ const AddPropertyPage = () => {
                 zip_code: formData.zipCode.trim(),
                 inspection_date: formData.inspectionDate || '',
                 negotiated_wins: formData.negotiatedWins.trim() || null,
+                ...buildLastSaleFields(formData.lastSalePrice, formData.lastSaleDate),
                 ...(confirmConflict ? { confirm_conflict: true } : {}),
             };
 
@@ -507,6 +534,7 @@ const AddPropertyPage = () => {
                 negotiated_wins: formData.negotiatedWins.trim() || null,
                 city: formData.city.trim(),
                 state: formData.state.trim(),
+                ...buildLastSaleFields(formData.lastSalePrice, formData.lastSaleDate),
             };
 
             const createdProperty = await propertyAPI.create(propertyData);
@@ -868,6 +896,40 @@ const AddPropertyPage = () => {
                 />
             </div>
 
+            {/* Row 4: Last Sale Price and Date (drives appreciation; may be empty → agent fills in) */}
+            <div>
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
+                    Last Sale Price
+                </label>
+                <Input
+                    type="number"
+                    name="lastSalePrice"
+                    min="0"
+                    step="1"
+                    placeholder="e.g. 500000"
+                    value={formData.lastSalePrice}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-4 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
+                />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
+                    Last Sale Date
+                </label>
+                <Input
+                    type="date"
+                    name="lastSaleDate"
+                    value={formData.lastSaleDate}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                    className="h-[48px] w-full rounded-[8px] border border-[#D9D9D9] dark:border-white/10 bg-white dark:bg-white/5 px-4 text-sm text-[#1E1E1E] dark:text-white placeholder:text-[#9CA3AF] focus-visible:ring-1 focus-visible:ring-[#E8730A] focus-visible:border-[#E8730A] disabled:opacity-50"
+                />
+            </div>
+            <p className="col-span-1 md:col-span-2 -mt-2 text-xs text-[#9CA3AF] dark:text-gray-400">
+                Used to calculate appreciation. Pre-filled from sale records when available — add it here if blank.
+            </p>
+
             {/* Negotiated Wins */}
             <div className="col-span-1 md:col-span-2 mt-4">
                 <label className="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
@@ -905,6 +967,8 @@ const AddPropertyPage = () => {
                         clientName: '',
                         inspectionDate: '',
                         negotiatedWins: '',
+                        lastSalePrice: '',
+                        lastSaleDate: '',
                     });
                 }}
                 disabled={isSubmitting}
