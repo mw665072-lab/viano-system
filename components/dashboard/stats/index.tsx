@@ -35,7 +35,7 @@ const STATS_CONFIG: StatConfig[] = [
     iconColor: "text-[#3C4653] dark:text-gray-300",
     barColor: "bg-emerald-500",
     valueColor: "text-[#1E1E1E] dark:text-white",
-    link: { label: "View Touchpoints", href: "/manage-properties" },
+    link: { label: "View Touchpoints", href: "/#" },
     linkColor: "text-[#1E1E1E] dark:text-gray-200",
   },
   {
@@ -45,7 +45,7 @@ const STATS_CONFIG: StatConfig[] = [
     iconColor: "text-[#3C4653] dark:text-gray-300",
     barColor: "bg-emerald-500",
     valueColor: "text-[#1E1E1E] dark:text-white",
-    link: { label: "View Opportunities", href: "/manage-properties" },
+    link: { label: "View Opportunities", href: "/top-appreciating-properties" },
     linkColor: "text-[#1E1E1E] dark:text-gray-200",
   },
 ]
