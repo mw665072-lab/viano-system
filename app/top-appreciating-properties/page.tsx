@@ -57,9 +57,9 @@ export default function TopAppreciatingPropertiesPage() {
         </span>
       </div>
 
-      {/* Loading */}
+      {/* Loading — Desktop */}
       {isLoading && (
-        <div className="flex flex-col">
+        <div className="hidden md:flex md:flex-col">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
@@ -91,6 +91,28 @@ export default function TopAppreciatingPropertiesPage() {
         </div>
       )}
 
+      {/* Loading — Mobile */}
+      {isLoading && (
+        <div className="md:hidden space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="p-4 rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1a1a1a]">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
+                <Skeleton className="w-12 h-12 rounded-lg flex-shrink-0" />
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <Skeleton className="h-3.5 w-2/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
+                <Skeleton className="h-3 w-[60px]" />
+                <Skeleton className="h-4 w-[80px]" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Error */}
       {!isLoading && error && (
         <div className="py-8 text-center">
@@ -114,7 +136,8 @@ export default function TopAppreciatingPropertiesPage() {
       {/* Full-width list */}
       {!isLoading && !error && displayItems.length > 0 && (
         <>
-          <div className="flex flex-col">
+          {/* Desktop grid */}
+          <div className="hidden md:flex md:flex-col">
             {displayItems.map((property, index) => (
               <div
                 key={property.property_id}
@@ -174,6 +197,66 @@ export default function TopAppreciatingPropertiesPage() {
                   >
                     Est. Gain
                   </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-3">
+            {displayItems.map((property, index) => (
+              <div
+                key={property.property_id}
+                className="p-4 rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1a1a1a]"
+              >
+                {/* Top row: rank + image + address */}
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                    <span
+                      className="text-sm font-bold text-white"
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      {startIndex + index + 1}
+                    </span>
+                  </div>
+                  <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-white/10">
+                    <Image
+                      src="/property-default-v2.png"
+                      alt={property.address}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3
+                      className="text-sm font-bold text-[#0C1D38] dark:text-white truncate"
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      {property.address}
+                    </h3>
+                    <p
+                      className="text-xs text-gray-400 mt-0.5 truncate"
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      {property.location} · Bought {property.last_sale_date}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Estimated gain */}
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
+                  <span
+                    className="text-[11px] uppercase text-gray-400 tracking-wide"
+                    style={{ fontFamily: "Manrope, sans-serif" }}
+                  >
+                    Est. Gain
+                  </span>
+                  <span
+                    className="text-base font-bold text-emerald-600 dark:text-emerald-400"
+                    style={{ fontFamily: "Manrope, sans-serif" }}
+                  >
+                    +{property.formatted_gain}
+                  </span>
                 </div>
               </div>
             ))}

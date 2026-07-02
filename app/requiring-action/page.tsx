@@ -131,9 +131,9 @@ export default function RequiringActionPage() {
         </span>
       </div>
 
-      {/* Loading */}
+      {/* Loading — Desktop */}
       {isLoading && (
-        <div className="flex flex-col">
+        <div className="hidden md:flex md:flex-col">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
@@ -154,6 +154,30 @@ export default function RequiringActionPage() {
                 <Skeleton className="h-3 w-[90px] max-w-full" />
               </div>
               <Skeleton className="w-7 h-7 rounded-full flex-shrink-0" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Loading — Mobile */}
+      {isLoading && (
+        <div className="md:hidden space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="p-4 rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1a1a1a]">
+              <div className="flex items-start gap-3">
+                <Skeleton className="w-12 h-12 flex-shrink-0 rounded-lg" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-2/3" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <Skeleton className="h-5 w-[80px] rounded-full" />
+              </div>
+              <div className="mt-2 space-y-1.5">
+                <Skeleton className="h-3.5 w-[140px]" />
+                <Skeleton className="h-3 w-[90px]" />
+              </div>
             </div>
           ))}
         </div>
@@ -183,7 +207,8 @@ export default function RequiringActionPage() {
       {/* Full-width list */}
       {!isLoading && !error && items.length > 0 && (
         <>
-          <div className="flex flex-col">
+          {/* Desktop grid */}
+          <div className="hidden md:flex md:flex-col">
             {displayItems.map(({ property, system }, index) => {
               const tagStyle = getTagStyle(system.alert_tier, system.percentage_used)
               const tagLabel = getSystemLabel(system.system_type)
@@ -240,6 +265,72 @@ export default function RequiringActionPage() {
                       <X className="w-3.5 h-3.5" />
                     )}
                   </button>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-3">
+            {displayItems.map(({ property, system }) => {
+              const tagStyle = getTagStyle(system.alert_tier, system.percentage_used)
+              const tagLabel = getSystemLabel(system.system_type)
+              const isDismissing = dismissingId === system.system_id
+
+              return (
+                <div
+                  key={system.system_id}
+                  className="p-4 rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1a1a1a]"
+                >
+                  {/* Top row: image + address + dismiss */}
+                  <div className="flex items-start gap-3">
+                    <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-white/10">
+                      <Image
+                        src="/property-default-v2.png"
+                        alt={property.property_name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-bold text-[#0C1D38] dark:text-white truncate" style={{ fontFamily: "Manrope, sans-serif" }}>
+                        {property.address || property.property_name}
+                      </h3>
+                      <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5 truncate" style={{ fontFamily: "Manrope, sans-serif" }}>
+                        {property.location}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDismiss(system.system_id)}
+                      disabled={isDismissing}
+                      className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0 disabled:opacity-50"
+                      title="Dismiss"
+                    >
+                      {isDismissing ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <X className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* System tag */}
+                  <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`inline-flex items-center px-3 py-1 text-[11px] font-bold rounded-full border ${tagStyle.bg} ${tagStyle.text} ${tagStyle.border} whitespace-nowrap`}
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      {tagLabel}
+                    </span>
+                  </div>
+
+                  {/* Action label + timeframe */}
+                  <p className="mt-2 text-sm font-semibold text-[#0C1D38] dark:text-white" style={{ fontFamily: "Manrope, sans-serif" }}>
+                    {system.action_label}
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5" style={{ fontFamily: "Manrope, sans-serif" }}>
+                    {system.timeframe}
+                  </p>
                 </div>
               )
             })}
