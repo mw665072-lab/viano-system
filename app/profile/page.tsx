@@ -7,10 +7,12 @@ import { StatusBadge } from "@/components/ui/status-badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft, ChevronRight, Loader2, CheckCircle, XCircle, Mail, Smartphone } from "lucide-react"
 import Image from "next/image"
-import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, UpdateUserRequest, getCurrentUserId, SMS_CONSENT_TEXT } from "@/lib/api"
+import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, UpdateUserRequest, getCurrentUserId, SMS_CONSENT_TEXT, getFriendlyErrorMessage } from "@/lib/api"
 import { CreditCard, ExternalLink, ShieldCheck, Zap, MessageSquare } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { OTPInput } from "@/components/ui/otp-input"
+import { PhoneInput, Country, DEFAULT_COUNTRY, toE164, isValidPhone, parsePhone } from "@/components/ui/phone-input"
+import { useSmsConsent } from "@/common/sms-consent/sms-consent-provider"
 
 interface ProfileData {
   name: string;
@@ -20,7 +22,6 @@ interface ProfileData {
   avatar: string;
   emailVerified: boolean;
   phoneVerified: boolean;
-  smsConsent: boolean;
 }
 
 interface AuditItem {
@@ -54,12 +55,16 @@ export default function ProfilePage() {
     avatar: "",
     emailVerified: false,
     phoneVerified: false,
-    smsConsent: false,
   });
 
-  // SMS-consent toggle state (separate from the profile read so save errors don't clobber the page)
-  const [smsConsentSaving, setSmsConsentSaving] = useState(false);
-  const [smsConsentError, setSmsConsentError] = useState<string | null>(null);
+  // SMS consent is shared with the sidebar toggle via context so both stay in sync.
+  const {
+    consent: smsConsent,
+    saving: smsConsentSaving,
+    error: smsConsentError,
+    toggleConsent: handleToggleSmsConsent,
+    setConsentValue: setSmsConsentValue,
+  } = useSmsConsent();
 
   const [audits, setAudits] = useState<AuditItem[]>([]);
 
@@ -81,6 +86,7 @@ export default function ProfilePage() {
     last_name: '',
     mobile_number: '',
   });
+  const [editCountry, setEditCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -151,7 +157,6 @@ export default function ProfilePage() {
           avatar: '',
           emailVerified: userData.email_verified || false,
           phoneVerified: userData.phone_verified || false,
-          smsConsent: userData.sms_consent || false,
         });
 
         // Pre-fill edit form
@@ -235,7 +240,7 @@ export default function ProfilePage() {
 
       } catch (err) {
         console.error("Failed to fetch data from API:", err);
-        setError(err instanceof Error ? err.message : 'Failed to load profile data');
+        setError(getFriendlyErrorMessage(err, 'Failed to load profile data'));
       } finally {
         setIsLoading(false);
       }
@@ -366,35 +371,14 @@ export default function ProfilePage() {
     }
   };
 
-  const handleToggleSmsConsent = async () => {
-    if (smsConsentSaving) return;
-
-    const next = !profile.smsConsent;
-    setSmsConsentSaving(true);
-    setSmsConsentError(null);
-    // Optimistic flip so the switch feels responsive.
-    setProfile(prev => ({ ...prev, smsConsent: next }));
-
-    try {
-      // On opt-in, send the exact disclosure for the audit trail; on opt-out, send null
-      // so the backend keeps the previously stored text.
-      const result = await authAPI.setSmsConsent({
-        consent: next,
-        consent_text: next ? SMS_CONSENT_TEXT : null,
-      });
-      // Reflect the backend's authoritative value rather than trusting local state.
-      setProfile(prev => ({ ...prev, smsConsent: result.sms_consent }));
-    } catch (err) {
-      // Roll back the optimistic flip on failure.
-      setProfile(prev => ({ ...prev, smsConsent: !next }));
-      setSmsConsentError(err instanceof Error ? err.message : 'Failed to update SMS consent');
-    } finally {
-      setSmsConsentSaving(false);
-    }
-  };
-
   const handleOpenEditModal = () => {
     setSaveError(null);
+    // Split the stored number back into a country code + national number so the
+    // selector and input pre-fill correctly (defaults to US for unknown formats).
+    const storedPhone = profile.phone === 'Not provided' ? '' : profile.phone;
+    const { country, national } = parsePhone(storedPhone);
+    setEditCountry(country);
+    setEditForm(prev => ({ ...prev, mobile_number: national }));
     setIsEditModalOpen(true);
   };
 
@@ -412,12 +396,26 @@ export default function ProfilePage() {
     setSaveError(null);
 
     try {
-      // Check if phone number changed
+      // Normalize both numbers to E.164 so the comparison ignores formatting/country-code noise.
       const originalPhone = profile.phone === 'Not provided' ? '' : profile.phone;
-      const newPhone = editForm.mobile_number.trim();
-      const phoneChanged = newPhone !== originalPhone;
+      const { country: originalCountry, national: originalNational } = parsePhone(originalPhone);
+      const originalFull = originalPhone ? toE164(originalCountry.dialCode, originalNational) : '';
+      const newFull = editForm.mobile_number.trim()
+        ? toE164(editCountry.dialCode, editForm.mobile_number)
+        : '';
+      const phoneChanged = newFull !== originalFull;
 
-      if (phoneChanged && newPhone) {
+      if (phoneChanged && newFull) {
+        if (!isValidPhone(editCountry, editForm.mobile_number)) {
+          setSaveError(
+            editCountry.dialCode === '+1'
+              ? 'Please enter a valid 10-digit mobile number (including area code).'
+              : 'Please enter a valid mobile number for the selected country.'
+          );
+          setIsSaving(false);
+          return;
+        }
+
         // Close edit modal and open phone update OTP flow
         setIsEditModalOpen(false);
         setPhoneUpdateOtpModal({
@@ -428,12 +426,12 @@ export default function ProfilePage() {
           error: null,
           resent: false,
           resendTimer: 0,
-          newPhone,
+          newPhone: newFull,
         });
 
         // Request OTP for phone update
         try {
-          await authAPI.requestPhoneUpdateOTP({ new_phone: newPhone, otp: '' });
+          await authAPI.requestPhoneUpdateOTP({ new_phone: newFull, otp: '' });
           setPhoneUpdateOtpModal(prev => ({
             ...prev,
             isSending: false,
@@ -443,7 +441,7 @@ export default function ProfilePage() {
           setPhoneUpdateOtpModal(prev => ({
             ...prev,
             isSending: false,
-            error: err instanceof Error ? err.message : 'Failed to send OTP',
+            error: getFriendlyErrorMessage(err, 'Failed to send verification code'),
           }));
         }
         setIsSaving(false);
@@ -471,7 +469,7 @@ export default function ProfilePage() {
       setIsEditModalOpen(false);
     } catch (err) {
       console.error('Failed to update profile:', err);
-      setSaveError(err instanceof Error ? err.message : 'Failed to update profile');
+      setSaveError(getFriendlyErrorMessage(err, 'Failed to update profile'));
     } finally {
       setIsSaving(false);
     }
@@ -518,7 +516,7 @@ export default function ProfilePage() {
       setPhoneUpdateOtpModal(prev => ({
         ...prev,
         isSending: false,
-        error: err instanceof Error ? err.message : 'Failed to resend OTP',
+        error: getFriendlyErrorMessage(err, 'Failed to resend verification code'),
       }));
     }
   };
@@ -527,7 +525,7 @@ export default function ProfilePage() {
     if (phoneUpdateOtpModal.otp.length !== 6) return;
 
     // Capture whether the agent had already opted in before the number changes.
-    const hadConsent = profile.smsConsent;
+    const hadConsent = smsConsent;
 
     setPhoneUpdateOtpModal(prev => ({ ...prev, isVerifying: true, error: null }));
 
@@ -556,7 +554,7 @@ export default function ProfilePage() {
       if (hadConsent) {
         try {
           const consentRes = await authAPI.setSmsConsent({ consent: true, consent_text: SMS_CONSENT_TEXT });
-          setProfile(prev => ({ ...prev, smsConsent: consentRes.sms_consent }));
+          setSmsConsentValue(consentRes.sms_consent);
         } catch (consentErr) {
           console.error('Failed to re-affirm SMS consent after phone update:', consentErr);
         }
@@ -567,7 +565,7 @@ export default function ProfilePage() {
       setPhoneUpdateOtpModal(prev => ({
         ...prev,
         isVerifying: false,
-        error: err instanceof Error ? err.message : 'Failed to update phone number',
+        error: getFriendlyErrorMessage(err, 'Failed to update phone number'),
       }));
     }
   };
@@ -612,7 +610,7 @@ export default function ProfilePage() {
       setOtpModal(prev => ({
         ...prev,
         isSending: false,
-        error: err instanceof Error ? err.message : `Failed to send ${type} verification code`,
+        error: getFriendlyErrorMessage(err, `Failed to send ${type} verification code`),
       }));
     }
   };
@@ -651,7 +649,7 @@ export default function ProfilePage() {
       setOtpModal(prev => ({
         ...prev,
         isSending: false,
-        error: err instanceof Error ? err.message : 'Failed to resend code',
+        error: getFriendlyErrorMessage(err, 'Failed to resend code'),
       }));
     }
   };
@@ -671,7 +669,7 @@ export default function ProfilePage() {
           setOtpModal(prev => ({
             ...prev,
             isVerifying: false,
-            error: result.message || 'Invalid verification code',
+            error: getFriendlyErrorMessage(result.message, 'Invalid verification code'),
           }));
         }
       } else {
@@ -683,7 +681,7 @@ export default function ProfilePage() {
           setOtpModal(prev => ({
             ...prev,
             isVerifying: false,
-            error: result.message || 'Invalid verification code',
+            error: getFriendlyErrorMessage(result.message, 'Invalid verification code'),
           }));
         }
       }
@@ -691,7 +689,7 @@ export default function ProfilePage() {
       setOtpModal(prev => ({
         ...prev,
         isVerifying: false,
-        error: err instanceof Error ? err.message : 'Verification failed',
+        error: getFriendlyErrorMessage(err, 'Verification failed'),
       }));
     }
   };
@@ -912,7 +910,7 @@ export default function ProfilePage() {
                       <div>
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Text Alerts</h2>
                         <p className="text-sm mt-0.5 font-medium">
-                          {profile.smsConsent ? (
+                          {smsConsent ? (
                             <span className="text-green-600 dark:text-green-400">
                               On — you&apos;ll receive automated property alerts by text.
                             </span>
@@ -929,17 +927,17 @@ export default function ProfilePage() {
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={profile.smsConsent}
+                      aria-checked={smsConsent}
                       aria-label="Receive automated property-alert text messages"
                       onClick={handleToggleSmsConsent}
                       disabled={smsConsentSaving}
                       className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#E8730A]/40 disabled:opacity-60 disabled:cursor-not-allowed ${
-                        profile.smsConsent ? 'bg-primary' : 'bg-gray-300 dark:bg-white/15'
+                        smsConsent ? 'bg-primary' : 'bg-gray-300 dark:bg-white/15'
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                          profile.smsConsent ? 'translate-x-6' : 'translate-x-1'
+                          smsConsent ? 'translate-x-6' : 'translate-x-1'
                         }`}
                       />
                     </button>
@@ -1192,13 +1190,17 @@ export default function ProfilePage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Phone Number</label>
-                <Input
-                  type="tel"
+                <PhoneInput
+                  country={editCountry}
+                  onCountryChange={setEditCountry}
                   value={editForm.mobile_number}
-                  onChange={(e) => handleEditFormChange('mobile_number', e.target.value)}
+                  onChange={(v) => handleEditFormChange('mobile_number', v)}
                   placeholder="Enter phone number"
-                  className="h-11 rounded-xl border-gray-200 dark:border-white/10 focus:border-[#E8730A] focus:ring-[#E8730A]"
+                  className="h-11 rounded-xl"
                 />
+                <p className="mt-1.5 text-xs text-gray-400">
+                  Changing your number will require a one-time verification code.
+                </p>
               </div>
             </div>
 

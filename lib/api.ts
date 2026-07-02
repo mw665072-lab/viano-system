@@ -666,6 +666,22 @@ export const propertyAPI = {
         apiRequest<UpcomingTouchpointsResponse>(`/api/property/upcoming-touchpoints?days=${days}`),
 
     /**
+     * Get the full detail for a single touchpoint / scheduled alert.
+     * Includes the complete client message, realtor context, best-effort CMA,
+     * and top local contractor referrals — powers the alert detail modal.
+     */
+    getTouchpointDetail: (messageId: string) =>
+        apiRequest<TouchpointDetailResponse>(`/api/property/touchpoints/${messageId}`),
+
+    /**
+     * Generate (or reuse) the personalized anniversary card for a card-eligible
+     * anniversary touchpoint. Image generation can take a few seconds on first
+     * view; the result is cached in S3 per message for fast repeat views.
+     */
+    getAnniversaryCard: (messageId: string) =>
+        apiRequest<AnniversaryCardResponse>(`/api/property/touchpoints/${messageId}/anniversary-card`),
+
+    /**
      * Get property opportunities with appreciation data
      * Returns properties where current price > last sale price, sorted by highest gain first
      */
@@ -1457,6 +1473,54 @@ export interface UpcomingTouchpointsResponse {
     touchpoints: UpcomingTouchpointItem[];
 }
 
+export interface ContractorReferral {
+    name: string;
+    rating: number | null;
+    phone: string | null;
+    address: string | null;
+    website: string | null;
+}
+
+export interface TouchpointDetailResponse {
+    message_id: string;
+    property_id: string;
+    property_address: string;
+    client_name: string;
+    alert_type: string;
+    trigger: string | null;
+    priority: number | null;
+    status: string;
+    scheduled_for: string | null;
+    viano_year: number | null;
+    days_from_upload: number | null;
+    /** The finished, send-ready client message (placeholders resolved). Prefer this. */
+    client_message: string;
+    /** The raw stored SMS template (may contain unresolved placeholders). */
+    message_text: string;
+    /** Why-this-matters context written for the agent (not sent to the client). */
+    realtor_context: string | null;
+    /** The exact suggested message to send the client. */
+    client_sample_message: string | null;
+    /** Legacy/embedded referral text stored on the alert, if any. */
+    referrals: string | null;
+    requires_cma: boolean;
+    requires_community_event: boolean;
+    /** Best-effort property valuation (may be null if unavailable). */
+    cma: CMAResponse | null;
+    /** Top local contractors for this alert (empty when not applicable). */
+    contractors: ContractorReferral[];
+    /** Milestone year (1/3/5/7/10) if this is a card-eligible anniversary message, else null. */
+    anniversary_year: number | null;
+}
+
+export interface AnniversaryCardResponse {
+    message_id: string;
+    eligible: boolean;
+    milestone_year: number | null;
+    /** Short-lived URL to the generated card image, or null if unavailable. */
+    card_url: string | null;
+}
+
 export interface PropertyOpportunityItem {
     property_id: string;
     property_name: string;
@@ -1583,6 +1647,92 @@ export interface HTTPValidationError {
 }
 
 // ============ HELPER FUNCTIONS ============
+
+/**
+ * Heuristic: does this string still look like raw/technical output that a normal user
+ * would not understand? (HTTP codes, Twilio/Clerk internals, raw JSON, stack frames, etc.)
+ */
+function looksTechnical(message: string): boolean {
+    return (
+        /\bhttp\b|status\s*code|status\s*\d{3}|\b[45]\d{2}\b/i.test(message) ||
+        /unable to create record|invalid parameter|traceback|exception|stacktrace|\bnull\b|\bundefined\b/i.test(message) ||
+        /[{}\[\]]|=>|\bat\s+[\w.$]+\s*\(/.test(message) ||
+        message.length > 160
+    );
+}
+
+/**
+ * Convert any backend/network error into a short, human-readable message that is safe to
+ * show end users. It strips technical noise (HTTP codes, Twilio's "Invalid parameter `To`",
+ * raw JSON, stack frames) and maps well-known failure shapes to friendly copy. When the
+ * underlying text still looks technical, the generic `fallback` is returned instead so we
+ * never surface something the user can't act on.
+ */
+export function getFriendlyErrorMessage(
+    error: unknown,
+    fallback = "Something went wrong. Please try again."
+): string {
+    const raw = (error instanceof Error ? error.message : typeof error === "string" ? error : "").trim();
+    if (!raw) return fallback;
+    const lower = raw.toLowerCase();
+
+    // Invalid phone number — e.g. Twilio "Invalid parameter `To`" (missing country/area code).
+    if (
+        /invalid parameter\s*['"`]?\s*to/.test(lower) ||
+        (lower.includes("unable to create record") && /\bto\b/.test(lower)) ||
+        /not a valid phone number/.test(lower) ||
+        /invalid.*(phone|mobile|number)/.test(lower) ||
+        /(phone|mobile)\s*number.*invalid/.test(lower)
+    ) {
+        return "That mobile number doesn't look valid. Please check the number and country code, then try again.";
+    }
+
+    // Verification code problems.
+    if (lower.includes("otp") || lower.includes("verification code") || /\bcode\b/.test(lower)) {
+        if (/expired/.test(lower)) return "Your verification code has expired. Please request a new one.";
+        if (/invalid|incorrect|wrong|mismatch|does not match|doesn't match/.test(lower)) {
+            return "That verification code is incorrect. Please double-check it and try again.";
+        }
+    }
+
+    // Account uniqueness.
+    if (/email/.test(lower) && /(already|exists|taken|registered|in use)/.test(lower)) {
+        return "An account with this email already exists. Try logging in instead.";
+    }
+    if (/username/.test(lower) && /(already|exists|taken|in use)/.test(lower)) {
+        return "This username is already taken. Please choose another one.";
+    }
+
+    // Credentials.
+    if (/(invalid|incorrect)\s+(password|credentials?)|wrong password|password.*incorrect/.test(lower)) {
+        return "The email or password you entered is incorrect.";
+    }
+
+    // Rate limiting.
+    if (/too many|rate.?limit|throttl|\b429\b/.test(lower)) {
+        return "Too many attempts. Please wait a minute and try again.";
+    }
+
+    // Connectivity.
+    if (/failed to fetch|network\s*error|networkerror|connection|timed out|timeout|econn|err_internet/.test(lower)) {
+        return "Couldn't reach the server. Please check your internet connection and try again.";
+    }
+
+    // Auth / session.
+    if (/session expired|please log in again|authentication required/.test(lower)) {
+        return "Your session has expired. Please log in again.";
+    }
+
+    // Server errors.
+    if (/internal server|server error|\b5\d{2}\b/.test(lower)) {
+        return "Our servers ran into a problem. Please try again in a moment.";
+    }
+
+    // If what's left still looks technical, hide it behind the generic fallback.
+    if (looksTechnical(raw)) return fallback;
+
+    return raw;
+}
 
 /**
  * Verbatim TCPA disclosure shown next to every SMS-consent control and sent as

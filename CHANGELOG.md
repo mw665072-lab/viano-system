@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-07-02] — Touchpoint Detail Modal & Phone Country Selector
+
+### Added
+- **Touchpoint / alert detail modal** (`components/touchpoints/alert-detail-modal.tsx`). Clicking a row in Upcoming Touchpoints, the Recent Alerts page, or the dashboard Recent Alerts widget now opens a modal (previously the rows did nothing). It shows the full, **send-ready** client message (placeholders resolved) with a copy button, the agent "why this matters" context, recommended local contractors (name, rating, address, click-to-call phone, website), and the property CMA (value, range, confidence, last sale) — so agents get the exact message plus contractor/CMA info on screen even when texts are off, saving SMS/email cost. Portal-rendered with body-scroll lock and Escape-to-close.
+- **Anniversary card in the modal.** For card-eligible home-anniversary touchpoints, the personalized card image loads lazily with its own skeleton state and an "Open full size" link; a failure shows a retry.
+- **Upcoming Touchpoints list page** (`app/upcoming-touchpoints/page.tsx`). Full-width, paginated (15/page) list of the next 180 days of scheduled touchpoints, with clickable rows/cards that open the detail modal. The dashboard "Upcoming Touchpoints" stat card now links here (previously `/#`).
+- **Text Alerts toggle in the sidebar** (`common/sidebar/index.tsx`). A message-icon card with an on/off switch bound to the agent's SMS consent, so opt-in/out is one tap from anywhere in the app.
+- **Shared SMS-consent context** (`common/sms-consent/sms-consent-provider.tsx`, mounted in `app/layout.tsx`). Single source of truth for `sms_consent` (read once from `/user/me`, re-fetched on login/account switch) with an optimistic toggle + rollback. The sidebar and profile "Text Alerts" toggles now stay in lockstep in real time instead of drifting until reload.
+- **Country-code phone selector** (`components/ui/phone-input.tsx`). Reusable `PhoneInput` with a searchable country dropdown defaulting to US (+1), plus `toE164`, `isValidPhone`, and `parsePhone` helpers. Adopted on signup and in the profile Edit Phone flow; numbers are submitted as E.164 (e.g. `+17274234870`), and the profile edit modal splits a stored number back into country + national parts to pre-fill correctly.
+- **Touchpoint detail API** (`lib/api.ts`): `propertyAPI.getTouchpointDetail()` → `GET /api/property/touchpoints/{message_id}` and `propertyAPI.getAnniversaryCard()` → `GET /api/property/touchpoints/{message_id}/anniversary-card`; new `TouchpointDetailResponse` (with resolved `client_message` + `anniversary_year`), `ContractorReferral`, and `AnniversaryCardResponse` types.
+
+### Changed
+- **Detail-modal loading uses skeletons, not spinners** — a layout-matching skeleton for the message body and a card-shaped skeleton while the anniversary image generates.
+- **Recent Alerts (page + dashboard widget)** rows/cards are now clickable to open the modal; the thumbs-up/down feedback buttons call `stopPropagation` so giving feedback doesn't also open the modal.
+- **Profile "Text Alerts" toggle** now reads/writes the shared consent context (behavior unchanged, but synced with the sidebar).
+
+### Fixed
+- **Non-technical error messages on signup & profile.** Both pages route API failures through `getFriendlyErrorMessage`, so raw/technical strings (and Clerk-style validation payloads) are shown to users as plain language instead of `instanceof Error ? err.message` dumps.
+- **Username rule checked earlier in signup.** The "letters, numbers, hyphens, and underscores only" rule is now validated when advancing from step 1, instead of only surfacing at the final submit on the password step.
+- **Anniversary card no longer shows the wrong property's image.** A slow image-generation request could resolve late and paint onto a different message after quickly switching rows; the modal now discards any async result (detail or card) that doesn't match the currently open message.
+
 ## [2026-06-21] — TCPA SMS Consent
 
 ### Added
