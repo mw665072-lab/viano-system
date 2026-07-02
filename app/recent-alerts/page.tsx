@@ -5,6 +5,7 @@ import { ThumbsUp, ThumbsDown, Check, AlertTriangle } from "lucide-react"
 import Image from "next/image"
 import { propertyAPI, ScheduledAlert } from "@/lib/api"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AlertDetailModal } from "@/components/touchpoints/alert-detail-modal"
 
 const ITEMS_PER_PAGE = 15
 
@@ -39,6 +40,7 @@ export default function RecentAlertsPage() {
   const [error, setError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<Record<string, "yes" | "no">>({})
   const [currentPage, setCurrentPage] = useState(1)
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -241,7 +243,8 @@ export default function RecentAlertsPage() {
                   return (
                     <tr
                       key={alert.message_id}
-                      className="group border-b border-gray-50 dark:border-white/10 last:border-0 hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors"
+                      onClick={() => setSelectedMessageId(alert.message_id)}
+                      className="group cursor-pointer border-b border-gray-50 dark:border-white/10 last:border-0 hover:bg-gray-50/60 dark:hover:bg-white/5 transition-colors"
                     >
                       <td className="py-[10px] pl-3">
                         <div className="flex items-center gap-3">
@@ -287,10 +290,10 @@ export default function RecentAlertsPage() {
                             </div>
                           ) : (
                             <div className="flex items-center gap-2">
-                              <button onClick={() => handleFeedback(alert.message_id, "yes")} aria-label="Helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+                              <button onClick={(e) => { e.stopPropagation(); handleFeedback(alert.message_id, "yes") }} aria-label="Helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
                                 <ThumbsUp className="w-4 h-4" />
                               </button>
-                              <button onClick={() => handleFeedback(alert.message_id, "no")} aria-label="Not helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+                              <button onClick={(e) => { e.stopPropagation(); handleFeedback(alert.message_id, "no") }} aria-label="Not helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
                                 <ThumbsDown className="w-4 h-4" />
                               </button>
                             </div>
@@ -312,7 +315,7 @@ export default function RecentAlertsPage() {
               const userFeedback = feedback[alert.message_id]
 
               return (
-                <div key={alert.message_id} className="p-4 rounded-2xl border border-gray-100 dark:border-white/10 hover:border-gray-200 dark:hover:border-white/10 transition-all bg-white dark:bg-[#1a1a1a]">
+                <div key={alert.message_id} onClick={() => setSelectedMessageId(alert.message_id)} className="p-4 rounded-2xl border border-gray-100 dark:border-white/10 hover:border-gray-200 dark:hover:border-white/10 transition-all bg-white dark:bg-[#1a1a1a] cursor-pointer active:scale-[0.99]">
                   <div className="flex items-start gap-3">
                     <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-white/10">
                       <Image src="/property-default-v2.png" alt={alert.property_address} fill className="object-cover" />
@@ -337,8 +340,8 @@ export default function RecentAlertsPage() {
                   ) : (
                     <div className="mt-3 flex items-center gap-2">
                       <span className="text-xs text-gray-500 dark:text-gray-400" style={{ fontFamily: "Manrope, sans-serif" }}>Was this helpful?</span>
-                      <button onClick={() => handleFeedback(alert.message_id, "yes")} aria-label="Helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"><ThumbsUp className="w-4 h-4" /></button>
-                      <button onClick={() => handleFeedback(alert.message_id, "no")} aria-label="Not helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"><ThumbsDown className="w-4 h-4" /></button>
+                      <button onClick={(e) => { e.stopPropagation(); handleFeedback(alert.message_id, "yes") }} aria-label="Helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"><ThumbsUp className="w-4 h-4" /></button>
+                      <button onClick={(e) => { e.stopPropagation(); handleFeedback(alert.message_id, "no") }} aria-label="Not helpful" className="w-8 h-8 flex items-center justify-center rounded-lg text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"><ThumbsDown className="w-4 h-4" /></button>
                     </div>
                   )}
                 </div>
@@ -358,6 +361,12 @@ export default function RecentAlertsPage() {
           )}
         </>
       )}
+
+      <AlertDetailModal
+        messageId={selectedMessageId}
+        open={selectedMessageId !== null}
+        onClose={() => setSelectedMessageId(null)}
+      />
     </div>
   )
 }

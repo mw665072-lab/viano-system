@@ -1,8 +1,9 @@
 "use client";
-import { Home, Building2, User, LogOut, Shield, Lock, LayoutDashboard } from "lucide-react";
+import { Home, Building2, User, LogOut, Shield, Lock, LayoutDashboard, MessageSquare } from "lucide-react";
 import { useRouter, usePathname } from 'next/navigation';
 import { clearAuth, getStoredUserInfo } from '@/lib/api';
 import { ThemeToggle } from '@/common/theme/theme-toggle';
+import { useSmsConsent } from '@/common/sms-consent/sms-consent-provider';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 
@@ -17,6 +18,16 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const [userRole, setUserRole] = useState('Real Estate Agent');
   const [userInitials, setUserInitials] = useState('CE');
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Text-alerts (TCPA SMS consent) — shared context so the sidebar and profile
+  // toggles stay in lockstep in real time.
+  const {
+    consent: smsConsent,
+    loading: smsLoading,
+    saving: smsSaving,
+    error: smsError,
+    toggleConsent: handleToggleSms,
+  } = useSmsConsent();
 
   useEffect(() => {
     const userInfo = getStoredUserInfo();
@@ -156,6 +167,39 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
       {/* Bottom Section - Profile card (hover or click to reveal menu) */}
       <div className="px-3 pb-4">
+        {/* Text Alerts toggle (TCPA SMS consent) */}
+        <div className="mb-3 rounded-xl border border-white/10 bg-white/5 p-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+              <MessageSquare size={16} className="text-gray-300" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white leading-tight">Text Alerts</p>
+              <p className="text-xs text-gray-400 leading-snug">Get text updates and alerts from Viano</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={smsConsent}
+              aria-label="Receive automated property-alert text messages"
+              onClick={handleToggleSms}
+              disabled={smsSaving || smsLoading}
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#E8730A]/40 disabled:opacity-60 disabled:cursor-not-allowed ${
+                smsConsent ? 'bg-green-500' : 'bg-white/15'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  smsConsent ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+          {smsError && (
+            <p className="mt-2 text-[11px] text-red-400 leading-snug">{smsError}</p>
+          )}
+        </div>
+
         {/* Theme toggle */}
         <div className="flex items-center justify-between px-2 mb-3">
           <span className="text-xs font-medium text-gray-400">Theme</span>

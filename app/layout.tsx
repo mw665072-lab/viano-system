@@ -4,6 +4,7 @@ import "./globals.css";
 import "./responsive.css";
 import Layout from "@/common/layout";
 import { ThemeProvider } from "@/common/theme/theme-provider";
+import { SmsConsentProvider } from "@/common/sms-consent/sms-consent-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,9 +44,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
       >
         <ThemeProvider>
-          <Layout>
-            {children}
-          </Layout>
+          <SmsConsentProvider>
+            <Layout>
+              {children}
+            </Layout>
+          </SmsConsentProvider>
         </ThemeProvider>
       </body>
     </html>

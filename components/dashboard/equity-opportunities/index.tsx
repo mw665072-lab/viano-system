@@ -57,18 +57,18 @@ export function TopEquityOpportunities() {
         </Link>
       </div>
 
-      {/* Loading */}
+      {/* Loading — Desktop */}
       {isLoading && (
-        <div className="flex flex-col">
+        <div className="hidden md:flex md:flex-col">
           {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={index}
-              className={`grid grid-cols-[52px_52px_1fr_1fr_20px] items-center gap-4 py-[10px] ${
+              className={`grid grid-cols-[44px_52px_minmax(0,1fr)_auto] items-center gap-3 md:gap-4 py-[10px] ${
                 index < 4 ? "border-b border-[#E8ECF0] dark:border-white/10" : ""
               } px-2 -mx-2`}
             >
               {/* Rank Badge */}
-              <div className="w-[52px] flex items-center justify-center">
+              <div className="w-11 flex items-center justify-center">
                 <Skeleton className="w-8 h-8 rounded-full" />
               </div>
 
@@ -85,6 +85,31 @@ export function TopEquityOpportunities() {
               <div className="min-w-0 flex flex-col items-end gap-1.5">
                 <Skeleton className="h-4 w-16 rounded" />
                 <Skeleton className="h-3 w-12 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Loading — Mobile */}
+      {isLoading && (
+        <div className="md:hidden space-y-3 mt-3">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div
+              key={index}
+              className="p-4 rounded-2xl border border-gray-100 dark:border-white/10"
+            >
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-8 h-8 rounded-full flex-shrink-0" />
+                <Skeleton className="w-12 h-12 rounded-lg flex-shrink-0" />
+                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                  <Skeleton className="h-4 w-3/4 rounded" />
+                  <Skeleton className="h-3 w-1/2 rounded" />
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
+                <Skeleton className="h-3 w-16 rounded" />
+                <Skeleton className="h-4 w-20 rounded" />
               </div>
             </div>
           ))}
@@ -111,18 +136,18 @@ export function TopEquityOpportunities() {
         </div>
       )}
 
-      {/* List */}
+      {/* List — Desktop */}
       {!isLoading && !error && displayItems.length > 0 && (
-        <div className="flex flex-col">
+        <div className="hidden md:flex md:flex-col">
           {displayItems.map((property, index) => (
             <div
               key={property.property_id}
-              className={`group grid grid-cols-[52px_52px_1fr_1fr_20px] items-center gap-4 py-[10px] ${
+              className={`group grid grid-cols-[44px_52px_minmax(0,1fr)_auto] items-center gap-3 md:gap-4 py-[10px] ${
                 index < displayItems.length - 1 ? "border-b border-[#E8ECF0] dark:border-white/10" : ""
               } hover:bg-emerald-50/60 dark:hover:bg-white/5 transition-colors px-2 -mx-2 rounded-lg`}
             >
               {/* Rank Badge */}
-              <div className="w-[52px] flex items-center justify-center">
+              <div className="w-11 flex items-center justify-center">
                 <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
                   <span
                     className="text-sm font-bold text-white"
@@ -175,6 +200,68 @@ export function TopEquityOpportunities() {
                 </p>
               </div>
 
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* List — Mobile cards */}
+      {!isLoading && !error && displayItems.length > 0 && (
+        <div className="md:hidden space-y-3 mt-3">
+          {displayItems.map((property, index) => (
+            <div
+              key={property.property_id}
+              className="p-4 rounded-2xl border border-gray-100 dark:border-white/10"
+            >
+              {/* Top row: rank + image + address */}
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                  <span
+                    className="text-sm font-bold text-white"
+                    style={{ fontFamily: "Manrope, sans-serif" }}
+                  >
+                    {index + 1}
+                  </span>
+                </div>
+                <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200 dark:bg-white/10">
+                  <Image
+                    src="/property-default-v2.png"
+                    alt={property.address}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3
+                    className="text-sm font-bold text-[#0C1D38] dark:text-white truncate"
+                    style={{ fontFamily: "Manrope, sans-serif" }}
+                  >
+                    {property.address}
+                  </h3>
+                  <p
+                    className="text-xs text-gray-400 mt-0.5 truncate"
+                    style={{ fontFamily: "Manrope, sans-serif" }}
+                  >
+                    {property.location} · Bought {property.last_sale_date}
+                  </p>
+                </div>
+              </div>
+
+              {/* Estimated gain */}
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
+                <span
+                  className="text-[11px] uppercase text-gray-400 tracking-wide"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
+                >
+                  Est. Gain
+                </span>
+                <span
+                  className="text-base font-bold text-emerald-600 dark:text-emerald-400"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
+                >
+                  +{property.formatted_gain}
+                </span>
+              </div>
             </div>
           ))}
         </div>

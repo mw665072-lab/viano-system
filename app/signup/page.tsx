@@ -5,8 +5,9 @@ import { Eye, EyeOff, ArrowRight, Loader2, CheckCircle, XCircle, ArrowLeft, Mail
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { authAPI, isAuthenticated, saveAuth, LoginResponse, SMS_CONSENT_TEXT, setPendingSmsConsent, flushPendingSmsConsent } from "@/lib/api";
+import { authAPI, isAuthenticated, saveAuth, LoginResponse, SMS_CONSENT_TEXT, setPendingSmsConsent, flushPendingSmsConsent, getFriendlyErrorMessage } from "@/lib/api";
 import { OTPInput } from "@/components/ui/otp-input";
+import { PhoneInput, Country, DEFAULT_COUNTRY, toE164, isValidPhone } from "@/components/ui/phone-input";
 
 // Password requirement validation
 interface PasswordRequirement {
@@ -36,6 +37,7 @@ export default function SignupPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
+  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
 
   // Step 2: OTP Verification
   const [emailOtp, setEmailOtp] = useState("");
@@ -106,32 +108,24 @@ export default function SignupPage() {
     return emailRegex.test(email);
   };
 
-  const validatePhone = (phone: string) => {
-    if (!phone.trim()) return true;
-    const phoneRegex = /^[\d\s\-+()]{10,}$/;
-    return phoneRegex.test(phone);
-  };
-
   const parseErrorMessage = (msg: string): string[] => {
+    // Clerk-style validation payloads carry user-friendly long_messages — surface those directly.
     try {
       if (msg.includes('{"errors":[')) {
         const errorData = JSON.parse(msg.substring(msg.indexOf('{')));
         if (errorData.errors && Array.isArray(errorData.errors)) {
-          return errorData.errors.map((e: any) => e.long_message || e.message);
+          const messages = (errorData.errors as Array<{ long_message?: string; message?: string }>)
+            .map((e) => e.long_message || e.message)
+            .filter((m): m is string => Boolean(m));
+          if (messages.length) return messages;
         }
       }
-    } catch (e) {
-      // If parsing fails, use the original message
+    } catch {
+      // Fall through to generic normalization below.
     }
 
-    if (msg.includes("email") && msg.includes("already")) {
-      return ["An account with this email already exists."];
-    }
-    if (msg.includes("username") && msg.includes("already")) {
-      return ["This username is already taken. Please choose another one."];
-    }
-
-    return [msg];
+    // Everything else gets normalized into plain, non-technical language.
+    return [getFriendlyErrorMessage(msg)];
   };
 
   const clearErrors = () => setErrors([]);
@@ -164,19 +158,32 @@ export default function SignupPage() {
       setErrors(["Username must be at least 3 characters"]);
       return;
     }
+    // Mirror the backend's username rule here so it's caught on step 1 instead of
+    // surfacing only at the final submit on step 3.
+    if (!/^[a-zA-Z0-9_-]+$/.test(username.trim())) {
+      setErrors(["Username can only contain letters, numbers, hyphens, and underscores"]);
+      return;
+    }
     if (!mobileNumber.trim()) {
       setErrors(["Please enter your mobile number"]);
       return;
     }
-    if (!validatePhone(mobileNumber)) {
-      setErrors(["Please enter a valid mobile number"]);
+    if (!isValidPhone(country, mobileNumber)) {
+      setErrors([
+        country.dialCode === "+1"
+          ? "Please enter a valid 10-digit mobile number (including area code)."
+          : "Please enter a valid mobile number for the selected country.",
+      ]);
       return;
     }
+
+    // Combine the selected country code + number into E.164 (e.g. +17274234870).
+    const fullPhone = toE164(country.dialCode, mobileNumber);
 
     setIsLoading(true);
     try {
       // Send phone OTP first (always required)
-      const phoneRes = await authAPI.sendPreRegisterOTP({ phone: mobileNumber.trim() });
+      const phoneRes = await authAPI.sendPreRegisterOTP({ phone: fullPhone });
       if (phoneRes.success) {
         setPhoneOtpSent(true);
         setPhoneResendTimer(60);
@@ -230,7 +237,7 @@ export default function SignupPage() {
     clearErrors();
     setIsLoading(true);
     try {
-      await authAPI.sendPreRegisterOTP({ phone: mobileNumber.trim() });
+      await authAPI.sendPreRegisterOTP({ phone: toE164(country.dialCode, mobileNumber) });
       setPhoneOtpSent(true);
       setPhoneResendTimer(60);
     } catch (err) {
@@ -298,7 +305,7 @@ export default function SignupPage() {
         password,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        mobile_number: mobileNumber.trim(),
+        mobile_number: toE164(country.dialCode, mobileNumber),
         phone_otp: phoneOtp,
       };
 
@@ -497,16 +504,15 @@ export default function SignupPage() {
                   className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-gray-400 outline-none transition-all focus:border-[#E8730A] focus:ring-2 focus:ring-[#E8730A]/30 disabled:bg-white/5 disabled:cursor-not-allowed"
                 />
 
-                <input
+                <PhoneInput
                   id="mobile_number"
                   name="mobile_number"
-                  type="tel"
                   placeholder="Mobile Number *"
+                  country={country}
+                  onCountryChange={(c) => { setCountry(c); clearErrors(); }}
                   value={mobileNumber}
-                  onChange={(e) => { setMobileNumber(e.target.value); clearErrors(); }}
+                  onChange={(v) => { setMobileNumber(v); clearErrors(); }}
                   disabled={isLoading}
-                  autoComplete="tel"
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-gray-400 outline-none transition-all focus:border-[#E8730A] focus:ring-2 focus:ring-[#E8730A]/30 disabled:bg-white/5 disabled:cursor-not-allowed"
                 />
 
                 <button
@@ -549,7 +555,7 @@ export default function SignupPage() {
                     )}
                   </div>
                   <p className="text-xs text-gray-400">
-                    Enter the 6-digit code sent to <span className="font-medium text-gray-200">{mobileNumber}</span>
+                    Enter the 6-digit code sent to <span className="font-medium text-gray-200">{country.dialCode} {mobileNumber}</span>
                   </p>
                   <OTPInput
                     value={phoneOtp}
