@@ -81,9 +81,9 @@ export default function Sidebar({ onClose }: SidebarProps) {
   };
 
   return (
-    <div className="w-[260px] h-screen bg-[#1F1F1F] flex flex-col text-white">
+    <div className="w-[260px] h-screen bg-[#1F1F1F] flex flex-col text-white overflow-hidden">
       {/* Logo */}
-      <div className="py-5 px-5 flex items-center gap-2">
+      <div className="py-5 px-5 flex items-center gap-2 flex-shrink-0">
         <Image
           src="/Logo.svg"
           alt="Viano Systems"
@@ -94,8 +94,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
         />
       </div>
 
-      {/* Main Nav */}
-      <div className="flex-1 px-3 py-4">
+      {/* Main Nav — scrolls independently so the footer stays visible on short screens */}
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4">
         <nav className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -166,7 +166,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
       </div>
 
       {/* Bottom Section - Profile card (hover or click to reveal menu) */}
-      <div className="px-3 pb-4">
+      <div className="px-3 pb-4 pt-2 flex-shrink-0 border-t border-white/5">
         {/* Text Alerts toggle (TCPA SMS consent) */}
         <div className="mb-3 rounded-xl border border-white/10 bg-white/5 p-3">
           <div className="flex items-center gap-3">
