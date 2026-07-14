@@ -1,9 +1,10 @@
 "use client";
-import { Home, Building2, User, LogOut, Shield, Lock, LayoutDashboard, MessageSquare } from "lucide-react";
+import { Home, Building2, User, LogOut, Shield, Lock, LayoutDashboard, MessageSquare, Users, ChevronRight } from "lucide-react";
 import { useRouter, usePathname } from 'next/navigation';
 import { clearAuth, getStoredUserInfo } from '@/lib/api';
 import { ThemeToggle } from '@/common/theme/theme-toggle';
 import { useSmsConsent } from '@/common/sms-consent/sms-consent-provider';
+import { UpgradeModal } from '@/components/billing/upgrade-modal';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 
@@ -18,6 +19,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const [userRole, setUserRole] = useState('Real Estate Agent');
   const [userInitials, setUserInitials] = useState('CE');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   // Text-alerts (TCPA SMS consent) — shared context so the sidebar and profile
   // toggles stay in lockstep in real time.
@@ -143,8 +145,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
               <span className="text-sm font-semibold text-white">Core Plan</span>
             </div>
             <p className="text-xs text-gray-500 mb-1">Up to 15 properties</p>
-            <p className="text-sm font-bold text-white mb-3">$50 / month</p>
-            <button className="w-full py-2 rounded-lg bg-white/10 text-xs font-medium text-white hover:bg-white/20 transition-colors">
+            <p className="text-sm font-bold text-white mb-3">$49 / month</p>
+            <button type="button" onClick={() => setUpgradeOpen(true)} className="w-full py-2 rounded-lg bg-white/10 text-xs font-medium text-white hover:bg-white/20 transition-colors">
               Upgrade to Core
             </button>
           </div>
@@ -156,12 +158,28 @@ export default function Sidebar({ onClose }: SidebarProps) {
               </svg>
               <span className="text-sm font-semibold text-white">Pro Plan</span>
             </div>
-            <p className="text-xs text-gray-500 mb-1">Up to 3 properties</p>
-            <p className="text-sm font-bold text-white mb-3">$15 / month</p>
-            <button className="w-full py-2 rounded-lg bg-white/10 text-xs font-medium text-white hover:bg-white/20 transition-colors">
+            <p className="text-xs text-gray-500 mb-1">Up to 50 properties</p>
+            <p className="text-sm font-bold text-white mb-3">$99 / month</p>
+            <button type="button" onClick={() => setUpgradeOpen(true)} className="w-full py-2 rounded-lg bg-white/10 text-xs font-medium text-white hover:bg-white/20 transition-colors">
               Upgrade to Pro
             </button>
           </div>
+
+          {/* Need More Properties — custom/team plans */}
+          <button
+            type="button"
+            onClick={() => setUpgradeOpen(true)}
+            className="w-full flex items-center gap-3 rounded-xl p-4 text-left bg-[#E8730A] hover:bg-[#d1670a] transition-colors"
+          >
+            <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+              <Users size={18} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white leading-tight">Need More Properties?</p>
+              <p className="text-xs text-white/80 leading-snug mt-0.5">Custom team plans for agents, teams, and brokerages.</p>
+            </div>
+            <ChevronRight size={18} className="text-white flex-shrink-0" />
+          </button>
         </div>
       </div>
 
@@ -262,6 +280,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
           </button>
         </div>
       </div>
+
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </div>
   );
 }

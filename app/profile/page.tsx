@@ -8,9 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft, ChevronRight, Loader2, CheckCircle, XCircle, Mail, Smartphone } from "lucide-react"
 import Image from "next/image"
 import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, UpdateUserRequest, getCurrentUserId, SMS_CONSENT_TEXT, getFriendlyErrorMessage } from "@/lib/api"
-import { CreditCard, ExternalLink, ShieldCheck, Zap, MessageSquare } from "lucide-react"
+import { CreditCard, ExternalLink, ShieldCheck, Zap, MessageSquare, AlertTriangle, Clock } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { OTPInput } from "@/components/ui/otp-input"
+import { UpgradeModal } from "@/components/billing/upgrade-modal"
 import { PhoneInput, Country, DEFAULT_COUNTRY, toE164, isValidPhone, parsePhone } from "@/components/ui/phone-input"
 import { useSmsConsent } from "@/common/sms-consent/sms-consent-provider"
 
@@ -46,6 +47,10 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [billingStatus, setBillingStatus] = useState<BillingStatusResponse | null>(null);
   const [isBillingLoading, setIsBillingLoading] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const [profile, setProfile] = useState<ProfileData>({
     name: "",
@@ -339,21 +344,7 @@ export default function ProfilePage() {
     return () => clearInterval(pollInterval);
   }, [refreshProfileData]);
 
-  const handleUpgrade = async () => {
-    const userId = getCurrentUserId();
-    if (!userId) return;
-
-    setIsBillingLoading(true);
-    try {
-      const { checkout_url } = await billingAPI.createCheckoutSession();
-      window.location.href = checkout_url;
-    } catch (err) {
-      console.error('Failed to create checkout session:', err);
-      alert('Failed to initiate upgrade. Please try again.');
-    } finally {
-      setIsBillingLoading(false);
-    }
-  };
+  const handleUpgrade = () => setUpgradeOpen(true);
 
   const handleManageBilling = async () => {
     const userId = getCurrentUserId();
@@ -368,6 +359,21 @@ export default function ProfilePage() {
       alert('Failed to open billing portal. Please try again.');
     } finally {
       setIsBillingLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    setIsCanceling(true);
+    setCancelError(null);
+    try {
+      await billingAPI.cancel();
+      // Refresh billing status so the "cancelling" banners/labels reflect the change.
+      await billingAPI.getStatus().then(setBillingStatus).catch(() => {});
+      setCancelModalOpen(false);
+    } catch (err) {
+      setCancelError(getFriendlyErrorMessage(err, "We couldn't cancel your subscription. Please try again."));
+    } finally {
+      setIsCanceling(false);
     }
   };
 
@@ -1045,21 +1051,97 @@ export default function ProfilePage() {
 
                   {billingStatus?.has_subscription ? (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-100 dark:border-emerald-500/30">
+                      {(() => {
+                        const sub = billingStatus.subscription;
+                        const isPastDue = sub?.status === 'past_due' || sub?.billing_hold === 'past_due';
+                        const isCanceling = !!sub?.cancel_at_period_end;
+                        const periodEnd = sub?.current_period_end
+                          ? new Date(sub.current_period_end).toLocaleDateString()
+                          : null;
+                        return (
+                          <>
+                            {isPastDue && (
+                              <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-500/10 rounded-2xl border border-red-100 dark:border-red-500/30">
+                                <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                                <div>
+                                  <p className="text-sm font-bold text-red-700 dark:text-red-400">Payment failed</p>
+                                  <p className="mt-0.5 text-xs text-red-600/90 dark:text-red-400/80 leading-relaxed">
+                                    Update your payment method to clear the outstanding invoice. Scheduled
+                                    messages are paused and you can&apos;t add properties until it&apos;s resolved.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {isCanceling && !isPastDue && (
+                              <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-500/10 rounded-2xl border border-amber-100 dark:border-amber-500/30">
+                                <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                                <div>
+                                  <p className="text-sm font-bold text-amber-800 dark:text-amber-300">
+                                    Plan cancels{periodEnd ? ` on ${periodEnd}` : ' at period end'}
+                                  </p>
+                                  <p className="mt-0.5 text-xs text-amber-700/90 dark:text-amber-300/80 leading-relaxed">
+                                    You keep access until then. Messages scheduled after this date are paused
+                                    and will resume if you resubscribe.
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {billingStatus.suspended_message_count > 0 && (
+                              <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10">
+                                <Clock className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                                  <span className="font-semibold text-gray-900 dark:text-white">
+                                    {billingStatus.suspended_message_count}
+                                  </span>{' '}
+                                  scheduled message{billingStatus.suspended_message_count === 1 ? ' is' : 's are'} paused
+                                  due to your billing status. They resume automatically once it&apos;s resolved.
+                                </p>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+
+                      <div className={`flex items-center justify-between p-4 rounded-2xl border ${
+                        billingStatus.subscription?.cancel_at_period_end
+                          ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/30'
+                          : 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/30'
+                      }`}>
                         <div>
-                          <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Active Plan</p>
-                          <p className="text-lg font-bold text-emerald-900 dark:text-emerald-300 mt-1">$49/month Pro Plan</p>
+                          <p className={`text-xs font-bold uppercase tracking-wider ${
+                            billingStatus.subscription?.cancel_at_period_end
+                              ? 'text-amber-700 dark:text-amber-400'
+                              : 'text-emerald-700 dark:text-emerald-400'
+                          }`}>
+                            {billingStatus.subscription?.cancel_at_period_end ? 'Cancelling' : 'Active Plan'}
+                          </p>
+                          <p className={`text-lg font-bold mt-1 ${
+                            billingStatus.subscription?.cancel_at_period_end
+                              ? 'text-amber-900 dark:text-amber-300'
+                              : 'text-emerald-900 dark:text-emerald-300'
+                          }`}>
+                            {billingStatus?.plan_name || 'Core Plan'}
+                            {billingStatus?.monthly_cost != null ? ` · $${billingStatus.monthly_cost}/mo` : ''}
+                          </p>
                         </div>
-                        <ShieldCheck className="w-8 h-8 text-emerald-500" />
+                        <ShieldCheck className={`w-8 h-8 ${
+                          billingStatus.subscription?.cancel_at_period_end ? 'text-amber-500' : 'text-emerald-500'
+                        }`} />
                       </div>
 
                       <div className="space-y-3 px-1">
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500 dark:text-gray-400">Status</span>
-                          <span className="font-semibold text-emerald-600 capitalize">{billingStatus.subscription?.status}</span>
+                          <span className="font-semibold capitalize text-gray-900 dark:text-white">
+                            {billingStatus.subscription?.status}
+                          </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">Next Invoice</span>
+                          <span className="text-gray-500 dark:text-gray-400">
+                            {billingStatus.subscription?.cancel_at_period_end ? 'Access until' : 'Next Invoice'}
+                          </span>
                           <span className="font-semibold text-gray-900 dark:text-white">
                             {billingStatus.subscription?.current_period_end
                               ? new Date(billingStatus.subscription.current_period_end).toLocaleDateString()
@@ -1067,6 +1149,13 @@ export default function ProfilePage() {
                           </span>
                         </div>
                       </div>
+
+                      <Button
+                        onClick={() => setUpgradeOpen(true)}
+                        className="w-full rounded-full h-11 font-bold"
+                      >
+                        Change plan
+                      </Button>
 
                       <Button
                         onClick={handleManageBilling}
@@ -1083,13 +1172,22 @@ export default function ProfilePage() {
                           </>
                         )}
                       </Button>
+
+                      {!billingStatus.subscription?.cancel_at_period_end && (
+                        <button
+                          onClick={() => { setCancelError(null); setCancelModalOpen(true); }}
+                          className="w-full text-center text-xs font-semibold text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors py-1"
+                        >
+                          Cancel subscription
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10">
                         <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Free Plan</p>
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mt-2">
-                          Upgrade to Pro to unlock unlimited properties and advanced features.
+                          Upgrade to Core to unlock unlimited properties and advanced features.
                         </p>
                       </div>
 
@@ -1110,17 +1208,9 @@ export default function ProfilePage() {
 
                       <Button
                         onClick={handleUpgrade}
-                        disabled={isBillingLoading}
                         className="w-full rounded-full h-11 font-bold shadow-md mt-2"
                       >
-                        {isBillingLoading ? (
-                          <span className="flex items-center gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Connecting...
-                          </span>
-                        ) : (
-                          "Upgrade to Pro ($49/mo)"
-                        )}
+                        View Plans
                       </Button>
                     </div>
                   )}
@@ -1132,6 +1222,73 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        onChanged={() => billingAPI.getStatus().then(setBillingStatus).catch(() => {})}
+      />
+
+      {/* Cancel subscription confirmation */}
+      {cancelModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={isCanceling ? undefined : () => setCancelModalOpen(false)}
+          />
+          <Card className="relative w-full max-w-md shadow-2xl overflow-hidden rounded-3xl">
+            <div className="p-6 md:p-7">
+              <div className="flex items-start gap-3">
+                <div className="w-11 h-11 rounded-full bg-red-50 dark:bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Cancel subscription?</h2>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                    Your {billingStatus?.plan_name || 'plan'} stays active until{' '}
+                    <span className="font-semibold">
+                      {billingStatus?.subscription?.current_period_end
+                        ? new Date(billingStatus.subscription.current_period_end).toLocaleDateString()
+                        : 'the end of the current period'}
+                    </span>
+                    . After that, messages scheduled beyond this date are paused and you&apos;ll return
+                    to the free limit for new properties. You can resubscribe anytime to resume them.
+                  </p>
+                </div>
+              </div>
+
+              {cancelError && (
+                <div className="mt-4 flex items-start gap-2.5 py-3 px-3.5 bg-red-50 dark:bg-red-500/10 rounded-xl border border-red-100 dark:border-red-500/30">
+                  <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs font-medium text-red-600 dark:text-red-400">{cancelError}</p>
+                </div>
+              )}
+
+              <div className="mt-6 flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setCancelModalOpen(false)}
+                  disabled={isCanceling}
+                  className="flex-1 rounded-full h-11 font-semibold"
+                >
+                  Keep plan
+                </Button>
+                <Button
+                  onClick={handleCancelSubscription}
+                  disabled={isCanceling}
+                  className="flex-1 rounded-full h-11 font-bold bg-red-500 hover:bg-red-600 text-white"
+                >
+                  {isCanceling ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Cancel subscription'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Edit Profile Modal */}
       {isEditModalOpen && (

@@ -24,6 +24,21 @@ function getApiBaseUrl(): string {
 
 const API_BASE_URL = getApiBaseUrl();
 
+// ngrok free tier serves an HTML interstitial without CORS headers unless this is sent
+const NGROK_HEADERS: HeadersInit =
+    API_BASE_URL.includes('ngrok') ? { 'ngrok-skip-browser-warning': 'true' } : {};
+
+function buildFetchHeaders(overrides: HeadersInit = {}, withJson = true): HeadersInit {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
+    return {
+        ...(withJson ? { 'Content-Type': 'application/json' } : {}),
+        ...NGROK_HEADERS,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...overrides,
+    };
+}
+
 // Mutex and state for token refreshing
 let isRefreshing = false;
 let failedQueue: { resolve: (value: string | null) => void; reject: (reason?: any) => void }[] = [];
@@ -103,13 +118,7 @@ async function apiRequest<T>(
 ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
 
-    // Get token from localStorage if available
-    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-
-    const defaultHeaders: HeadersInit = {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    };
+    const defaultHeaders: HeadersInit = buildFetchHeaders();
 
     const config: RequestInit = {
         ...options,
@@ -162,7 +171,7 @@ async function apiRequest<T>(
             try {
                 const refreshResponse = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: buildFetchHeaders(),
                     body: JSON.stringify({ refresh_token: refreshToken }),
                 });
 
@@ -415,14 +424,10 @@ export const propertyAPI = {
         const queryString = params.toString();
         const url = `${API_BASE_URL}/api/property/my-properties/${propertyId}/reset-and-reprocess${queryString ? `?${queryString}` : ''}`;
 
-        const token = getAuthToken();
-
         const response = await fetch(url, {
             method: 'POST',
             body: formData,
-            headers: {
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
+            headers: buildFetchHeaders({}, false),
         });
 
         if (!response.ok) {
@@ -442,14 +447,11 @@ export const propertyAPI = {
         formData.append('file', file);
 
         const url = `${API_BASE_URL}/api/property/upload-and-extract?doc_type=${encodeURIComponent(docType)}`;
-        const token = getAuthToken();
 
         const response = await fetch(url, {
             method: 'POST',
             body: formData,
-            headers: {
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
+            headers: buildFetchHeaders({}, false),
         });
 
         // Handle 402 billing error specifically
@@ -539,14 +541,10 @@ export const propertyAPI = {
         const queryString = params.toString();
         const url = `${API_BASE_URL}/api/property/my-properties/${propertyId}/documents${queryString ? `?${queryString}` : ''}`;
 
-        const token = getAuthToken();
-
         const response = await fetch(url, {
             method: 'PUT',
             body: formData,
-            headers: {
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
+            headers: buildFetchHeaders({}, false),
         });
 
         if (!response.ok) {
@@ -612,14 +610,11 @@ export const propertyAPI = {
         formData.append('doc_types', docTypes.join(','));
 
         const url = `${API_BASE_URL}/api/property/bulk-upload-and-extract`;
-        const token = getAuthToken();
 
         const response = await fetch(url, {
             method: 'POST',
             body: formData,
-            headers: {
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
+            headers: buildFetchHeaders({}, false),
         });
 
         if (!response.ok) {
@@ -780,15 +775,42 @@ export const billingAPI = {
      * Check if the current user is allowed to add another property (JWT-based)
      */
     canAddProperty: () =>
-        apiRequest<{ allowed: boolean; reason: string; requires_subscription: boolean }>('/api/billing/can-add-property'),
+        apiRequest<CanAddPropertyResponse>('/api/billing/can-add-property'),
 
     /**
-     * Create a Stripe Checkout Session for a new subscription (JWT-based)
+     * Create a Stripe Checkout Session for a new subscription on the given
+     * individual plan (JWT-based)
      */
-    createCheckoutSession: () =>
+    createCheckoutSession: (plan: PlanSlug = 'core') =>
         apiRequest<{ checkout_url: string }>('/api/billing/create-checkout-session', {
             method: 'POST',
+            body: JSON.stringify({ plan }),
         }),
+
+    /**
+     * Preview proration for switching plans (existing subscription only).
+     */
+    previewPlanChange: (plan: PlanSlug) =>
+        apiRequest<PlanChangePreviewResponse>('/api/billing/preview-plan-change', {
+            method: 'POST',
+            body: JSON.stringify({ plan }),
+        }),
+
+    /**
+     * Switch an existing subscription to a different individual plan (JWT-based).
+     * Pass proration_date from previewPlanChange so the charge matches the preview.
+     */
+    changePlan: (plan: PlanSlug, prorationDate: number) =>
+        apiRequest<ChangePlanResponse>('/api/billing/change-plan', {
+            method: 'POST',
+            body: JSON.stringify({ plan, proration_date: prorationDate }),
+        }),
+
+    /**
+     * Public individual-plan catalog (pricing metadata for the upgrade UI)
+     */
+    getPlans: () =>
+        apiRequest<{ plans: PlanInfo[] }>('/api/billing/plans'),
 
     /**
      * Cancel subscription at the end of the current billing period (JWT-based)
@@ -833,14 +855,10 @@ export const documentAPI = {
         const docTypesParam = docTypes.map(dt => `doc_types=${encodeURIComponent(dt)}`).join('&');
         const url = `${API_BASE_URL}/api/documents/upload/${propertyId}?${docTypesParam}`;
 
-        const token = getAuthToken();
-
         const response = await fetch(url, {
             method: 'POST',
             body: formData,
-            headers: {
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            },
+            headers: buildFetchHeaders({}, false),
         });
 
         if (!response.ok) {
@@ -1541,21 +1559,98 @@ export interface PropertyOpportunitiesResponse {
 }
 
 // Billing Types
+export type PlanSlug = 'core' | 'pro' | 'elite';
+
+export interface PlanInfo {
+    slug: PlanSlug;
+    name: string;
+    monthly_price: number;
+    property_limit: number;
+}
+
+export interface PlanChangeLineItem {
+    description: string;
+    amount: number;
+    currency: string;
+    proration: boolean;
+}
+
+export interface PlanChangePreviewResponse {
+    plan: PlanSlug;
+    plan_name: string;
+    current_plan: PlanSlug;
+    current_plan_name: string;
+    currency: string;
+    /** Proration total charged today (not the next full billing period). */
+    amount_due: number;
+    subtotal: number;
+    total: number;
+    proration_date: number;
+    lines: PlanChangeLineItem[];
+    next_renewal_amount?: number | null;
+    next_renewal_description?: string | null;
+    next_billing_date?: string | null;
+}
+
+export interface ChangePlanResponse {
+    changed: boolean;
+    plan: PlanSlug;
+    plan_name?: string;
+    monthly_cost?: number;
+    property_limit?: number;
+    reason?: string;
+}
+
+/** Billing hold reason on a subscription (drives message suspension). */
+export type BillingHold = 'past_due' | 'canceled' | null;
+
 export interface SubscriptionResponse {
     subscription_id: string;
     stripe_subscription_id: string;
     status: string;
+    /** True when the subscription is set to cancel at the end of the current period. */
+    cancel_at_period_end: boolean;
+    /** Why scheduled messages are on hold, or null when none. */
+    billing_hold: BillingHold;
     current_period_start: string | null;
     current_period_end: string | null;
     monthly_cost: number;
+    plan: PlanSlug;
+    plan_name: string;
 }
 
 export interface BillingStatusResponse {
     user_id: string;
     total_properties: number;
+    free_property_limit?: number;
     has_subscription: boolean;
     subscription: SubscriptionResponse | null;
     monthly_cost: number;
+    plan: PlanSlug | 'free';
+    plan_name: string;
+    property_limit: number;
+    /** Count of scheduled messages currently paused for billing reasons. */
+    suspended_message_count: number;
+}
+
+/** Response from GET /api/billing/can-add-property. */
+export interface CanAddPropertyResponse {
+    allowed: boolean;
+    reason: string;
+    requires_subscription: boolean;
+    /** Present and true when the block is due to a failed payment (past_due). */
+    past_due?: boolean;
+}
+
+/**
+ * 409 detail returned by preview-plan-change / change-plan when a downgrade would
+ * leave the user over the target plan's property limit.
+ */
+export interface DowngradeBlocked {
+    allowed: false;
+    current_property_count: number;
+    target_property_limit: number;
+    properties_to_delete: number;
 }
 
 // CMA Types
@@ -1721,6 +1816,11 @@ export function getFriendlyErrorMessage(
     // Auth / session.
     if (/session expired|please log in again|authentication required/.test(lower)) {
         return "Your session has expired. Please log in again.";
+    }
+
+    // Billing / Stripe configuration.
+    if (/similar object exists in live mode.*test mode key|stripe price mismatch.*live mode/.test(lower)) {
+        return "Plan prices aren't configured for test mode yet. Ask your admin to add test Stripe price IDs for Pro and Elite.";
     }
 
     // Server errors.

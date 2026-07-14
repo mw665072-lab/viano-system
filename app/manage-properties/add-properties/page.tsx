@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId, BillingError, ApiError, PropertyResponse, PropertyConflict } from '@/lib/api';
+import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId, BillingError, ApiError, PropertyResponse, PropertyConflict, CanAddPropertyResponse } from '@/lib/api';
 import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
 import BulkUpload from '@/components/manage-properties/bulk-upload';
+import { UpgradeModal } from '@/components/billing/upgrade-modal';
 
 type FlowType = 'pdf' | 'manual' | 'bulk';
 type PdfStep = 1 | 2;
@@ -107,9 +108,22 @@ const AddPropertyPage = () => {
     // Non-recallable-Twilio warning returned by a successful takeover; shown on the success screen.
     const [successWarning, setSuccessWarning] = useState<string | null>(null);
 
-    const [canAddProperty, setCanAddProperty] = useState<{ allowed: boolean; reason: string; requires_subscription: boolean } | null>(null);
+    const [canAddProperty, setCanAddProperty] = useState<CanAddPropertyResponse | null>(null);
     const [isCheckingLimit, setIsCheckingLimit] = useState(true);
-    const [isBillingLoading, setIsBillingLoading] = useState(false);
+    const [upgradeOpen, setUpgradeOpen] = useState(false);
+    const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+
+    // Open the Stripe billing portal so the user can fix a failed payment.
+    const handleUpdatePayment = useCallback(async () => {
+        setIsOpeningPortal(true);
+        try {
+            const { portal_url } = await billingAPI.getPortalLink();
+            window.location.href = portal_url;
+        } catch (err) {
+            console.error('Error opening billing portal:', err);
+            setIsOpeningPortal(false);
+        }
+    }, []);
 
     // Check property limit on mount (skip if loading an existing draft)
     useEffect(() => {
@@ -601,21 +615,6 @@ const AddPropertyPage = () => {
         }
     };
 
-    const handleUpgrade = async () => {
-        const userId = getCurrentUserId();
-        if (!userId) return;
-
-        setIsBillingLoading(true);
-        try {
-            const { checkout_url } = await billingAPI.createCheckoutSession();
-            window.location.href = checkout_url;
-        } catch (err) {
-            console.error('Failed to create checkout session:', err);
-            alert('Failed to initiate upgrade. Please try again.');
-            setIsBillingLoading(false);
-        }
-    };
-
     // Loading state while checking limit
     if (isCheckingLimit) {
         return (
@@ -636,26 +635,39 @@ const AddPropertyPage = () => {
                     <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/15 rounded-full flex items-center justify-center mx-auto mb-6">
                         <ShieldAlert className="w-8 h-8 text-amber-500" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Limit Reached</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        {canAddProperty.past_due ? "Payment Required" : "Limit Reached"}
+                    </h2>
                     <p className="text-gray-600 dark:text-gray-300 mb-8 whitespace-pre-wrap">
                         {canAddProperty.reason || "You have reached the limit of properties for your current plan."}
                     </p>
 
                     <div className="space-y-3">
-                        {canAddProperty.requires_subscription && (
+                        {canAddProperty.past_due ? (
                             <Button
-                                onClick={handleUpgrade}
-                                disabled={isBillingLoading}
+                                onClick={handleUpdatePayment}
+                                disabled={isOpeningPortal}
                                 className="w-full rounded-full h-12 font-bold"
                             >
-                                {isBillingLoading ? (
-                                    <span className="flex items-center gap-2">
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Connecting to Stripe...
-                                    </span>
+                                {isOpeningPortal ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
-                                    "Upgrade to Pro"
+                                    "Update Payment Method"
                                 )}
+                            </Button>
+                        ) : canAddProperty.requires_subscription ? (
+                            <Button
+                                onClick={() => setUpgradeOpen(true)}
+                                className="w-full rounded-full h-12 font-bold"
+                            >
+                                View Plans
+                            </Button>
+                        ) : (
+                            <Button
+                                onClick={() => setUpgradeOpen(true)}
+                                className="w-full rounded-full h-12 font-bold"
+                            >
+                                Upgrade Plan
                             </Button>
                         )}
                         <Button
@@ -667,6 +679,8 @@ const AddPropertyPage = () => {
                         </Button>
                     </div>
                 </Card>
+
+                <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
             </div>
         );
     }
