@@ -1,5 +1,5 @@
 "use client";
-import { Home, Building2, User, LogOut, Shield, Lock, LayoutDashboard, MessageSquare, Users, ChevronRight } from "lucide-react";
+import { Home, Building2, User, LogOut, Shield, Lock, LayoutDashboard, MessageSquare, Sparkles } from "lucide-react";
 import { useRouter, usePathname } from 'next/navigation';
 import { clearAuth, getStoredUserInfo } from '@/lib/api';
 import { ThemeToggle } from '@/common/theme/theme-toggle';
@@ -135,50 +135,15 @@ export default function Sidebar({ onClose }: SidebarProps) {
           })}
         </nav>
 
-        {/* Plan Cards */}
-        <div className="mt-8 space-y-3">
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <div className="flex items-center gap-2 mb-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8730A" strokeWidth="2">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-              <span className="text-sm font-semibold text-white">Core Plan</span>
-            </div>
-            <p className="text-xs text-gray-500 mb-1">Up to 15 properties</p>
-            <p className="text-sm font-bold text-white mb-3">$49 / month</p>
-            <button type="button" onClick={() => setUpgradeOpen(true)} className="w-full py-2 rounded-lg bg-white/10 text-xs font-medium text-white hover:bg-white/20 transition-colors">
-              Upgrade to Core
-            </button>
-          </div>
-
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <div className="flex items-center gap-2 mb-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8730A" strokeWidth="2">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-              <span className="text-sm font-semibold text-white">Pro Plan</span>
-            </div>
-            <p className="text-xs text-gray-500 mb-1">Up to 50 properties</p>
-            <p className="text-sm font-bold text-white mb-3">$99 / month</p>
-            <button type="button" onClick={() => setUpgradeOpen(true)} className="w-full py-2 rounded-lg bg-white/10 text-xs font-medium text-white hover:bg-white/20 transition-colors">
-              Upgrade to Pro
-            </button>
-          </div>
-
-          {/* Need More Properties — custom/team plans */}
+        {/* Upgrade CTA — routes to the full plans page */}
+        <div className="mt-8">
           <button
             type="button"
             onClick={() => setUpgradeOpen(true)}
-            className="w-full flex items-center gap-3 rounded-xl p-4 text-left bg-[#E8730A] hover:bg-[#d1670a] transition-colors"
+            className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 bg-[#E8730A] hover:bg-[#d1670a] transition-colors text-sm font-semibold text-white"
           >
-            <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-              <Users size={18} className="text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white leading-tight">Need More Properties?</p>
-              <p className="text-xs text-white/80 leading-snug mt-0.5">Custom team plans for agents, teams, and brokerages.</p>
-            </div>
-            <ChevronRight size={18} className="text-white flex-shrink-0" />
+            <Sparkles size={18} className="flex-shrink-0" />
+            Upgrade Plan
           </button>
         </div>
       </div>

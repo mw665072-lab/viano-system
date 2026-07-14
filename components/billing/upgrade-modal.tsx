@@ -25,6 +25,12 @@ const PLAN_ICONS: Record<PlanSlug, React.ComponentType<{ size?: number; classNam
   elite: Crown,
 }
 
+const PLAN_META: Record<PlanSlug, { popular?: boolean; features?: string[] }> = {
+  core: {},
+  pro: { popular: true, features: ["Priority support", "Advanced reporting"] },
+  elite: {},
+}
+
 function formatCents(amount: number, currency = "usd"): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -178,7 +184,7 @@ export function UpgradeModal({ open, onClose, onChanged }: UpgradeModalProps) {
       />
 
       <div
-        className="relative w-full sm:max-w-lg max-h-[92vh] sm:max-h-[88vh] flex flex-col bg-white dark:bg-[#161616] rounded-t-2xl sm:rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 overflow-hidden"
+        className="relative w-full sm:max-w-5xl max-h-[92vh] sm:max-h-[88vh] flex flex-col bg-white dark:bg-[#161616] rounded-t-2xl sm:rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 overflow-hidden"
         style={FONT}
       >
         {/* Header */}
@@ -236,7 +242,7 @@ export function UpgradeModal({ open, onClose, onChanged }: UpgradeModalProps) {
 
           {/* Downgrade blocked: too many properties for the target plan */}
           {downgradeBlock && (
-            <div className="space-y-4">
+            <div className="space-y-4 max-w-lg mx-auto">
               <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/30">
                 <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div className="min-w-0">
@@ -278,7 +284,7 @@ export function UpgradeModal({ open, onClose, onChanged }: UpgradeModalProps) {
 
           {/* Confirm step */}
           {!downgradeBlock && confirmPreview && (
-            <div className="space-y-4">
+            <div className="space-y-4 max-w-lg mx-auto">
               <div className="rounded-2xl border border-gray-100 dark:border-white/10 overflow-hidden">
                 <div className="px-4 py-3 bg-gray-50 dark:bg-white/5 border-b border-gray-100 dark:border-white/10">
                   <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -375,9 +381,9 @@ export function UpgradeModal({ open, onClose, onChanged }: UpgradeModalProps) {
 
           {/* Plan list */}
           {!downgradeBlock && !confirmPreview && loading && (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-72 w-full rounded-2xl" />
               ))}
             </div>
           )}
@@ -395,65 +401,83 @@ export function UpgradeModal({ open, onClose, onChanged }: UpgradeModalProps) {
           )}
 
           {!downgradeBlock && !confirmPreview && !loading && !loadError && plans && (
-            <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {plans.map((plan) => {
                 const Icon = PLAN_ICONS[plan.slug] ?? Star
+                const meta = PLAN_META[plan.slug] ?? {}
                 const isCurrent = plan.slug === currentPlan
                 const isActing = actingPlan === plan.slug
                 return (
                   <div
                     key={plan.slug}
-                    className={`rounded-2xl border p-4 transition-colors ${
-                      isCurrent
-                        ? "border-[#E8730A]/40 bg-[#E8730A]/5"
-                        : "border-gray-100 dark:border-white/10 bg-white dark:bg-[#1a1a1a]"
-                    }`}
+                    className={`relative flex flex-col rounded-2xl border p-5 transition-colors ${
+                      meta.popular
+                        ? "border-[#E8730A] shadow-lg shadow-[#E8730A]/10 dark:border-[#E8730A]"
+                        : "border-gray-100 dark:border-white/10"
+                    } bg-white dark:bg-[#1a1a1a]`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
-                        <Icon size={18} className="text-[#E8730A]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-bold text-[#0C1D38] dark:text-white">{plan.name}</p>
-                          {isCurrent && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#E8730A]">
-                              <Check className="w-3 h-3" /> Current
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Up to {plan.property_limit} properties
-                        </p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-base font-bold text-[#0C1D38] dark:text-white">
-                          ${plan.monthly_price}
-                        </p>
-                        <p className="text-[10px] text-gray-400 dark:text-gray-500">/month</p>
-                      </div>
+                    {meta.popular && (
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#E8730A] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
+                        Most popular
+                      </span>
+                    )}
+
+                    <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 dark:bg-white/10">
+                      <Icon size={20} className="text-[#E8730A]" />
                     </div>
+
+                    <p className="text-base font-bold text-[#0C1D38] dark:text-white">{plan.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Up to {plan.property_limit} properties
+                    </p>
+
+                    <div className="mt-4">
+                      <span className="text-2xl font-bold text-[#0C1D38] dark:text-white">
+                        ${plan.monthly_price}
+                      </span>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">/month</p>
+                    </div>
+
+                    {isCurrent ? (
+                      <span className="mt-3 inline-flex w-fit items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                        Current
+                      </span>
+                    ) : meta.features && meta.features.length > 0 ? (
+                      <ul className="mt-3 space-y-1.5">
+                        {meta.features.map((feature) => (
+                          <li
+                            key={feature}
+                            className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-300"
+                          >
+                            <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[#E8730A]" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
 
                     <button
                       type="button"
                       onClick={() => handleSelect(plan.slug)}
                       disabled={isCurrent || actingPlan !== null}
-                      className={`mt-3 w-full py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 disabled:cursor-not-allowed ${
+                      className={`mt-auto flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed ${
                         isCurrent
-                          ? "bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-500"
-                          : "bg-[#E8730A] text-white hover:bg-[#d1670a] disabled:opacity-60"
+                          ? "border border-gray-200 bg-transparent text-gray-400 dark:border-white/15 dark:text-gray-500"
+                          : meta.popular
+                            ? "bg-[#E8730A] text-white hover:bg-[#d1670a] disabled:opacity-60"
+                            : "border border-gray-200 bg-transparent text-[#0C1D38] hover:bg-gray-50 disabled:opacity-60 dark:border-white/15 dark:text-white dark:hover:bg-white/5"
                       }`}
                     >
                       {isActing ? (
                         <>
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          Loading preview…
+                          Loading…
                         </>
                       ) : isCurrent ? (
                         "Current plan"
                       ) : (
                         <>
-                          {hasSubscription ? "Switch to" : "Select"} {plan.name.replace(" Plan", "")}
+                          {hasSubscription ? "Switch to" : "Select"} {plan.name.replace(/ ?plan$/i, "")}
                           <ArrowRight className="w-3.5 h-3.5" />
                         </>
                       )}
@@ -464,23 +488,23 @@ export function UpgradeModal({ open, onClose, onChanged }: UpgradeModalProps) {
 
               <a
                 href={CUSTOM_CONTACT_HREF}
-                className="flex items-center gap-3 rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1a1a1a] p-4 hover:border-gray-200 dark:hover:border-white/20 transition-colors"
+                className="flex flex-col rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1a1a1a] p-5 hover:border-gray-200 dark:hover:border-white/20 transition-colors"
               >
-                <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <Users size={18} className="text-[#E8730A]" />
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100 dark:bg-white/10">
+                  <Users size={20} className="text-gray-500 dark:text-gray-300" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-[#0C1D38] dark:text-white">Need more than 50?</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Custom plans for large teams and brokerages.
-                  </p>
-                </div>
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#E8730A] flex-shrink-0">
+                <p className="text-base font-bold text-[#0C1D38] dark:text-white">
+                  Need more than {plans[plans.length - 1]?.property_limit ?? 50}?
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                  Custom plans for large teams and brokerages.
+                </p>
+                <span className="mt-auto inline-flex items-center gap-1 pt-6 text-xs font-semibold text-[#E8730A]">
                   Contact
                   <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </a>
-            </>
+            </div>
           )}
         </div>
       </div>
