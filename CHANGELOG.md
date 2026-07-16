@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-07-14] — Billing Lifecycle: Downgrade Guard, Cancel & Payment States
+
+### Added
+- **In-app cancel subscription** (`app/profile/page.tsx`). A "Cancel subscription" link on the subscription card (hidden once already cancelling) opens a confirmation modal that states the access-until date and what happens to scheduled messages, then calls `billingAPI.cancel()` and refreshes billing status. The card immediately reflects the cancelling state.
+- **Downgrade-blocked step in the plan modal** (`components/billing/upgrade-modal.tsx`). When a downgrade is rejected with `409` because the portfolio exceeds the target plan, the modal shows a dedicated "Too many properties" step — *delete N properties to switch* (with current count vs. target limit) — plus a **Manage properties** action and **Back to plans**. Applied to both the preview and confirm calls.
+- **Payment-failed handling on Add Property** (`app/manage-properties/add-properties/page.tsx`). When `can-add-property` returns `past_due`, the limit screen becomes **"Payment Required"** with an **Update Payment Method** button that opens the Stripe portal. A subscribed user at their plan limit now also gets an **Upgrade Plan** CTA (previously a dead end).
+- **Billing-state banners on the profile subscription card** (`app/profile/page.tsx`): a red **Payment failed** banner (`past_due`), an amber **Plan cancels on {date}** banner (`cancel_at_period_end`), and an info **N messages paused** banner from `suspended_message_count`. The active-plan card and detail row recolor/relabel to "Cancelling" / "Access until" when a cancel is pending.
+- **New billing types** (`lib/api.ts`): `cancel_at_period_end` and `billing_hold` on `SubscriptionResponse`; `suspended_message_count` on `BillingStatusResponse`; new `CanAddPropertyResponse` (with `past_due`), `DowngradeBlocked`, and `BillingHold` types. `billingAPI.canAddProperty()` is now typed with `CanAddPropertyResponse`.
+
+### Changed
+- **Cancellation is surfaced via `cancel_at_period_end`, not status.** Because the backend keeps a cancelling subscription as `status: "active"`, all cancel-state UI keys off `cancel_at_period_end` (the previous `"canceling"` status no longer exists).
+
+### Notes
+- Undoing a pending cancellation still happens through the Stripe Billing Portal (the `customer.subscription.updated` webhook restores the paused messages); no in-app "Resume" button yet.
+- Plan downgrades are expected to be disabled in the Stripe Billing Portal, so all plan switching flows through the in-app modal where the property-limit guard is enforced.
+
 ## [2026-07-02] — Touchpoint Detail Modal & Phone Country Selector
 
 ### Added

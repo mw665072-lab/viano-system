@@ -1,9 +1,10 @@
 "use client";
-import { Home, Building2, User, LogOut, Shield, Lock, LayoutDashboard, MessageSquare } from "lucide-react";
+import { Home, Building2, User, LogOut, Shield, Lock, LayoutDashboard, MessageSquare, Sparkles } from "lucide-react";
 import { useRouter, usePathname } from 'next/navigation';
 import { clearAuth, getStoredUserInfo } from '@/lib/api';
 import { ThemeToggle } from '@/common/theme/theme-toggle';
 import { useSmsConsent } from '@/common/sms-consent/sms-consent-provider';
+import { UpgradeModal } from '@/components/billing/upgrade-modal';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 
@@ -18,6 +19,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const [userRole, setUserRole] = useState('Real Estate Agent');
   const [userInitials, setUserInitials] = useState('CE');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   // Text-alerts (TCPA SMS consent) — shared context so the sidebar and profile
   // toggles stay in lockstep in real time.
@@ -133,35 +135,16 @@ export default function Sidebar({ onClose }: SidebarProps) {
           })}
         </nav>
 
-        {/* Plan Cards */}
-        <div className="mt-8 space-y-3">
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <div className="flex items-center gap-2 mb-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8730A" strokeWidth="2">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-              <span className="text-sm font-semibold text-white">Core Plan</span>
-            </div>
-            <p className="text-xs text-gray-500 mb-1">Up to 15 properties</p>
-            <p className="text-sm font-bold text-white mb-3">$50 / month</p>
-            <button className="w-full py-2 rounded-lg bg-white/10 text-xs font-medium text-white hover:bg-white/20 transition-colors">
-              Upgrade to Core
-            </button>
-          </div>
-
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <div className="flex items-center gap-2 mb-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8730A" strokeWidth="2">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-              <span className="text-sm font-semibold text-white">Pro Plan</span>
-            </div>
-            <p className="text-xs text-gray-500 mb-1">Up to 3 properties</p>
-            <p className="text-sm font-bold text-white mb-3">$15 / month</p>
-            <button className="w-full py-2 rounded-lg bg-white/10 text-xs font-medium text-white hover:bg-white/20 transition-colors">
-              Upgrade to Pro
-            </button>
-          </div>
+        {/* Upgrade CTA — routes to the full plans page */}
+        <div className="mt-8">
+          <button
+            type="button"
+            onClick={() => setUpgradeOpen(true)}
+            className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 bg-[#E8730A] hover:bg-[#d1670a] transition-colors text-sm font-semibold text-white"
+          >
+            <Sparkles size={18} className="flex-shrink-0" />
+            Upgrade Plan
+          </button>
         </div>
       </div>
 
@@ -262,6 +245,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
           </button>
         </div>
       </div>
+
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </div>
   );
 }

@@ -6,12 +6,18 @@ import { CheckCircle, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { billingAPI, type BillingStatusResponse } from '@/lib/api';
 
 const BillingSuccessContent = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const sessionId = searchParams.get('session_id');
     const [countdown, setCountdown] = useState(5);
+    const [status, setStatus] = useState<BillingStatusResponse | null>(null);
+
+    useEffect(() => {
+        billingAPI.getStatus().then(setStatus).catch(() => {});
+    }, []);
 
     useEffect(() => {
         if (countdown > 0) {
@@ -52,7 +58,11 @@ const BillingSuccessContent = () => {
                 </h1>
                 
                 <p className="text-gray-600 mb-8 leading-relaxed">
-                    Thank you for your subscription. Your account has been upgraded to <span className="font-bold text-gray-900">Pro Plan</span>. You can now analyze unlimited properties.
+                    {status?.has_subscription ? (
+                        <>Your account is now on the <span className="font-bold text-gray-900">{status.plan_name}</span> &mdash; you can manage up to {status.property_limit} properties.</>
+                    ) : (
+                        <>Thank you for your subscription. Your plan is being activated and will be ready in a moment.</>
+                    )}
                 </p>
 
                 <div className="space-y-4">
