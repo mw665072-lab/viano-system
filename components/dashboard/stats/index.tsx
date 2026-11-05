@@ -36,7 +36,7 @@ const STATS_CONFIG: StatConfig[] = [
     iconColor: "text-[#3C4653] dark:text-gray-300",
     barColor: "bg-emerald-500",
     valueColor: "text-[#1E1E1E] dark:text-white",
-    link: { label: "View Touchpoints", href: "/upcoming-touchpoints" },
+    link: { label: "View Touchpoints", href: "/messages" },
     linkColor: "text-[#1E1E1E] dark:text-gray-200",
   },
   {

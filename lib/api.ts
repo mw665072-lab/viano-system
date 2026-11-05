@@ -160,10 +160,10 @@ async function apiRequest<T>(
         const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
 
         if (!refreshToken) {
-            // No refresh token, force logout
+            // No refresh token, force logout (and come back here after logging in)
             if (typeof window !== 'undefined') {
                 clearAuth();
-                window.location.href = '/login';
+                window.location.href = loginUrlForCurrentPage();
             }
             throw new Error('Authentication required');
         }
@@ -229,7 +229,7 @@ async function apiRequest<T>(
                 processQueue(err as Error, null);
                 if (typeof window !== 'undefined') {
                     clearAuth();
-                    window.location.href = '/login';
+                    window.location.href = loginUrlForCurrentPage();
                 }
                 throw new Error('Session expired. Please log in again.');
             } finally {
@@ -707,6 +707,50 @@ export const propertyAPI = {
      */
     getOpportunities: () =>
         apiRequest<PropertyOpportunitiesResponse>('/api/property/opportunities'),
+};
+
+// ============ OUTREACH (MONTHLY MESSAGE QUEUE) APIs ============
+// The list endpoints and getCard are pure database reads. prepare() may look up a local event
+// once per draft version. getRecommendations() is a paid Google Places call on every request.
+export const outreachAPI = {
+    /** Month summary. Omit `month` for the current month (America/New_York). */
+    getMonth: (month?: string) =>
+        apiRequest<OutreachMonthResponse>(`/api/outreach${month ? `?month=${encodeURIComponent(month)}` : ''}`),
+
+    /** One property's updates for the month, in date order. 404 if it isn't yours or was transferred. */
+    getPropertyMonth: (propertyId: string, month?: string) =>
+        apiRequest<OutreachPropertyMonthResponse>(
+            `/api/outreach/properties/${encodeURIComponent(propertyId)}${month ? `?month=${encodeURIComponent(month)}` : ''}`),
+
+    /** The card. Never paid; works in any month, before or after contact. */
+    getCard: (itemId: string) =>
+        apiRequest<OutreachCard>(`/api/outreach/items/${encodeURIComponent(itemId)}`),
+
+    /** Renders and saves the homeowner draft only if it's missing or stale. Idempotent. 409 `withdrawn`. */
+    prepare: (itemId: string) =>
+        apiRequest<OutreachCard>(`/api/outreach/items/${encodeURIComponent(itemId)}/prepare`, { method: 'POST' }),
+
+    /** The saved draft text for copying. Records nothing. 409 `withdrawn` | `draft_not_ready` | `draft_stale`. */
+    copy: (itemId: string) =>
+        apiRequest<OutreachCopyResponse>(`/api/outreach/items/${encodeURIComponent(itemId)}/copy`, { method: 'POST' }),
+
+    /**
+     * Mark contacted. `contactedOn` is "YYYY-MM-DD" (defaults to today, Eastern). Idempotent for the
+     * same date. 409 `already_contacted` | `withdrawn`; 422 `future_date`.
+     */
+    complete: (itemId: string, contactedOn?: string) =>
+        apiRequest<OutreachCompleteResponse>(`/api/outreach/items/${encodeURIComponent(itemId)}/complete`, {
+            method: 'POST',
+            body: JSON.stringify(contactedOn ? { contacted_on: contactedOn } : {}),
+        }),
+
+    /** Paid Google Places call on every request: call on an explicit tap only, never prefetch or store. */
+    getRecommendations: (itemId: string) =>
+        apiRequest<OutreachRecommendations>(`/api/outreach/items/${encodeURIComponent(itemId)}/recommendations`),
+
+    /** Recently contacted, newest first, across months. `limit` is 1–200. */
+    getContacted: (limit = 50) =>
+        apiRequest<OutreachContactedResponse>(`/api/outreach/contacted?limit=${limit}`),
 };
 
 // ============ SYSTEMS APIs ============
@@ -1564,6 +1608,128 @@ export interface AnniversaryCardResponse {
     card_url: string | null;
 }
 
+// ---- Outreach (monthly message queue) ----
+
+/** check_in | system_alert | anniversary | insurance | home_value | maintenance | negotiated_win | intro | other */
+export type OutreachKind =
+    | 'check_in' | 'system_alert' | 'anniversary' | 'insurance' | 'home_value'
+    | 'maintenance' | 'negotiated_win' | 'intro' | 'other';
+
+/** Dates are "YYYY-MM-DD" (date only). Timestamps are ISO-8601 with a timezone. */
+export interface OutreachPropertyRow {
+    property_id: string;
+    address: string;
+    homeowner: string;
+    /** Includes overdue carry-over. */
+    pending_count: number;
+    overdue_count: number;
+    new_count: number;
+    next_outreach_on: string;
+}
+
+export interface OutreachMonthResponse {
+    month: string;                  // "YYYY-MM"
+    pending_update_count: number;   // includes overdue carry-over
+    overdue_update_count: number;   // carried over from earlier months (current month only)
+    new_update_count: number;       // added after this month's text was sent
+    property_count: number;
+    properties: OutreachPropertyRow[];
+}
+
+export interface OutreachListItem {
+    item_id: string;
+    outreach_on: string;
+    kind: OutreachKind;
+    title: string;
+    trigger: string | null;
+    priority: number | null;
+    homeowner: string;
+    /** Why it's due (Realtor-facing context). */
+    reason: string | null;
+    overdue: boolean;
+    new: boolean;
+}
+
+export interface OutreachPropertyMonthResponse {
+    month: string;
+    property_id: string;
+    address: string;
+    homeowner: string;
+    pending_count: number;
+    overdue_count: number;
+    new_count: number;
+    items: OutreachListItem[];
+}
+
+export type OutreachDraftStatus = 'ready' | 'not_prepared' | 'stale';
+
+export interface OutreachContact {
+    contacted_on: string;
+    recorded_at: string;
+}
+
+export interface OutreachCard {
+    item_id: string;
+    property_id: string;
+    address: string;
+    homeowner: string;
+    month: string | null;
+    outreach_on: string | null;
+    kind: OutreachKind;
+    title: string;
+    trigger: string | null;
+    priority: number | null;
+    reason: string | null;
+    /** Ended by a property transfer, replaced by a system reset, or on billing hold. */
+    withdrawn: boolean;
+    /** `text` is only present when status is 'ready'. */
+    draft: { status: OutreachDraftStatus; text: string | null; rendered_at: string | null };
+    /** Whether contractor recommendations apply (fetch them with getRecommendations). */
+    recommendations_available: boolean;
+    anniversary_year: number | null;
+    /** Set once marked contacted. */
+    contact: OutreachContact | null;
+}
+
+export interface OutreachCopyResponse { item_id: string; text: string; draft_rendered_at: string; }
+
+export interface OutreachCompleteResponse {
+    item_id: string;
+    contact_event_id: string;
+    contacted_on: string;
+    recorded_at: string;
+    /** True when this repeated an earlier "Mark contacted" with the same date. */
+    already_recorded: boolean;
+}
+
+export interface OutreachRecommendations {
+    item_id: string;
+    available: boolean;                 // false: no relevant trade (e.g. a check-in)
+    trade: string | null;               // e.g. "HVAC contractor"
+    contractors: ContractorReferral[];  // same shape as the existing ContractorReferral
+    copy_text: string | null;           // ready-to-copy list; null when there are no results
+}
+
+export interface OutreachContactedItem {
+    /** null when a later schedule change removed the update: show it, but don't make it clickable. */
+    item_id: string | null;
+    property_id: string;
+    address: string;
+    homeowner: string;
+    title: string;
+    kind: OutreachKind;
+    outreach_on: string | null;
+    month: string | null;
+    contacted_on: string;
+    recorded_at: string;
+}
+
+export interface OutreachContactedResponse { count: number; items: OutreachContactedItem[]; }
+
+/** Codes carried in ApiError.detail.code for 409/422 responses from the outreach endpoints. */
+export type OutreachErrorCode =
+    | 'withdrawn' | 'draft_not_ready' | 'draft_stale' | 'already_contacted' | 'future_date';
+
 export interface PropertyOpportunityItem {
     property_id: string;
     property_name: string;
@@ -1883,6 +2049,49 @@ export function getFriendlyErrorMessage(
     if (looksTechnical(raw)) return fallback;
 
     return raw;
+}
+
+/** The `code` from an outreach 409/422 error, if any. Branch on this, never on the message text. */
+export function getOutreachErrorCode(err: unknown): OutreachErrorCode | undefined {
+    if (err instanceof ApiError && err.detail && typeof err.detail === 'object') {
+        const code = (err.detail as Record<string, unknown>).code;
+        if (typeof code === 'string') return code as OutreachErrorCode;
+    }
+    return undefined;
+}
+
+/**
+ * A same-site relative path that's safe to redirect to after login, or null.
+ * Rejects absolute and protocol-relative URLs (`//evil.com`, `/\evil.com`), control
+ * characters (browsers strip tabs/newlines, so `/\t/evil.com` would become `//evil.com`),
+ * and the auth pages themselves. Prevents open redirects through `?next=`.
+ */
+export function safeNextPath(raw: string | null | undefined): string | null {
+    if (!raw || !raw.startsWith('/') || raw.startsWith('//') || raw.includes('://') || raw.includes('\\')) return null;
+    for (let i = 0; i < raw.length; i++) {
+        const c = raw.charCodeAt(i);
+        if (c < 0x20 || c === 0x7f) return null;
+    }
+    if (raw.startsWith('/login') || raw.startsWith('/signup')) return null;
+    // Belt and braces: it must resolve to the same origin.
+    try {
+        const base = 'https://same-origin.invalid';
+        if (new URL(raw, base).origin !== base) return null;
+    } catch {
+        return null;
+    }
+    return raw;
+}
+
+/** `/login`, carrying `path` as `?next=` when it's safe to return to. */
+export function loginUrlFor(path: string): string {
+    const next = safeNextPath(path);
+    return next ? `/login?next=${encodeURIComponent(next)}` : '/login';
+}
+
+/** The current page as a `/login?next=…` URL (browser only). */
+function loginUrlForCurrentPage(): string {
+    return loginUrlFor(window.location.pathname + window.location.search);
 }
 
 /**
