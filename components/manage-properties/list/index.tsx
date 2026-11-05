@@ -119,6 +119,7 @@ export function PropertyList({
               <DropdownMenuItem onClick={() => onStatusFilterChange?.('All Status')}>All Status</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onStatusFilterChange?.('Pending')}>Pending</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onStatusFilterChange?.('Completed')}>Completed</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onStatusFilterChange?.('Draft')}>Draft</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

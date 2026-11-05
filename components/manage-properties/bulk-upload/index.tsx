@@ -1,11 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { Upload, Loader2, X, FileText, AlertCircle, CheckCircle, ChevronDown, Trash2, CheckSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { propertyAPI, BulkUploadQuotaResponse, BulkUploadResponse, BulkUploadItem, BulkUploadFailedItem, getCurrentUserId, documentAPI, ConfirmPropertyRequest } from '@/lib/api';
+import { propertyAPI, ApiError, BulkUploadResponse, BulkUploadItem, BulkUploadFailedItem, getFriendlyErrorMessage, documentAPI, ConfirmPropertyRequest } from '@/lib/api';
+import { DRAFTS_LIST_HREF, getPlanLimitError, pendingDrafts, resolvePlanLimitAction, uploadSlots, type LimitAction } from '@/lib/property-quota';
+import { useUploadQuota } from '@/lib/use-upload-quota';
+import { PlanLimitNotice } from '@/components/billing/plan-limit-notice';
 import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
 
 interface SelectedFile {
@@ -69,9 +73,23 @@ const formatDateDisplay = (value?: string | null): string => {
     return isNaN(d.getTime()) ? value : d.toLocaleDateString();
 };
 
+const pluralize = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
 const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) => {
-    const [quota, setQuota] = useState<BulkUploadQuotaResponse | null>(null);
-    const [isCheckingQuota, setIsCheckingQuota] = useState(true);
+    // Upload slots = properties the user can still confirm minus drafts they already hold.
+    const {
+        quota,
+        isLoading: isCheckingQuota,
+        error: quotaError,
+        slots,
+        blocker,
+        refresh: refreshQuota,
+    } = useUploadQuota();
+    // Plan-limit (402) outcome with the button to show. `propertyId` pins it to one draft's card.
+    const [limitNotice, setLimitNotice] = useState<{ action: LimitAction; message: string; note?: string; propertyId?: string } | null>(null);
+    // Drafts awaiting a delete confirmation, and whether that delete is running.
+    const [deleteTargets, setDeleteTargets] = useState<string[] | null>(null);
+    const [isDeletingDrafts, setIsDeletingDrafts] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadResult, setUploadResult] = useState<BulkUploadResponse | null>(null);
@@ -90,28 +108,14 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
         onReviewingChange?.(!!uploadResult);
     }, [uploadResult, onReviewingChange]);
 
-    // Check quota on mount
-    useEffect(() => {
-        const checkQuota = async () => {
-            const userId = getCurrentUserId();
-            if (!userId) {
-                setError('Please login to use bulk upload');
-                setIsCheckingQuota(false);
-                return;
-            }
-
-            try {
-                const quotaData = await propertyAPI.getBulkUploadQuota();
-                setQuota(quotaData);
-            } catch (err) {
-                console.error('Error checking quota:', err);
-                setError(err instanceof Error ? err.message : 'Failed to check upload quota');
-            } finally {
-                setIsCheckingQuota(false);
-            }
-        };
-        checkQuota();
-    }, []);
+    /** Show the right limit button for a 402. Returns false when `err` isn't a 402. */
+    const showPlanLimit = async (err: unknown, extra?: { note?: string; propertyId?: string }): Promise<boolean> => {
+        const info = getPlanLimitError(err);
+        if (!info) return false;
+        const action = await resolvePlanLimitAction(info.requiresSubscription);
+        setLimitNotice({ action, message: info.message, ...extra });
+        return true;
+    };
 
     // Initialize form data for each draft when upload result changes
     useEffect(() => {
@@ -144,19 +148,28 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
 
         const newFiles = Array.from(e.target.files);
         const validFiles: SelectedFile[] = [];
+        let fileError: string | null = null;
 
         for (const file of newFiles) {
             if (file.type !== 'application/pdf') {
-                setError(`File "${file.name}" is not a PDF. Only PDF files are allowed.`);
+                fileError = `File "${file.name}" is not a PDF. Only PDF files are allowed.`;
                 continue;
             }
             validFiles.push({ file, docType: 'home_inspection' });
         }
 
-        if (validFiles.length > 0) {
-            setSelectedFiles(prev => [...prev, ...validFiles]);
-            setError(null);
+        // Cap the selection at the user's upload slots; anything past that would be rejected.
+        const room = Math.max(0, slots - selectedFiles.length);
+        const accepted = validFiles.slice(0, room);
+        const skipped = validFiles.length - accepted.length;
+        if (skipped > 0) {
+            fileError = `You can upload ${pluralize(slots, 'more property', 'more properties')} right now, so ${pluralize(skipped, 'file was', 'files were')} not added.`;
         }
+
+        if (accepted.length > 0) {
+            setSelectedFiles(prev => [...prev, ...accepted]);
+        }
+        setError(fileError);
 
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -179,26 +192,39 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
             return;
         }
 
-        if (quota && selectedFiles.length > quota.remaining) {
-            setError(`You can only upload ${quota.remaining} more properties based on your current plan`);
+        if (selectedFiles.length > slots) {
+            setError(`You can upload ${pluralize(slots, 'more property', 'more properties')} right now. Remove ${pluralize(selectedFiles.length - slots, 'file', 'files')} and try again.`);
             return;
         }
 
         setIsUploading(true);
         setError(null);
+        setLimitNotice(null);
 
         try {
             const result = await propertyAPI.bulkUploadAndExtract(selectedFiles);
-            console.log('Bulk upload result:', JSON.stringify(result, null, 2));
-            console.log('Successful items:', result.successful);
             setUploadResult(result);
             setSelectedFiles([]);
-
-            const newQuota = await propertyAPI.getBulkUploadQuota();
-            setQuota(newQuota);
+            // quota_remaining matches upload_slots, but refetch so the drafts count is current too.
+            await refreshQuota();
         } catch (err) {
-            console.error('Bulk upload error:', err);
-            setError(err instanceof Error ? err.message : 'Bulk upload failed. Please try again.');
+            if (await showPlanLimit(err)) {
+                // 402: no confirmable slots left. Keep the quota banner in sync too.
+                refreshQuota();
+            } else if (err instanceof ApiError && err.status === 400) {
+                // A 400 is either "drafts fill your slots" or a bad file. Don't parse the text:
+                // refetch the quota and compare. With 0 slots the drafts banner explains it.
+                const fresh = await refreshQuota();
+                const freshSlots = fresh ? uploadSlots(fresh) : null;
+                if (freshSlots === null || freshSlots >= selectedFiles.length) {
+                    setError(err.message);
+                } else if (freshSlots > 0) {
+                    setError(`You can upload ${pluralize(freshSlots, 'more property', 'more properties')} right now. Remove ${pluralize(selectedFiles.length - freshSlots, 'file', 'files')} and try again.`);
+                }
+            } else {
+                console.error('Bulk upload error:', err);
+                setError(err instanceof Error ? err.message : 'Bulk upload failed. Please try again.');
+            }
         } finally {
             setIsUploading(false);
         }
@@ -208,9 +234,11 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
         setUploadResult(null);
         setSelectedFiles([]);
         setError(null);
+        setLimitNotice(null);
         setExpandedDraft(null);
         setDraftFormData({});
         setSelectedDrafts(new Set());
+        refreshQuota();
     };
 
     // Toggle draft selection
@@ -288,6 +316,8 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
         if (!item.property_id || !item.extracted) return;
 
         updateDraftFormData(item.property_id, { isConfirming: true });
+        setError(null);
+        setLimitNotice(null);
 
         try {
             const confirmData = buildConfirmData(item);
@@ -312,18 +342,28 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                 return newSet;
             });
         } catch (err) {
-            console.error('Error confirming draft:', err);
+            // Keep the form as-is on any error. On a 402 the backend already saved the edits.
             updateDraftFormData(item.property_id, { isConfirming: false });
-            setError(err instanceof Error ? err.message : 'Failed to confirm draft');
+            const isLimit = await showPlanLimit(err, {
+                note: 'Your edits are saved to this draft. Confirm again once your plan allows it.',
+                propertyId: item.property_id,
+            });
+            if (!isLimit) {
+                console.error('Error confirming draft:', err);
+                setError(err instanceof Error ? err.message : 'Failed to confirm draft');
+            }
         }
     };
 
-    // Bulk confirm selected drafts
+    // Bulk confirm selected drafts. Runs one at a time (the server serializes confirms per user,
+    // so parallel calls just fail) and stops at the first 402.
     const handleBulkConfirm = async () => {
         if (selectedDrafts.size === 0) return;
 
         setIsBulkConfirming(true);
         setBulkConfirmError(null);
+        setLimitNotice(null);
+        setError(null);
 
         const selectedItems = uploadResult?.successful.filter(
             item => item.property_id && selectedDrafts.has(item.property_id)
@@ -331,6 +371,8 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
 
         let successCount = 0;
         let failCount = 0;
+        const confirmedIds = new Set<string>();
+        let stoppedAtLimit = false;
 
         for (const item of selectedItems) {
             if (!item.property_id || !item.extracted) continue;
@@ -352,14 +394,27 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                 }
 
                 updateDraftFormData(item.property_id, { isConfirmed: true });
+                confirmedIds.add(item.property_id);
                 successCount++;
             } catch (err) {
+                const isLimit = await showPlanLimit(err, {
+                    note: successCount > 0
+                        ? `${pluralize(successCount, 'property was', 'properties were')} confirmed before the limit was reached. The rest are still drafts and stay selected.`
+                        : 'The selected properties are still drafts and stay selected.',
+                });
+                if (isLimit) {
+                    stoppedAtLimit = true;
+                    break;
+                }
                 console.error('Error confirming draft:', err);
                 failCount++;
             }
         }
 
-        setSelectedDrafts(new Set());
+        // After a limit stop, keep the unconfirmed ones selected so the user can retry after upgrading.
+        setSelectedDrafts(stoppedAtLimit
+            ? new Set([...selectedDrafts].filter(id => !confirmedIds.has(id)))
+            : new Set());
         setIsBulkConfirming(false);
 
         if (failCount > 0) {
@@ -367,10 +422,34 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
         }
     };
 
-    // Remove selected drafts (just deselects from UI, actual deletion happens in backend)
-    const handleRemoveSelected = () => {
-        // For now, just deselect - actual deletion would require backend API call
-        setSelectedDrafts(new Set());
+    // Delete drafts (frees their upload slots). Called after the user confirms in the dialog.
+    const handleDeleteDrafts = async () => {
+        if (!deleteTargets || deleteTargets.length === 0) return;
+        const ids = deleteTargets;
+
+        setIsDeletingDrafts(true);
+        setError(null);
+
+        const results = await Promise.allSettled(ids.map(id => propertyAPI.delete(id)));
+        const deleted = new Set(ids.filter((_, i) => results[i].status === 'fulfilled'));
+        const failed = ids.length - deleted.size;
+
+        if (deleted.size > 0) {
+            setUploadResult(prev => prev
+                ? { ...prev, successful: prev.successful.filter(item => !item.property_id || !deleted.has(item.property_id)) }
+                : prev);
+            setSelectedDrafts(prev => new Set([...prev].filter(id => !deleted.has(id))));
+            if (expandedDraft && deleted.has(expandedDraft)) setExpandedDraft(null);
+            if (limitNotice?.propertyId && deleted.has(limitNotice.propertyId)) setLimitNotice(null);
+        }
+        if (failed > 0) {
+            const firstError = results.find(r => r.status === 'rejected') as PromiseRejectedResult | undefined;
+            setError(`${pluralize(failed, 'draft', 'drafts')} couldn't be deleted. ${getFriendlyErrorMessage(firstError?.reason, 'Please try again.')}`);
+        }
+
+        setIsDeletingDrafts(false);
+        setDeleteTargets(null);
+        refreshQuota();
     };
 
     // Loading state
@@ -405,6 +484,30 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
 
         return (
             <div className="space-y-5">
+                {/* Plan-limit notice (bulk confirm). A single-draft 402 shows inside that draft's card. */}
+                {limitNotice && !limitNotice.propertyId && (
+                    <PlanLimitNotice
+                        action={limitNotice.action}
+                        message={limitNotice.message}
+                        note={limitNotice.note}
+                        onDismiss={() => setLimitNotice(null)}
+                        onPlanChanged={() => {
+                            setLimitNotice(null);
+                            refreshQuota();
+                        }}
+                    />
+                )}
+
+                {error && (
+                    <div className="p-4 bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 rounded-lg flex items-center gap-3">
+                        <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+                        <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+                        <button onClick={() => setError(null)} className="ml-auto text-red-600 hover:text-red-800" aria-label="Dismiss">
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
+
                 {/* Bulk Actions for Unconfirmed Drafts */}
                 {unconfirmedDrafts.length > 0 && (
                     <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-200 dark:border-white/10">
@@ -424,17 +527,18 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                                 {selectedDrafts.size > 0 && (
                                     <>
                                         <Button
-                                            onClick={handleRemoveSelected}
+                                            onClick={() => setDeleteTargets([...selectedDrafts])}
+                                            disabled={isBulkConfirming || isDeletingDrafts}
                                             variant="outline"
                                             size="sm"
                                             className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30 hover:bg-red-50 dark:hover:bg-red-500/15"
                                         >
                                             <Trash2 className="w-4 h-4 mr-1" />
-                                            Remove Selected
+                                            Delete Selected
                                         </Button>
                                         <Button
                                             onClick={handleBulkConfirm}
-                                            disabled={isBulkConfirming}
+                                            disabled={isBulkConfirming || isDeletingDrafts}
                                             size="sm"
                                             className="bg-[#E8730A] hover:bg-[#C45F08] text-white"
                                         >
@@ -543,6 +647,20 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                                                     </div>
                                                 )}
                                             </div>
+
+                                            {/* Delete draft (frees its upload slot) */}
+                                            {!isConfirmed && item.property_id && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDeleteTargets([item.property_id!])}
+                                                    disabled={formData?.isConfirming || isBulkConfirming || isDeletingDrafts}
+                                                    className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/15 rounded-lg transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    title="Delete draft"
+                                                    aria-label="Delete draft"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
 
                                             {/* Review Button */}
                                             {!isConfirmed && (
@@ -721,10 +839,24 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                                                         )}
                                                     </div>
 
+                                                    {/* Plan-limit notice for this draft's confirm (402) */}
+                                                    {limitNotice && limitNotice.propertyId === item.property_id && (
+                                                        <PlanLimitNotice
+                                                            action={limitNotice.action}
+                                                            message={limitNotice.message}
+                                                            note={limitNotice.note}
+                                                            onDismiss={() => setLimitNotice(null)}
+                                                            onPlanChanged={() => {
+                                                                setLimitNotice(null);
+                                                                refreshQuota();
+                                                            }}
+                                                        />
+                                                    )}
+
                                                     {/* Confirm Button */}
                                                     <Button
                                                         onClick={() => handleConfirmDraft(item)}
-                                                        disabled={formData?.isConfirming}
+                                                        disabled={formData?.isConfirming || isBulkConfirming || isDeletingDrafts}
                                                         className="w-full bg-[#E8730A] hover:bg-[#C45F08] text-white"
                                                     >
                                                         {formData?.isConfirming ? (
@@ -801,9 +933,16 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                 {/* Failed S3 Upload Items */}
                 {uploadResult.failed_s3_upload && uploadResult.failed_s3_upload.length > 0 && (
                     <div>
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
                             Upload Failed ({uploadResult.failed_s3_upload.length})
                         </h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                            A draft was still created for {uploadResult.failed_s3_upload.length === 1 ? 'this file' : 'each of these files'} and
+                            uses an upload slot. Open it from your drafts to add the document again, or delete it.{' '}
+                            <Link href={DRAFTS_LIST_HREF} className="font-medium text-[#E8730A] hover:underline">
+                                Go to drafts
+                            </Link>
+                        </p>
                         <div className="space-y-2">
                             {uploadResult.failed_s3_upload.map((item, index) => (
                                 <div key={index} className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-500/15 rounded-xl border border-orange-100 dark:border-orange-500/30">
@@ -836,6 +975,47 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                         </Button>
                     )}
                 </div>
+
+                {/* Delete draft confirmation */}
+                {deleteTargets && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div role="dialog" aria-modal="true" className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-2xl max-w-sm w-full shadow-xl p-6">
+                            <div className="w-12 h-12 bg-red-50 dark:bg-red-500/15 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Trash2 className="w-6 h-6 text-red-500" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white text-center mb-2">
+                                Delete {deleteTargets.length === 1 ? 'this draft' : `${deleteTargets.length} drafts`}?
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 text-center mb-6">
+                                The extracted details and uploaded document will be removed. This frees {deleteTargets.length === 1 ? 'an upload slot' : 'upload slots'} and can&apos;t be undone.
+                            </p>
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setDeleteTargets(null)}
+                                    disabled={isDeletingDrafts}
+                                    className="flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleDeleteDrafts}
+                                    disabled={isDeletingDrafts}
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                    {isDeletingDrafts ? (
+                                        <span className="flex items-center gap-2">
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Deleting...
+                                        </span>
+                                    ) : (
+                                        'Delete'
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
@@ -843,30 +1023,69 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
     // Main upload view
     return (
         <div className="space-y-6">
-            {/* Quota Display */}
-            {quota && (
-                <div className={`p-4 rounded-xl border ${quota.can_bulk_upload ? 'bg-blue-50 dark:bg-blue-500/15 border-blue-100 dark:border-blue-500/30' : 'bg-amber-50 dark:bg-amber-500/15 border-amber-100 dark:border-amber-500/30'}`}>
+            {/* Plan-limit (402) notice from the last upload attempt */}
+            {limitNotice && (
+                <PlanLimitNotice
+                    action={limitNotice.action}
+                    message={limitNotice.message}
+                    note={limitNotice.note}
+                    onDismiss={() => setLimitNotice(null)}
+                    onPlanChanged={() => {
+                        setLimitNotice(null);
+                        refreshQuota();
+                    }}
+                />
+            )}
+
+            {/* Quota couldn't load: uploads stay disabled until it does */}
+            {!quota && quotaError && (
+                <div className="p-4 rounded-xl border bg-red-50 dark:bg-red-500/15 border-red-200 dark:border-red-500/30 flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+                    <p className="flex-1 text-sm text-red-700 dark:text-red-400">{quotaError}</p>
+                    <button
+                        type="button"
+                        onClick={() => refreshQuota()}
+                        className="text-xs font-semibold text-red-700 dark:text-red-400 underline underline-offset-2 flex-shrink-0"
+                    >
+                        Try again
+                    </button>
+                </div>
+            )}
+
+            {/* Quota Display: slots available, or why there are none (drafts banner / limit button) */}
+            {quota && (blocker ? (
+                !limitNotice && (
+                    <PlanLimitNotice
+                        action={blocker.action}
+                        message={blocker.message}
+                        onPlanChanged={refreshQuota}
+                    />
+                )
+            ) : (
+                <div className="p-4 rounded-xl border bg-blue-50 dark:bg-blue-500/15 border-blue-100 dark:border-blue-500/30">
                     <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${quota.can_bulk_upload ? 'bg-blue-100 dark:bg-blue-500/15' : 'bg-amber-100 dark:bg-amber-500/15'}`}>
-                            {quota.can_bulk_upload ? (
-                                <Upload className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            ) : (
-                                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                            )}
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-500/15">
+                            <Upload className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                            <p className={`text-sm font-medium ${quota.can_bulk_upload ? 'text-blue-900 dark:text-blue-400' : 'text-amber-900 dark:text-amber-400'}`}>
-                                {quota.can_bulk_upload
-                                    ? `You can upload ${quota.remaining} more ${quota.remaining === 1 ? 'property' : 'properties'}`
-                                    : 'Upload quota exceeded'}
+                            <p className="text-sm font-medium text-blue-900 dark:text-blue-400">
+                                You can upload {pluralize(slots, 'more property', 'more properties')}
                             </p>
-                            <p className={`text-xs ${quota.can_bulk_upload ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400'}`}>
-                                {quota.current_count} of {quota.max_allowed} properties used
+                            <p className="text-xs text-blue-600 dark:text-blue-400">
+                                {quota.current_count} of {quota.max_allowed} used
+                                {pendingDrafts(quota) > 0 && (
+                                    <>
+                                        {' · '}
+                                        <Link href={DRAFTS_LIST_HREF} className="underline underline-offset-2 hover:text-blue-800 dark:hover:text-blue-300">
+                                            {pluralize(pendingDrafts(quota), 'draft', 'drafts')}
+                                        </Link>
+                                    </>
+                                )}
                             </p>
                         </div>
                     </div>
                 </div>
-            )}
+            ))}
 
             {/* File Selection Area */}
             <div>
@@ -877,13 +1096,13 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                     multiple
                     onChange={handleFileSelect}
                     className="hidden"
-                    disabled={isUploading || !quota?.can_bulk_upload}
+                    disabled={isUploading || selectedFiles.length >= slots}
                 />
 
                 <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading || !quota?.can_bulk_upload}
+                    disabled={isUploading || selectedFiles.length >= slots}
                     className="w-full h-[180px] rounded-[16px] border-2 border-dashed border-[#E8730A] bg-white dark:bg-white/5 hover:bg-[#F8FAFC] dark:hover:bg-white/10 transition-colors flex flex-col items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <Upload className="w-10 h-10 text-[#E8730A]" />
@@ -891,7 +1110,11 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                         Click to Upload Multiple PDFs
                     </span>
                     <span className="text-xs text-[#9CA3AF] dark:text-gray-400">
-                        Select one or more PDF files for bulk upload
+                        {slots > 0 && selectedFiles.length >= slots
+                            ? `You've selected the maximum of ${pluralize(slots, 'file', 'files')}`
+                            : slots > 0
+                                ? `Select up to ${pluralize(slots - selectedFiles.length, 'PDF file', 'PDF files')}`
+                                : 'Select one or more PDF files for bulk upload'}
                     </span>
                 </button>
             </div>
@@ -912,10 +1135,10 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
                         </button>
                     </div>
 
-                    {selectedFiles.length > quota?.remaining! && (
+                    {selectedFiles.length > slots && (
                         <div className="mb-3 p-3 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 rounded-lg">
                             <p className="text-xs text-amber-700 dark:text-amber-400">
-                                Warning: You have selected {selectedFiles.length} files but can only upload {quota?.remaining} based on your quota.
+                                You have selected {selectedFiles.length} files but can only upload {slots} right now. Remove {pluralize(selectedFiles.length - slots, 'file', 'files')} to continue.
                             </p>
                         </div>
                     )}
@@ -968,7 +1191,7 @@ const BulkUpload = ({ onNavigateToDraft, onReviewingChange }: BulkUploadProps) =
             {/* Upload Button */}
             <Button
                 onClick={handleUpload}
-                disabled={selectedFiles.length === 0 || isUploading || !quota?.can_bulk_upload || selectedFiles.length > quota?.remaining!}
+                disabled={selectedFiles.length === 0 || isUploading || slots === 0 || selectedFiles.length > slots}
                 className="w-full h-[48px] rounded-full text-white text-sm font-medium hover:opacity-90 transition-all duration-300"
                 style={{ background: '#E8730A', fontFamily: 'Roboto', fontWeight: 500 }}
             >

@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, useMemo, useCallback, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation';
 import { PropertyList } from '@/components/manage-properties/list';
 import { PropertyDetailPanel } from '@/components/manage-properties/detail';
 import { AlertCircle, Loader2, X, Upload, FileText, Trash2 } from 'lucide-react';
@@ -94,8 +94,12 @@ function getStatusConfig(processStatus: string | undefined) {
 
 
 
+/** Status filter values that can be deep-linked via ?status=. */
+const STATUS_FILTERS = ['Draft', 'Pending', 'Completed'];
+
 const Page = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
     const [properties, setProperties] = useState<Property[]>([]);
@@ -107,7 +111,11 @@ const Page = () => {
     const [cmaMap, setCmaMap] = useState<Map<string, CMAResponse>>(new Map());
     const [isCmaLoading, setIsCmaLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState('All Status');
+    // Deep link: ?status=Draft (from the "Review drafts" button) pre-selects the status filter.
+    const [statusFilter, setStatusFilter] = useState(() => {
+        const status = searchParams.get('status');
+        return status && STATUS_FILTERS.includes(status) ? status : 'All Status';
+    });
     const [isDownloading, setIsDownloading] = useState(false);
     const [downloadError, setDownloadError] = useState<string | null>(null);
 
@@ -1031,4 +1039,11 @@ const Page = () => {
     )
 }
 
-export default Page
+// useSearchParams (for ?status=) needs a Suspense boundary for static prerendering.
+const ManagePropertiesPage = () => (
+    <Suspense fallback={<div className="h-full bg-[#F8F9FB] dark:bg-[#0f0f0f]" />}>
+        <Page />
+    </Suspense>
+)
+
+export default ManagePropertiesPage
