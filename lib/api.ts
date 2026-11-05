@@ -111,6 +111,31 @@ function extractApiErrorMessage(body: unknown): string | undefined {
     return undefined;
 }
 
+/**
+ * Turn a failed multipart upload response into a typed error. A 402 (plan limit) becomes a
+ * BillingError carrying `requires_subscription`; anything else becomes an ApiError so callers
+ * can branch on `status` (e.g. the 400 returned when unconfirmed drafts fill the upload slots).
+ */
+async function throwUploadError(response: Response, fallback: string): Promise<never> {
+    let body: unknown = null;
+    try {
+        body = await response.json();
+    } catch {
+        // Non-JSON (or empty) error body
+    }
+    const message = extractApiErrorMessage(body) ?? fallback;
+    const detail = (body && typeof body === 'object' && 'detail' in (body as Record<string, unknown>))
+        ? (body as Record<string, unknown>).detail
+        : body;
+
+    if (response.status === 402) {
+        const requiresSubscription = !!(detail && typeof detail === 'object'
+            && (detail as Partial<QuotaLimitDetail>).requires_subscription);
+        throw new BillingError(message, requiresSubscription, detail);
+    }
+    throw new ApiError(message, response.status, detail);
+}
+
 // Generic fetch wrapper with error handling
 async function apiRequest<T>(
     endpoint: string,
@@ -441,6 +466,11 @@ export const propertyAPI = {
     /**
      * Upload a PDF and extract property data (PDF-first flow)
      * Creates a draft property with extracted data
+     *
+     * Errors (checked before the upload is accepted):
+     * - 402 → BillingError: no confirmable slots left (plan limit / past_due)
+     * - 400 → ApiError: unconfirmed drafts fill the remaining slots, OR a bad file / doc_type.
+     *   Don't parse the text — refetch the quota to tell them apart.
      */
     uploadAndExtract: async (file: File, docType: '4point' | 'home_inspection' = 'home_inspection'): Promise<UploadAndExtractResponse> => {
         const formData = new FormData();
@@ -454,16 +484,9 @@ export const propertyAPI = {
             headers: buildFetchHeaders({}, false),
         });
 
-        // Handle 402 billing error specifically
-        if (response.status === 402) {
-            const error = await response.json().catch(() => ({ detail: 'Subscription required' }));
-            throw new BillingError(error.detail || 'Subscription required to upload more properties');
-        }
-
         // Accept 202 Accepted as success (async processing)
         if (response.status !== 202 && !response.ok) {
-            const error = await response.json().catch(() => ({ detail: 'Failed to upload and extract PDF' }));
-            throw new Error(error.detail || 'Failed to upload and extract PDF');
+            await throwUploadError(response, 'Failed to upload and extract PDF');
         }
 
         return response.json();
@@ -589,15 +612,18 @@ export const propertyAPI = {
         }),
 
     /**
-     * Get bulk upload quota for the current user
-     * Returns how many more properties can be added based on subscription tier
+     * Get the upload quota for the current user. Call before opening any upload (single or
+     * bulk). Read slots via `uploadSlots()` from lib/property-quota — drafts count against
+     * uploads even though they don't count against the plan limit.
      */
     getBulkUploadQuota: () =>
         apiRequest<BulkUploadQuotaResponse>('/api/property/bulk-upload/quota'),
 
     /**
      * Bulk upload and extract multiple PDFs
-     * Creates draft properties for each successfully extracted PDF
+     * Creates draft properties for each successfully extracted PDF.
+     * Rejected up front when there are more files than upload slots: same 402 (BillingError) /
+     * 400 (ApiError) as uploadAndExtract.
      */
     bulkUploadAndExtract: async (
         items: Array<{ file: File; docType: '4point' | 'home_inspection' }>
@@ -618,8 +644,7 @@ export const propertyAPI = {
         });
 
         if (!response.ok) {
-            const error = await response.json().catch(() => ({ detail: 'Bulk upload failed' }));
-            throw new Error(error.detail || 'Bulk upload failed');
+            await throwUploadError(response, 'Bulk upload failed');
         }
 
         return response.json();
@@ -1621,7 +1646,13 @@ export interface SubscriptionResponse {
 
 export interface BillingStatusResponse {
     user_id: string;
+    /** Every property row, drafts and transferred included. Not the plan usage — see active_properties. */
     total_properties: number;
+    /**
+     * Live properties: the count the plan limit uses. Optional until the quota-hardening
+     * backend deploys; read it via `usedProperties()` (falls back to total_properties).
+     */
+    active_properties?: number;
     free_property_limit?: number;
     has_subscription: boolean;
     subscription: SubscriptionResponse | null;
@@ -1682,10 +1713,23 @@ export interface CMAResponse {
 
 // Bulk Upload Types
 export interface BulkUploadQuotaResponse {
+    /** Properties the user can still confirm (plan limit minus active). Always 0 when past_due. */
     remaining: number;
+    /** Active (confirmed, live) properties. */
     current_count: number;
     max_allowed: number;
+    /** Unconfirmed drafts. Optional until the quota-hardening backend deploys. */
+    pending_drafts?: number;
+    /** `remaining - pending_drafts`, min 0: files the user can upload now. Read via `uploadSlots()`. */
+    upload_slots?: number;
+    /** `upload_slots > 0` on the new backend (`remaining > 0` on the old one). */
     can_bulk_upload: boolean;
+}
+
+/** `detail` of a 402 from upload, bulk upload, confirm, or create. */
+export interface QuotaLimitDetail {
+    message: string;
+    requires_subscription: boolean;
 }
 
 export interface BulkUploadItem {
@@ -1715,6 +1759,7 @@ export interface BulkUploadFailedItem {
 
 export interface BulkUploadResponse {
     success: boolean;
+    /** Upload slots left after this upload (matches the quota endpoint's upload_slots). */
     quota_remaining: number;
     successful: BulkUploadItem[];
     failed_extraction: BulkUploadFailedItem[];
@@ -1722,11 +1767,17 @@ export interface BulkUploadResponse {
     failed_s3_upload?: BulkUploadFailedItem[];
 }
 
-/** Custom error class for billing/subscription errors (402) */
-export class BillingError extends Error {
-    constructor(message: string) {
-        super(message);
+/**
+ * Plan-limit error (402) from the multipart upload endpoints. `requiresSubscription` is true
+ * for a free user at the free limit; false covers both a subscriber at their plan limit and a
+ * past_due subscription (check billing status to tell those apart).
+ */
+export class BillingError extends ApiError {
+    requiresSubscription: boolean;
+    constructor(message: string, requiresSubscription = false, detail: unknown = null) {
+        super(message, 402, detail);
         this.name = 'BillingError';
+        this.requiresSubscription = requiresSubscription;
     }
 }
 

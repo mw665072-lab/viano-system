@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ArrowLeft, ChevronRight, Loader2, CheckCircle, XCircle, Mail, Smartphone } from "lucide-react"
 import Image from "next/image"
 import { authAPI, processAPI, propertyAPI, billingAPI, UserResponse, ProcessSummaryResponse, PropertyResponse, BillingStatusResponse, UpdateUserRequest, getCurrentUserId, SMS_CONSENT_TEXT, getFriendlyErrorMessage } from "@/lib/api"
+import { usedProperties } from "@/lib/property-quota"
 import { CreditCard, ExternalLink, ShieldCheck, Zap, MessageSquare, AlertTriangle, Clock } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { OTPInput } from "@/components/ui/otp-input"
@@ -1133,6 +1134,12 @@ export default function ProfilePage() {
 
                       <div className="space-y-3 px-1">
                         <div className="flex justify-between text-sm">
+                          <span className="text-gray-500 dark:text-gray-400">Properties</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            {usedProperties(billingStatus)} of {billingStatus.property_limit} used
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
                           <span className="text-gray-500 dark:text-gray-400">Status</span>
                           <span className="font-semibold capitalize text-gray-900 dark:text-white">
                             {billingStatus.subscription?.status}
@@ -1186,6 +1193,11 @@ export default function ProfilePage() {
                     <div className="space-y-4">
                       <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10">
                         <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Free Plan</p>
+                        {billingStatus && (
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white mt-2">
+                            {usedProperties(billingStatus)} of {billingStatus.property_limit} properties used
+                          </p>
+                        )}
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mt-2">
                           Upgrade to Core to unlock unlimited properties and advanced features.
                         </p>

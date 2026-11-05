@@ -7,10 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId, BillingError, ApiError, PropertyResponse, PropertyConflict, CanAddPropertyResponse } from '@/lib/api';
+import { propertyAPI, documentAPI, processAPI, billingAPI, CreatePropertyRequest, getCurrentUserId, ApiError, PropertyResponse, PropertyConflict, CanAddPropertyResponse } from '@/lib/api';
+import { getPlanLimitError, resolvePlanLimitAction, uploadSlots, type LimitAction } from '@/lib/property-quota';
+import { useUploadQuota } from '@/lib/use-upload-quota';
 import NegotiatedWinsForm from '@/components/manage-properties/negotiated-wins-form';
 import BulkUpload from '@/components/manage-properties/bulk-upload';
 import { UpgradeModal } from '@/components/billing/upgrade-modal';
+import { PlanLimitNotice } from '@/components/billing/plan-limit-notice';
 
 type FlowType = 'pdf' | 'manual' | 'bulk';
 type PdfStep = 1 | 2;
@@ -112,6 +115,26 @@ const AddPropertyPage = () => {
     const [isCheckingLimit, setIsCheckingLimit] = useState(true);
     const [upgradeOpen, setUpgradeOpen] = useState(false);
     const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+
+    // Upload slots (drafts block new uploads). Not needed when confirming an existing draft.
+    const { blocker: uploadBlocker, refresh: refreshUploadQuota } = useUploadQuota(!draftId);
+    // Plan-limit (402) outcome of the last upload / confirm / create, with the button to show.
+    const [limitNotice, setLimitNotice] = useState<{ action: LimitAction; message: string; note?: string } | null>(null);
+
+    /** Show the right limit button for a 402. Returns false when `err` isn't a 402. */
+    const showPlanLimit = useCallback(async (err: unknown, note?: string): Promise<boolean> => {
+        const info = getPlanLimitError(err);
+        if (!info) return false;
+        const action = await resolvePlanLimitAction(info.requiresSubscription);
+        setError(null);
+        setLimitNotice({ action, message: info.message, note });
+        return true;
+    }, []);
+
+    const switchFlow = (flow: FlowType) => {
+        setActiveFlow(flow);
+        setLimitNotice(null);
+    };
 
     // Open the Stripe billing portal so the user can fix a failed payment.
     const handleUpdatePayment = useCallback(async () => {
@@ -280,8 +303,11 @@ const AddPropertyPage = () => {
             return;
         }
 
+        if (uploadBlocker) return; // Banner already explains why; the button is disabled too.
+
         setIsExtracting(true);
         setError(null);
+        setLimitNotice(null);
         setProcessingMessage('Uploading document...');
 
         try {
@@ -322,11 +348,19 @@ const AddPropertyPage = () => {
             setProcessingMessage('');
             setPdfStep(2);
         } catch (err) {
-            console.error('Error uploading PDF:', err);
             setProcessingMessage('');
-            if (err instanceof BillingError) {
-                setError('Subscription required: ' + err.message);
+            if (await showPlanLimit(err)) {
+                // 402: no confirmable slots left. Keep the quota banner in sync too.
+                refreshUploadQuota();
+            } else if (err instanceof ApiError && err.status === 400) {
+                // A 400 is either "drafts fill your slots" or a bad file / doc_type. Don't parse the
+                // text: refetch the quota. If there are no slots, the drafts banner explains it.
+                const quota = await refreshUploadQuota();
+                if (!quota || uploadSlots(quota) > 0) {
+                    setError(err.message);
+                }
             } else {
+                console.error('Error uploading PDF:', err);
                 setError(err instanceof Error ? err.message : 'Failed to upload and extract PDF. Please try again.');
             }
         } finally {
@@ -364,6 +398,7 @@ const AddPropertyPage = () => {
             setIsSubmitting(true);
         }
         setError(null);
+        setLimitNotice(null);
         setConfirmProgress(confirmConflict ? 'Overriding existing plan...' : 'Confirming property...');
 
         try {
@@ -410,7 +445,11 @@ const AddPropertyPage = () => {
             setConfirmProgress('');
 
             const detail = err instanceof ApiError ? (err.detail as PropertyConflict | undefined) : undefined;
-            if (err instanceof ApiError && err.status === 409 && detail?.conflict) {
+            if (await showPlanLimit(err, 'Your edits are saved to this draft. Confirm again once your plan allows it.')) {
+                // 402: the backend already saved the edits to the draft. Leave the form as-is so
+                // the user can confirm again (same body) after upgrading / fixing payment.
+                setConflict(null);
+            } else if (err instanceof ApiError && err.status === 409 && detail?.conflict) {
                 // Expected control-flow outcome — the address belongs to another agent's active
                 // plan. Surface it as the conflict modal; don't log it as an error.
                 setConflict({
@@ -527,6 +566,7 @@ const AddPropertyPage = () => {
 
         setIsSubmitting(true);
         setError(null);
+        setLimitNotice(null);
         setUploadProgress('');
 
         try {
@@ -607,9 +647,11 @@ const AddPropertyPage = () => {
             }, 2000);
 
         } catch (err) {
-            console.error('Error submitting form:', err);
-            setError(err instanceof Error ? err.message : 'Failed to add property. Please try again.');
             setUploadProgress('');
+            if (!(await showPlanLimit(err))) {
+                console.error('Error submitting form:', err);
+                setError(err instanceof Error ? err.message : 'Failed to add property. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -719,6 +761,15 @@ const AddPropertyPage = () => {
                 </p>
             </div>
 
+            {/* No upload slots: drafts banner or plan-limit button (a 402 notice above takes precedence) */}
+            {uploadBlocker && !limitNotice && (
+                <PlanLimitNotice
+                    action={uploadBlocker.action}
+                    message={uploadBlocker.message}
+                    onPlanChanged={refreshUploadQuota}
+                />
+            )}
+
             {/* Document Type Selector */}
             <div className="grid grid-cols-2 gap-3">
                 <button
@@ -751,14 +802,14 @@ const AddPropertyPage = () => {
                 accept=".pdf"
                 onChange={handlePdfSelect}
                 className="hidden"
-                disabled={isExtracting}
+                disabled={isExtracting || !!uploadBlocker}
             />
 
             {!pdfFile ? (
                 <button
                     type="button"
                     onClick={() => pdfInputRef.current?.click()}
-                    disabled={isExtracting}
+                    disabled={isExtracting || !!uploadBlocker}
                     className={`w-full h-[200px] rounded-[16px] border-2 border-dashed border-[#E8730A] dark:border-white/15 bg-white dark:bg-white/5 hover:bg-[#F8FAFC] transition-colors flex flex-col items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed ${isFormShaking ? 'animate-shake' : ''}`}
                 >
                     <Upload className="w-10 h-10 text-[#E8730A]" />
@@ -802,7 +853,7 @@ const AddPropertyPage = () => {
             <Button
                 type="button"
                 onClick={handlePdfUpload}
-                disabled={!pdfFile || isExtracting}
+                disabled={!pdfFile || isExtracting || !!uploadBlocker}
                 className="w-full h-[48px] rounded-full text-white text-sm font-medium hover:opacity-90 transition-all duration-300"
                 style={{ background: '#E8730A', fontFamily: 'Roboto', fontWeight: 500 }}
             >
@@ -966,6 +1017,9 @@ const AddPropertyPage = () => {
             <button
                 type="button"
                 onClick={() => {
+                    // The draft stays and keeps its upload slot, so refresh the quota banner.
+                    refreshUploadQuota();
+                    setLimitNotice(null);
                     setPdfStep(1);
                     setPdfFile(null);
                     setPdfDocType('home_inspection');
@@ -1237,7 +1291,7 @@ const AddPropertyPage = () => {
                     <div className="flex gap-2 mb-6 bg-gray-100 dark:bg-white/10 p-1 rounded-xl max-w-lg">
                         <button
                             type="button"
-                            onClick={() => setActiveFlow('pdf')}
+                            onClick={() => switchFlow('pdf')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                                 activeFlow === 'pdf'
                                     ? 'bg-white dark:bg-[#1a1a1a] text-[#E8730A] shadow-sm'
@@ -1249,7 +1303,7 @@ const AddPropertyPage = () => {
                         </button>
                         <button
                             type="button"
-                            onClick={() => setActiveFlow('bulk')}
+                            onClick={() => switchFlow('bulk')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                                 activeFlow === 'bulk'
                                     ? 'bg-white dark:bg-[#1a1a1a] text-[#E8730A] shadow-sm'
@@ -1261,7 +1315,7 @@ const AddPropertyPage = () => {
                         </button>
                         <button
                             type="button"
-                            onClick={() => setActiveFlow('manual')}
+                            onClick={() => switchFlow('manual')}
                             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
                                 activeFlow === 'manual'
                                     ? 'bg-white dark:bg-[#1a1a1a] text-[#E8730A] shadow-sm'
@@ -1283,6 +1337,21 @@ const AddPropertyPage = () => {
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
+                    )}
+
+                    {/* Plan-limit (402) notice with the right button for the case */}
+                    {limitNotice && (
+                        <PlanLimitNotice
+                            action={limitNotice.action}
+                            message={limitNotice.message}
+                            note={limitNotice.note}
+                            onDismiss={() => setLimitNotice(null)}
+                            onPlanChanged={() => {
+                                setLimitNotice(null);
+                                refreshUploadQuota();
+                            }}
+                            className="mb-4 max-w-[838px]"
+                        />
                     )}
 
                     {/* Form Content */}

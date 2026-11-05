@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-11-04] — Property Quota Hardening (pairs with backend `fix/quota-hardening`)
+
+### Added
+- **Upload slots** (`lib/property-quota.ts`, `lib/use-upload-quota.ts`). Unconfirmed drafts now block new uploads, so uploads are capped at `upload_slots` (`remaining − pending_drafts`), not `remaining`. Shared helpers `usedProperties()`, `uploadSlots()`, and `pendingDrafts()` fall back to `total_properties` / `remaining` / `0` when the new fields are missing, so the UI works against both the old and the new backend. `useUploadQuota()` loads the quota and works out what's blocking uploads.
+- **One limit notice for every limit case** (`components/billing/plan-limit-notice.tsx`): **Subscribe** (402, `requires_subscription: true`), **Upgrade plan** (402, active subscriber), **Update payment method** (402, `past_due`, which opens the Stripe portal), and **Review drafts** (drafts fill the slots; links to `/manage-properties?status=Draft`). The 402 cases are told apart with `subscription.status` from `GET /api/billing/status`.
+- **Delete drafts in bulk review** (`components/manage-properties/bulk-upload`). Each draft has a delete action, and "Remove Selected" now really deletes the selected drafts (`DELETE /api/property/my-properties/{id}`) after a confirmation. The quota is refetched afterwards. Previously it only cleared the selection.
+- **Draft status filter + deep link** on Manage Properties: a "Draft" option in the status dropdown, and `?status=Draft` pre-selects it.
+- **Property usage on the profile subscription card**: "X of Y used", from `active_properties`.
+
+### Changed
+- **Single PDF upload** checks the quota first. The drafts or limit banner appears and Upload is disabled when there are no slots. It now handles the new `402` / `400` before the upload is accepted (it used to always get `202`). After a `400`, the app refetches the quota instead of parsing the error text.
+- **Bulk upload** limits the file picker to `upload_slots` (extra files aren't added), shows "N of M used · K drafts", and handles `402` / `400` the same way. Files in `failed_s3_upload` explain that their draft still uses a slot and link to the drafts list.
+- **Confirm keeps the form on 402.** The backend now saves the edits before rejecting, so the review form stays filled with a note to confirm again after upgrading. Single confirm (PDF review and bulk review) shows the limit notice in place.
+- **"Confirm Selected" stops at the first 402.** Confirms already run one at a time. Unconfirmed drafts stay selected so the user can retry after upgrading. Confirm and delete buttons are disabled while a bulk confirm is running.
+- **Manual create** shows the limit notice on a `402` instead of a raw message.
+- **Dashboard "Active Properties"** shows the draft count next to plan usage.
+- `BillingError` now extends `ApiError` (status 402) and carries `requiresSubscription`. Multipart upload errors no longer show `[object Object]` when `detail` is an object.
+
+### Notes
+- `failed_s3_upload` items only include `filename` and `error`. A per-file "Retry" needs the backend to return `property_id` for each item. Until then, users fix those drafts from the drafts list.
+
 ## [2026-07-14] — Billing Lifecycle: Downgrade Guard, Cancel & Payment States
 
 ### Added

@@ -5,6 +5,7 @@ import { Home, CalendarDays, ArrowRight } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
 import { propertyAPI } from "@/lib/api"
+import { pendingDrafts } from "@/lib/property-quota"
 
 interface StatConfig {
   id: string
@@ -63,6 +64,8 @@ const ICONS: Record<string, React.ReactNode> = {
 export default function DashboardStatsCard() {
   const [activeCount, setActiveCount] = useState<number>(0)
   const [maxAllowed, setMaxAllowed] = useState<number>(0)
+  // Unconfirmed drafts: shown next to plan usage, never counted in it.
+  const [draftCount, setDraftCount] = useState<number>(0)
   const [upcomingTouchpoints, setUpcomingTouchpoints] = useState<number>(0)
   const [opportunitiesCount, setOpportunitiesCount] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -77,6 +80,7 @@ export default function DashboardStatsCard() {
 
       setActiveCount(quotaResult.current_count)
       setMaxAllowed(quotaResult.max_allowed)
+      setDraftCount(pendingDrafts(quotaResult))
       setUpcomingTouchpoints(touchpointsResult.count)
       setOpportunitiesCount(opportunitiesResult.total_opportunities)
     } catch (err) {
@@ -115,7 +119,9 @@ export default function DashboardStatsCard() {
   const getStatSubtitle = (id: string): string => {
     switch (id) {
       case "active-properties":
-        return `of ${maxAllowed} Used`
+        return draftCount > 0
+          ? `of ${maxAllowed} Used · ${draftCount} ${draftCount === 1 ? "Draft" : "Drafts"}`
+          : `of ${maxAllowed} Used`
       case "upcoming-touchpoints":
         return "Next 180 Days"
       case "property-opportunities":
