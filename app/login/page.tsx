@@ -1,14 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { authAPI, saveAuth, isAuthenticated, flushPendingSmsConsent } from "@/lib/api";
+import { useRouter, useSearchParams } from "next/navigation";
+import { authAPI, saveAuth, isAuthenticated, flushPendingSmsConsent, safeNextPath } from "@/lib/api";
 
+// useSearchParams needs a Suspense boundary, or `next build` fails.
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="dark min-h-screen w-full bg-[#0f0f0f]" />}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Where to go after login (e.g. the monthly SMS link). Only ever a same-site path.
+  const nextPath = safeNextPath(searchParams.get("next")) ?? "/dashboard";
 
   // Form state
   const [email, setEmail] = useState("");
@@ -23,9 +35,9 @@ export default function LoginPage() {
   // Check if already logged in
   useEffect(() => {
     if (isAuthenticated()) {
-      router.replace("/dashboard");
+      router.replace(nextPath);
     }
-  }, [router]);
+  }, [router, nextPath]);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -66,8 +78,8 @@ export default function LoginPage() {
         // Best-effort and email-matched; never blocks the redirect on failure.
         await flushPendingSmsConsent(response.email);
 
-        // Redirect to dashboard/manage properties
-        router.push("/dashboard");
+        // Back to the page that sent us here, else the dashboard. Replace, so Back doesn't return to login.
+        router.replace(nextPath);
       } else {
         setError("Login failed. Please check your credentials.");
       }

@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-11-05] — Monthly Message Queue (pairs with backend PRs #66–#71)
+
+### Added
+- **Messages area** for the monthly message queue. Realtors now get one text a month that links here, instead of up to three texts per touchpoint.
+  - **Laid out like Manage Properties.** The month's properties fill a list panel, and selecting one narrows the list and opens that property's updates beside it. On phones the property opens as a full-screen overlay, and an update opens its card on top.
+  - **Month list** (`app/messages/page.tsx`, `components/messages/property-queue-list.tsx`; `/messages?month=YYYY-MM` is the SMS link target):
+    - shows "N updates across M properties" with Overdue and New counts, a ‹ month › switcher and a link to Recently contacted;
+    - has search, an All Status / Overdue / New filter and pagination;
+    - lists each property with its homeowner's initials, address, update count, next date and a View/Hide Updates toggle;
+    - without `?month=`, the server picks the current month (Eastern) and the URL is rewritten to include it;
+    - an invalid month shows an error with a link to the current month.
+  - **Property updates panel** (`components/messages/property-updates-panel.tsx`):
+    - opened with `?property={id}`, so the phone's back button closes it;
+    - lists the property's updates for the month in date order, each with a date tile, kind, title, a two-line "why it's due", and Overdue/New badges;
+    - a transferred or someone else's property shows a friendly not-found state;
+    - `/messages/property/{id}?month=…` redirects here, so older links still work.
+  - **Recently contacted** (`app/messages/contacted/page.tsx`):
+    - uses the same list panel, with search and pagination, showing the last 50 contacted updates, newest first, across months;
+    - rows whose update has left the schedule are shown muted and can't be opened.
+  - **The card** (`components/messages/message-card.tsx`). Opened with `?item={id}`, so the phone's back button closes it and cards can be linked. It's a bottom sheet on mobile and shows "why it's due" and the homeowner message.
+    - It prepares a missing or stale draft automatically, once per open.
+    - **Copy message** copies the text returned by the server, never the text on screen, and works on iOS Safari. Copying records nothing. If the draft changed, the card shows the updated text for review and does not copy it.
+    - Anniversary updates show the card image, loaded lazily.
+    - Withdrawn updates show a banner and hide copy and contact.
+- **Mark contacted** (`components/messages/mark-contacted.tsx`). Records the date the Realtor actually reached the homeowner, using a native date picker that defaults to today and won't accept future dates. Repeating it with the same date is harmless. A different date shows "Already marked contacted on …", and a future date (possible around midnight, Eastern) is explained. The list refreshes, so the update leaves pending.
+- **Contractor recommendations on request** (`components/messages/recommendations-section.tsx`). Fetched only when the Realtor taps the button, one request per tap. The list (rating, phone, website, address) and **Copy recommendations** are kept in component state only, never in browser storage, because Google Places terms forbid storing place details.
+- **Outreach API** (`lib/api.ts`): `outreachAPI` (`getMonth`, `getPropertyMonth`, `getCard`, `prepare`, `copy`, `complete`, `getRecommendations`, `getContacted`), the `Outreach*` types, and `getOutreachErrorCode()` for branching on 409/422 codes.
+- **Helpers**:
+  - `lib/outreach-dates.ts`: date-only parsing and formatting that avoids the UTC "one day early" bug, and month arithmetic on `YYYY-MM` strings. It also has `copyFromServer()`, an iOS-safe copy of fetched text that makes one request and falls back to a press-and-hold copy when the clipboard is blocked.
+  - `lib/use-keyed-request.ts`: fetches by key, ignores late responses, and derives the loading state.
+- **Return to the page after login.** A logged-out visit to any app page (e.g. the SMS link) goes to `/login?next=…`, then back to that page. Session expiry in `apiRequest` does the same. `safeNextPath()` accepts only same-site paths, rejecting absolute URLs, `//host`, backslashes, control characters (`/\t/host`) and auth pages, so `next` can't be used as an open redirect.
+
+### Changed
+- **Sidebar**: new **Messages** item after Dashboard, highlighted on every `/messages*` page.
+- **Header**: titled "Messages" on the Messages pages, with the Add Property action on `/messages`.
+- **Dashboard**: "View Touchpoints" now opens `/messages`. The stat value is unchanged.
+- **Login** uses `router.replace`, so Back doesn't return to the login form.
+
+### Notes
+- The Upcoming Touchpoints and Recent Alerts pages and `AlertDetailModal` are unchanged. The new card doesn't use `GET /api/property/touchpoints/{id}`, which calls Google Places on every open.
+- A contact date can't be undone or corrected yet (no backend endpoint).
+- The Sign up link doesn't carry `next`, so a brand-new account still lands on the dashboard.
+
 ## [2026-11-04] — Property Quota Hardening (pairs with backend `fix/quota-hardening`)
 
 ### Added

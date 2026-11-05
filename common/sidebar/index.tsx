@@ -45,6 +45,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    { id: "messages", label: "Messages", icon: MessageSquare, href: "/messages" },
     { id: "properties", label: "Manage Properties", icon: Building2, href: "/manage-properties" },
     { id: "shield", label: "Shield", icon: Shield, href: "/shield", badge: "BETA" },
     { id: "contractors", label: "Contractors", icon: Lock, href: "/contractors", locked: true },
@@ -52,6 +53,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   const getActiveId = () => {
     if (pathname === '/dashboard' || pathname === '/') return 'dashboard';
+    if (pathname.startsWith('/messages')) return 'messages';
     if (pathname.startsWith('/manage-properties') || pathname.startsWith('/add-properties')) return 'properties';
     if (pathname.startsWith('/shield')) return 'shield';
     if (pathname.startsWith('/contractors')) return 'contractors';

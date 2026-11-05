@@ -4,7 +4,7 @@ import { type ReactNode, useState, useEffect } from "react";
 import Navbar from "../navbar";
 import Sidebar from "../sidebar";
 import { PageHeader } from "../header";
-import { getStoredUserInfo, isAuthenticated } from "@/lib/api";
+import { getStoredUserInfo, isAuthenticated, loginUrlFor } from "@/lib/api";
 
 
 interface LayoutProps {
@@ -23,7 +23,8 @@ const Layout = ({ children }: LayoutProps) => {
 
     useEffect(() => {
         if (!isAuthPage && !isAuthenticated()) {
-            router.replace("/login");
+            // Come back to this exact page (e.g. the monthly SMS link) after logging in.
+            router.replace(loginUrlFor(window.location.pathname + window.location.search));
         } else {
             setIsCheckingAuth(false);
         }
@@ -99,6 +100,21 @@ const Layout = ({ children }: LayoutProps) => {
                             title="Add Property"
                             showBack={true}
                             backHref="/manage-properties"
+                            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                        />
+                    ) : pathname === "/messages" ? (
+                        <PageHeader
+                            title="Messages"
+                            showBack={false}
+                            actionLabel="Add New Property"
+                            actionHref="/manage-properties/add-properties"
+                            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                        />
+                    ) : pathname?.startsWith("/messages/") ? (
+                        <PageHeader
+                            title="Messages"
+                            showBack={true}
+                            onBack={() => router.back()}
                             onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
                         />
                     ) : pathname === "/manage-properties" || pathname?.startsWith("/manage-properties") ? (
