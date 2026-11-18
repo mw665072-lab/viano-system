@@ -1,5 +1,6 @@
 import React from "react"
-import { CheckCircle2 } from "lucide-react"
+import { CheckCircle2, FileSearch, PauseCircle, ShieldAlert } from "lucide-react"
+import type { OutreachVerification } from "@/lib/api"
 
 const BASE = "inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold rounded-md border whitespace-nowrap"
 
@@ -40,6 +41,45 @@ export function StatusCountBadges({ overdue, isNew }: { overdue: number; isNew: 
       {overdue > 0 && <OverdueBadge count={overdue} />}
       {isNew > 0 && <NewBadge count={isNew} />}
     </>
+  )
+}
+
+const VERIFICATION_CHIPS: Record<string, { text: string; icon: typeof CheckCircle2; className: string }> = {
+  verified: {
+    text: "Permit-checked",
+    icon: CheckCircle2,
+    className: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30",
+  },
+  not_yet_verified: {
+    text: "Permits not checked yet",
+    icon: FileSearch,
+    className: "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-white/10",
+  },
+  unverified: {
+    text: "Permit check unavailable",
+    icon: ShieldAlert,
+    className: "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30",
+  },
+  on_hold: {
+    text: "On hold",
+    icon: PauseCircle,
+    className: "bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-500/30",
+  },
+}
+
+/**
+ * The permit check of an update that states a system age. The full label is the tooltip.
+ * Renders nothing for updates without one, and for "based on the inspection" (the usual case).
+ */
+export function VerificationChip({ verification }: { verification?: OutreachVerification | null }) {
+  const chip = verification ? VERIFICATION_CHIPS[verification.basis] : undefined
+  if (!verification || !chip) return null
+  const Icon = chip.icon
+  return (
+    <span className={`${BASE} ${chip.className}`} title={verification.label}>
+      <Icon className="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+      {chip.text}
+    </span>
   )
 }
 

@@ -11,6 +11,7 @@ import { AddManualSystemModal } from "./add-manual-system-modal"
 import { AddDefaultSystemsModal } from "./add-default-systems-modal"
 import { EditSystemModal } from "./edit-system-modal"
 import { DeleteSystemModal } from "./delete-system-modal"
+import { PermitNotices } from "./permit-notices"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface PropertyDetailData {
@@ -569,6 +570,14 @@ export function PropertyDetailPanel({
                                         <span className="text-sm text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-white/10 rounded-lg px-3 py-1.5 whitespace-nowrap">{systems.length} Systems Total</span>
                                     </div>
                                 </div>
+
+                                {property.id && !isLoadingSystems && systems.length > 0 && (
+                                    <PermitNotices
+                                        propertyId={property.id}
+                                        systems={systems}
+                                        onOpenHistory={handleOpenHistoryModal}
+                                    />
+                                )}
 
                                 {isLoadingSystems ? (
                                     <div className="divide-y divide-gray-100 dark:divide-white/20">
