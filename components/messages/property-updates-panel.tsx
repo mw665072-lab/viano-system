@@ -11,7 +11,7 @@ import {
 import { formatDay, formatMonth, monthName } from "@/lib/outreach-dates"
 import { Skeleton } from "@/components/ui/skeleton"
 import { KindBadge } from "./kind-badge"
-import { StatusBadges, StatusCountBadges } from "./status-badges"
+import { StatusBadges, StatusCountBadges, VerificationChip } from "./status-badges"
 import { ErrorBox } from "./list-states"
 import { InitialsAvatar, PanelEmpty } from "./panel-parts"
 
@@ -192,6 +192,7 @@ function UpdateRow({ item, active, onOpen }: { item: OutreachListItem; active: b
         <div className="flex flex-wrap items-center gap-1.5">
           <KindBadge kind={item.kind} />
           <StatusBadges overdue={item.overdue} isNew={item.new} />
+          <VerificationChip verification={item.verification} />
         </div>
         <p className="mt-1.5 text-sm font-semibold text-gray-900 dark:text-white break-words">{item.title}</p>
         {item.reason && <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{item.reason}</p>}

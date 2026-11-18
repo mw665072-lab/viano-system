@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2026-11-18] — Permit Checks & System Update Checks (pairs with backend PR #72)
+
+Before messages that mention a system's age reach the Realtor, the backend checks PropertyLens building permits. When a permit suggests a system was replaced, Viano asks the Realtor with a **System Update Check** and holds the messages about that system until it's answered. Nothing changes for Realtors until the backend's permit checks are switched on, except the handling in "Prepare and Copy" below, which is needed as soon as the backend is deployed.
+
+### Added
+- **System Update Check card** (`components/messages/system-update-check.tsx`). It opens from the Messages list like any update, with the new kind badge "System update check".
+  - **Shows** what PropertyLens found: permit number, status and its date, issue date, work description and any inspections on the permit, plus why Viano is asking (Scenario B: open permit; D: details not conclusive; A_shadow: a completed replacement Viano would have applied automatically).
+  - **Yes, replaced:** a date (not in the future), "I only know the month", and an optional note. When the permit doesn't say which unit, the Realtor picks the system from the permit's candidates, with names loaded from the property's systems. Calls `POST /api/property/verifications/{id}/confirm`.
+  - **No:** "Not replaced yet" (asked again in about 3 months, or sooner if the permit changes), "The permit is about something else" or "The permit isn't for this home" (not asked again unless the permit changes), with an optional note. Calls `.../reject`.
+  - **If the system was changed** since the question was asked (409 `stale_revision`), the card explains it and offers **Confirm anyway** using the system's current revision.
+  - **Once answered,** or closed because the age was updated another way, the card shows the outcome instead of the "withdrawn" banner. The list refreshes, and the held updates come back.
+  - The message section becomes an optional **question for the homeowner** to copy. Mark contacted is hidden, since answering the question is the action.
+- **Permit-check label** (`VerificationChip` in `components/messages/status-badges.tsx`) on updates that mention a system age, in the property's update list and on the card: "Permit-checked", "Permits not checked yet", "Permit check unavailable" or "On hold". The full wording is the tooltip. Nothing is shown for "based on the inspection", which is the usual case.
+- **Automatic-update notice** on the property page (`components/manage-properties/detail/permit-notices.tsx`): "Viano updated the Roof from permit #…: replaced Sep 30, 2026". **OK** acknowledges it (`.../acknowledge`), and **Review or undo** opens the system's replacement history, where Undo already lives. Undoing closes the notice. Notices appear only once automatic updates are switched on.
+- **API** (`lib/api.ts`):
+  - `verificationAPI`: `confirm`, `reject`, `acknowledge`, `listForProperty`;
+  - types `OutreachVerification`, `OutreachReview`, `PermitEvidence`, `VerificationOutcome` and `VerificationListItem`;
+  - `verification` on list items and cards, and `review` on cards;
+  - kind `system_update`;
+  - `getVerificationErrorCode()` and `getApiErrorDetail()`.
+
+### Changed
+- **Prepare and Copy handle the two new 409s**:
+  - `verification_pending`: the server is checking permits for this home and has started the check. The card shows "Checking permits for this home…" and retries quietly every 4 seconds, up to 8 times, then offers Try again. After a deploy, each update of the month gets this once before its first check, even with permit checks off.
+  - `awaiting_review`: the update is on hold. The card explains why and hides the message, Copy and Mark contacted, and the list refreshes. A card already known to be on hold doesn't call Prepare at all.
+- **Replacement history** (`history-modal.tsx`) shows where each reset came from ("From a permit (automatic)", "Confirmed by you (permit check)", "Entered manually"). It shows only the month (or year) when the exact day isn't known.
+- `SystemResponse` now includes `revision` and `age_source`, and `ReplacementEventResponse` includes `source`, `anchor_precision` and `permit_record_id`. All are optional, so older backends still work.
+
+### Notes
+- Held updates are hidden from the month's list by the backend, and their System Update Check stands in for them, so the counts already match what the Realtor sees.
+- Every new field is optional, so this build also works against a backend without permit checks.
+
 ## [2026-11-05] — Monthly Message Queue (pairs with backend PRs #66–#71)
 
 ### Added

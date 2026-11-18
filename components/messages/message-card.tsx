@@ -13,6 +13,7 @@ import {
   Info,
   Loader2,
   MessageSquareText,
+  PauseCircle,
   SearchX,
   X,
 } from "lucide-react"
@@ -28,11 +29,17 @@ import {
 import { ClipboardUnavailableError, copyFromServer, findDay, formatDay, selectContents } from "@/lib/outreach-dates"
 import { Skeleton } from "@/components/ui/skeleton"
 import { KindBadge } from "./kind-badge"
-import { ContactedChip, StatusBadges } from "./status-badges"
+import { ContactedChip, StatusBadges, VerificationChip } from "./status-badges"
 import { MarkContacted } from "./mark-contacted"
 import { RecommendationsSection } from "./recommendations-section"
+import { SystemUpdateCheck } from "./system-update-check"
 
 const FONT = { fontFamily: "Manrope, sans-serif" }
+
+// A refused prepare (409 verification_pending) starts the home's permit check on the server; it
+// usually finishes within seconds. Retry quietly a few times before asking the Realtor to.
+const PERMIT_RETRY_MS = 4000
+const PERMIT_MAX_RETRIES = 8
 
 const SECTION_HEADING =
   "flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
@@ -123,6 +130,16 @@ function MessageCardBody({
 
   const [notice, setNotice] = useState<Notice | null>(null)
 
+  // Permit check (updates that state a system age). `checking`: the server is checking permits for
+  // this home (409 verification_pending), retried on a timer; `held`: on hold until the home's
+  // System Update Check is answered (409 awaiting_review).
+  const [checking, setChecking] = useState(false)
+  const [checkingStalled, setCheckingStalled] = useState(false)
+  const [held, setHeld] = useState(false)
+  const permitTriesRef = useRef(0)
+  const permitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const runPrepareRef = useRef<() => void>(() => {})
+
   // Copy
   const [copyBusy, setCopyBusy] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -145,6 +162,7 @@ function MessageCardBody({
     return () => {
       aliveRef.current = false
       if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current)
+      if (permitTimerRef.current) clearTimeout(permitTimerRef.current)
     }
   }, [])
 
@@ -190,17 +208,49 @@ function MessageCardBody({
     [onChanged],
   )
 
+  // The permit check is running on the server: try again shortly, a bounded number of times.
+  const waitForPermitCheck = useCallback(() => {
+    setChecking(true)
+    if (permitTriesRef.current >= PERMIT_MAX_RETRIES) {
+      setCheckingStalled(true)
+      return
+    }
+    permitTriesRef.current += 1
+    if (permitTimerRef.current) clearTimeout(permitTimerRef.current)
+    permitTimerRef.current = setTimeout(() => {
+      if (aliveRef.current) runPrepareRef.current()
+    }, PERMIT_RETRY_MS)
+  }, [])
+
+  const markHeld = useCallback(() => {
+    setHeld(true)
+    setChecking(false)
+    setNotice(null)
+    onChanged?.()
+  }, [onChanged])
+
   const runPrepare = useCallback(() => {
     outreachAPI
       .prepare(itemId)
       .then((c) => {
         if (!aliveRef.current) return
         setCard(c)
+        setChecking(false)
+        setCheckingStalled(false)
         setPrepareError(c.withdrawn || c.draft.status === "ready" ? null : "The message isn't ready yet.")
       })
       .catch((err: unknown) => {
         if (!aliveRef.current) return
-        if (getOutreachErrorCode(err) === "withdrawn") {
+        const code = getOutreachErrorCode(err)
+        if (code === "verification_pending") {
+          waitForPermitCheck()
+          return
+        }
+        if (code === "awaiting_review") {
+          markHeld()
+          return
+        }
+        if (code === "withdrawn") {
           markWithdrawn()
           return
         }
@@ -209,6 +259,7 @@ function MessageCardBody({
           return
         }
         console.error("Outreach prepare error:", err)
+        setChecking(false)
         setPrepareError(getFriendlyErrorMessage(err, "We couldn't prepare the message. Please try again."))
       })
       .finally(() => {
@@ -216,9 +267,15 @@ function MessageCardBody({
         setPrepareDone(true)
         setRepreparing(false)
       })
-  }, [itemId, markWithdrawn, showNotFound])
+  }, [itemId, markWithdrawn, markHeld, showNotFound, waitForPermitCheck])
 
-  const needsPrepare = !!card && !card.withdrawn && card.draft.status !== "ready"
+  useEffect(() => {
+    runPrepareRef.current = runPrepare
+  }, [runPrepare])
+
+  // On hold for a System Update Check: nothing to prepare or copy until it's answered.
+  const isHeld = held || card?.verification?.state === "awaiting_review"
+  const needsPrepare = !!card && !card.withdrawn && !isHeld && card.draft.status !== "ready"
 
   // Auto-prepare once per open when the draft is missing or stale.
   useEffect(() => {
@@ -292,6 +349,17 @@ function MessageCardBody({
           markWithdrawn()
           return
         }
+        if (code === "awaiting_review") {
+          markHeld()
+          return
+        }
+        if (code === "verification_pending") {
+          // Checked first; the draft is re-prepared afterwards if the check changed anything.
+          permitTriesRef.current = 0
+          setCheckingStalled(false)
+          waitForPermitCheck()
+          return
+        }
         if (err instanceof ApiError && err.status === 404) {
           showNotFound(err)
           return
@@ -308,6 +376,20 @@ function MessageCardBody({
     setPrepareError(null)
     setRepreparing(true)
     runPrepare()
+  }
+
+  const handleCheckAgain = () => {
+    permitTriesRef.current = 0
+    setCheckingStalled(false)
+    setRepreparing(true)
+    runPrepare()
+  }
+
+  // A System Update Check was answered (or found closed): show the outcome and refresh.
+  const handleReviewAnswered = (message: string) => {
+    setNotice({ tone: "info", text: message })
+    reloadCard()
+    onChanged?.()
   }
 
   const handleContacted = (contact: OutreachContact) => {
@@ -338,8 +420,11 @@ function MessageCardBody({
 
   const isLoading = !card && !loadError
   const notFound = loadError instanceof ApiError && loadError.status === 404
-  const draftLoading = repreparing || (needsPrepare && !prepareDone && !prepareError)
+  const draftLoading = !checking && (repreparing || (needsPrepare && !prepareDone && !prepareError))
   const draftText = card && card.draft.status === "ready" ? card.draft.text : null
+  const review = card?.review ?? null
+  // An answered check's card is closed on the server (withdrawn): its outcome replaces the banner.
+  const answeredReview = !!review && review.status !== "open"
 
   return (
     <>
@@ -368,6 +453,7 @@ function MessageCardBody({
                 )}
                 <KindBadge kind={card.kind} />
                 <StatusBadges overdue={flags?.overdue && !card.contact} isNew={flags?.isNew && !card.contact} />
+                <VerificationChip verification={card.verification} />
                 {card.contact && (
                   <ContactedChip label={`Contacted on ${formatDay(card.contact.contacted_on, { month: "short", day: "numeric" })}`} />
                 )}
@@ -436,7 +522,7 @@ function MessageCardBody({
 
         {card && !loadError && (
           <>
-            {card.withdrawn && (
+            {card.withdrawn && !answeredReview && (
               <div className="flex items-start gap-3 py-3.5 px-4 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5" role="status">
                 <Ban className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-gray-700 dark:text-gray-200">
@@ -472,13 +558,61 @@ function MessageCardBody({
               </section>
             )}
 
-            {/* Message to the homeowner */}
-            {!card.withdrawn && (
+            {/* System Update Check: the question and its answer */}
+            {review && (
+              <SystemUpdateCheck
+                review={review}
+                propertyId={card.property_id}
+                homeowner={card.homeowner || "the homeowner"}
+                onAnswered={handleReviewAnswered}
+              />
+            )}
+
+            {/* On hold for a System Update Check */}
+            {!card.withdrawn && isHeld && (
+              <div className="flex items-start gap-3 py-3.5 px-4 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50 dark:bg-teal-500/10" role="status">
+                <PauseCircle className="w-5 h-5 text-teal-600 dark:text-teal-300 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-[#0C1D38] dark:text-gray-100">
+                  This update is on hold: PropertyLens shows a permit that may change this system&apos;s age. Answer the
+                  System Update Check in this home&apos;s updates first; this update comes back afterwards, corrected if
+                  needed.
+                </p>
+              </div>
+            )}
+
+            {/* Message to the homeowner (a System Update Check offers an optional question instead) */}
+            {!card.withdrawn && !isHeld && (
               <section>
                 <h3 className={SECTION_HEADING}>
                   <MessageSquareText className="w-4 h-4 text-orange-500" />
-                  Message to {card.homeowner || "the homeowner"}
+                  {review
+                    ? `Question for ${card.homeowner || "the homeowner"} (optional)`
+                    : `Message to ${card.homeowner || "the homeowner"}`}
                 </h3>
+
+                {checking && (
+                  <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/70 dark:bg-white/5 p-4" role="status">
+                    {checkingStalled ? (
+                      <>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          Viano is still checking permits for this home. Try again in a minute.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleCheckAgain}
+                          className="mt-1 min-h-10 text-xs font-semibold text-orange-600 dark:text-orange-400 underline underline-offset-2"
+                        >
+                          Try again
+                        </button>
+                      </>
+                    ) : (
+                      <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                        <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+                        Checking permits for this home before preparing the message…
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {draftLoading && (
                   <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/70 dark:bg-white/5 p-4 space-y-2" aria-busy="true">
@@ -490,7 +624,7 @@ function MessageCardBody({
                   </div>
                 )}
 
-                {!draftLoading && draftText && (
+                {!checking && !draftLoading && draftText && (
                   <>
                     <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/70 dark:bg-white/5 p-4">
                       <p ref={draftRef} className="text-sm leading-relaxed text-[#0C1D38] dark:text-gray-100 whitespace-pre-wrap break-words select-text">
@@ -527,7 +661,7 @@ function MessageCardBody({
                   </>
                 )}
 
-                {!draftLoading && !draftText && (
+                {!checking && !draftLoading && !draftText && (
                   <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/70 dark:bg-white/5 p-4">
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       {prepareError ?? "The message hasn't been prepared yet."}
@@ -613,7 +747,7 @@ function MessageCardBody({
       </div>
 
       {/* Footer: Mark contacted (pending, not withdrawn) */}
-      {card && !loadError && !card.withdrawn && !card.contact && (
+      {card && !loadError && !card.withdrawn && !card.contact && !review && !isHeld && (
         <div className="px-5 sm:px-6 py-3 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-[#161616] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <MarkContacted
             itemId={itemId}

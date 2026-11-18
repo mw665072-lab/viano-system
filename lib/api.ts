@@ -753,6 +753,40 @@ export const outreachAPI = {
         apiRequest<OutreachContactedResponse>(`/api/outreach/contacted?limit=${limit}`),
 };
 
+// ============ PERMIT VERIFICATION APIs ============
+// System Update Checks (questions) and automatic-update notices. Pure database work: no paid calls.
+export const verificationAPI = {
+    /**
+     * Yes, the system was replaced on this date. Resets its age (source realtor_confirmed) and
+     * replans its alerts. Repeating returns the same outcome. 409 `review_closed` | `stale_revision`
+     * (detail.revision is the current one) | `already_applied`; 422 `system_required`
+     * (detail.candidate_system_ids) | `wrong_system` | `future_date` | `invalid_date` | `invalid_precision`.
+     */
+    confirm: (verificationId: string, data: ConfirmReplacementRequest) =>
+        apiRequest<VerificationOutcome>(`/api/property/verifications/${encodeURIComponent(verificationId)}/confirm`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    /** No: the held updates are released unchanged. Repeating with the same reason is harmless. */
+    reject: (verificationId: string, reason: RejectReason, note?: string) =>
+        apiRequest<VerificationOutcome>(`/api/property/verifications/${encodeURIComponent(verificationId)}/reject`, {
+            method: 'POST',
+            body: JSON.stringify(note ? { reason, note } : { reason }),
+        }),
+
+    /** An automatic-update notice has been seen (undo stays available in the system's history). */
+    acknowledge: (verificationId: string) =>
+        apiRequest<VerificationOutcome>(`/api/property/verifications/${encodeURIComponent(verificationId)}/acknowledge`, {
+            method: 'POST',
+        }),
+
+    /** A property's questions and notices, newest first. 404 if it isn't yours. */
+    listForProperty: (propertyId: string, status?: VerificationStatus) =>
+        apiRequest<VerificationListItem[]>(
+            `/api/property/my-properties/${encodeURIComponent(propertyId)}/verifications${status ? `?status=${status}` : ''}`),
+};
+
 // ============ SYSTEMS APIs ============
 export const systemsAPI = {
     /**
@@ -1370,7 +1404,15 @@ export interface ReplacementEventResponse {
     notes: string | null;
     created_at: string;
     undone_at: string | null;
+    /** Who set this age: manual | permit_auto (from a PropertyLens permit) | realtor_confirmed (a System Update Check). */
+    source?: ReplacementSource | null;
+    /** day | month | year: how precisely the replacement date is known. */
+    anchor_precision?: 'day' | 'month' | 'year' | null;
+    /** The PropertyLens permit behind a permit_auto / realtor_confirmed reset. */
+    permit_record_id?: string | null;
 }
+
+export type ReplacementSource = 'manual' | 'permit_auto' | 'realtor_confirmed';
 
 export interface SystemResponse {
     system_id: string;
@@ -1386,6 +1428,10 @@ export interface SystemResponse {
     mfg_year: number | null;
     age_unknown: boolean;
     replacement_history: ReplacementEventResponse[];
+    /** Bumped on every age change; pass as `expected_revision` when confirming a System Update Check. */
+    revision?: number;
+    /** inspection | manual | permit_auto | realtor_confirmed */
+    age_source?: string | null;
 }
 
 export interface ResetSystemRequest {
@@ -1610,10 +1656,65 @@ export interface AnniversaryCardResponse {
 
 // ---- Outreach (monthly message queue) ----
 
-/** check_in | system_alert | anniversary | insurance | home_value | maintenance | negotiated_win | intro | other */
+/** check_in | system_alert | system_update | anniversary | insurance | home_value | maintenance | negotiated_win | intro | other */
 export type OutreachKind =
-    | 'check_in' | 'system_alert' | 'anniversary' | 'insurance' | 'home_value'
+    | 'check_in' | 'system_alert' | 'system_update' | 'anniversary' | 'insurance' | 'home_value'
     | 'maintenance' | 'negotiated_win' | 'intro' | 'other';
+
+/**
+ * The permit check of an update that states a system age (null for other updates).
+ * - upcoming / checking: not checked yet (checked at the start of its month);
+ * - ready: checked against permits, no recent replacement found;
+ * - inspection_only: no permit check applies (plan, inspection under 2 years, or checks off);
+ * - needs_verification: the permit check failed; the update is still sendable;
+ * - awaiting_review: on hold until the property's System Update Check is answered.
+ */
+export interface OutreachVerification {
+    state: 'upcoming' | 'checking' | 'ready' | 'inspection_only' | 'needs_verification' | 'awaiting_review';
+    basis: 'not_yet_verified' | 'verified' | 'inspection' | 'unverified' | 'on_hold';
+    /** Ready-to-show label, e.g. "Checked against permits: no recent replacement found". */
+    label: string;
+    verification_id: string | null;
+}
+
+/** Facts from the PropertyLens permit behind a System Update Check. Every field may be missing. */
+export interface PermitEvidence {
+    permit_number?: string | null;
+    /** The status as PropertyLens reported it, e.g. "Issued". */
+    status?: string | null;
+    /** final | open | dead_void | dead_expired | unknown */
+    status_norm?: string | null;
+    issued_on?: string | null;
+    last_status_on?: string | null;
+    work_description?: string | null;
+    evidence_source?: string | null;
+    candidate_system_ids?: string[];
+    inspections?: Array<Record<string, unknown>>;
+}
+
+/**
+ * The question a "System Update Check" card asks (kind `system_update`). Answer it with
+ * verificationAPI.confirm / reject.
+ * - B: the permit is open or issued;
+ * - D: the evidence is incomplete (no completion date, unit unknown, repair wording...);
+ * - A_shadow: a verified replacement Viano would have applied if automatic updates were on.
+ */
+export interface OutreachReview {
+    verification_id: string;
+    scenario: 'A_shadow' | 'B' | 'D' | string;
+    /** open | confirmed | rejected | superseded (closed by a reset made another way). */
+    status: VerificationStatus;
+    /** null when the permit doesn't say which unit: choose from candidate_system_ids. */
+    system_id: string | null;
+    candidate_system_ids: string[];
+    /** The completion date the permit suggests, if any. */
+    proposed_date: string | null;
+    proposed_precision: 'day' | 'month' | 'year' | null;
+    /** The system's revision when the question was asked; send as expected_revision. */
+    base_system_revision: number | null;
+    reason_codes: string[];
+    evidence: PermitEvidence | null;
+}
 
 /** Dates are "YYYY-MM-DD" (date only). Timestamps are ISO-8601 with a timezone. */
 export interface OutreachPropertyRow {
@@ -1648,6 +1749,8 @@ export interface OutreachListItem {
     reason: string | null;
     overdue: boolean;
     new: boolean;
+    /** Set when the update states a system age. */
+    verification?: OutreachVerification | null;
 }
 
 export interface OutreachPropertyMonthResponse {
@@ -1689,6 +1792,10 @@ export interface OutreachCard {
     anniversary_year: number | null;
     /** Set once marked contacted. */
     contact: OutreachContact | null;
+    /** Set when the update states a system age. */
+    verification?: OutreachVerification | null;
+    /** Set on a System Update Check card (kind `system_update`). */
+    review?: OutreachReview | null;
 }
 
 export interface OutreachCopyResponse { item_id: string; text: string; draft_rendered_at: string; }
@@ -1728,7 +1835,65 @@ export interface OutreachContactedResponse { count: number; items: OutreachConta
 
 /** Codes carried in ApiError.detail.code for 409/422 responses from the outreach endpoints. */
 export type OutreachErrorCode =
-    | 'withdrawn' | 'draft_not_ready' | 'draft_stale' | 'already_contacted' | 'future_date';
+    | 'withdrawn' | 'draft_not_ready' | 'draft_stale' | 'already_contacted' | 'future_date'
+    /** On hold until the property's System Update Check is answered. */
+    | 'awaiting_review'
+    /** Its permit check is running (the server started it): retry shortly. */
+    | 'verification_pending';
+
+// ---- Permit verification (System Update Checks and automatic-update notices) ----
+
+export type VerificationStatus = 'open' | 'confirmed' | 'rejected' | 'acknowledged' | 'superseded';
+
+/** not_completed: asked again later or when the permit changes; the other two: not asked again unless the permit changes. */
+export type RejectReason = 'not_completed' | 'not_this_system' | 'wrong_property';
+
+export interface ConfirmReplacementRequest {
+    /** "YYYY-MM-DD". With precision 'month' only the month counts. Not in the future. */
+    replacement_date: string;
+    precision?: 'day' | 'month';
+    /** Required when the review doesn't name the unit (one of candidate_system_ids). */
+    system_id?: string;
+    /** The review's base_system_revision (or the system's current revision); a mismatch is 409 stale_revision. */
+    expected_revision?: number;
+    note?: string;
+}
+
+export interface VerificationOutcome {
+    verification_id: string;
+    /** review: a question; info: an automatic-update notice. */
+    kind: 'review' | 'info';
+    status: VerificationStatus;
+    resolution: 'replaced' | RejectReason | null;
+    system_id: string | null;
+    event_id: string | null;
+    replacement_date: string | null;
+    precision: 'day' | 'month' | null;
+    /** The system's new revision after a confirm. */
+    revision?: number | null;
+    resolved_by: string | null;
+    resolved_at: string | null;
+    note: string | null;
+}
+
+export interface VerificationListItem extends VerificationOutcome {
+    /** A (automatic update) | A_shadow | B | D */
+    scenario: string;
+    permit_record_id: string | null;
+    proposed_date: string | null;
+    proposed_precision: string | null;
+    base_system_revision: number | null;
+    reason_codes: string[];
+    evidence: PermitEvidence & { event_id?: string };
+    review_message_id: string | null;
+    created_at: string;
+}
+
+/** Codes in ApiError.detail.code from the /api/property/verifications endpoints. */
+export type VerificationErrorCode =
+    | 'review_closed' | 'stale_revision' | 'already_applied' | 'not_a_review' | 'not_a_notice'
+    | 'invalid_precision' | 'future_date' | 'system_required' | 'wrong_system' | 'invalid_date'
+    | 'invalid_reason';
 
 export interface PropertyOpportunityItem {
     property_id: string;
@@ -2053,9 +2218,19 @@ export function getFriendlyErrorMessage(
 
 /** The `code` from an outreach 409/422 error, if any. Branch on this, never on the message text. */
 export function getOutreachErrorCode(err: unknown): OutreachErrorCode | undefined {
-    if (err instanceof ApiError && err.detail && typeof err.detail === 'object') {
-        const code = (err.detail as Record<string, unknown>).code;
-        if (typeof code === 'string') return code as OutreachErrorCode;
+    return getApiErrorDetail(err)?.code as OutreachErrorCode | undefined;
+}
+
+/** The `code` from a System Update Check 409/422 error, if any. */
+export function getVerificationErrorCode(err: unknown): VerificationErrorCode | undefined {
+    return getApiErrorDetail(err)?.code as VerificationErrorCode | undefined;
+}
+
+/** A structured error body (`{ code, message, ... }`) from an ApiError, if it has one. */
+export function getApiErrorDetail(err: unknown): (Record<string, unknown> & { code?: string; message?: string }) | undefined {
+    if (err instanceof ApiError && err.detail && typeof err.detail === 'object' && !Array.isArray(err.detail)) {
+        const detail = err.detail as Record<string, unknown>;
+        if (typeof detail.code === 'string') return detail as Record<string, unknown> & { code: string };
     }
     return undefined;
 }

@@ -72,6 +72,24 @@ export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: His
             .join(' ')
     }
 
+    // When only the month (or year) of the replacement is known, don't show a made-up day.
+    const formatReplacementDate = (event: ReplacementEventResponse) => {
+        const date = new Date(event.replacement_date)
+        if (event.anchor_precision === 'month') {
+            return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+        }
+        if (event.anchor_precision === 'year') {
+            return String(date.getFullYear())
+        }
+        return formatDate(event.replacement_date)
+    }
+
+    const SOURCE_LABELS: Record<string, string> = {
+        permit_auto: 'From a permit (automatic)',
+        realtor_confirmed: 'Confirmed by you (permit check)',
+        manual: 'Entered manually',
+    }
+
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-[#1a1a1a] dark:border dark:border-white/10 rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -158,9 +176,15 @@ export function HistoryModal({ propertyId, system, onClose, onUndoSuccess }: His
                                                 )}
                                             </div>
                                             <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
-                                                {formatDate(event.replacement_date)}
+                                                {formatReplacementDate(event)}
                                             </span>
                                         </div>
+
+                                        {event.source && SOURCE_LABELS[event.source] && (
+                                            <p className="mb-2 text-[11px] font-medium text-gray-500 dark:text-gray-400">
+                                                {SOURCE_LABELS[event.source]}
+                                            </p>
+                                        )}
 
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className={`text-sm font-semibold ${event.undone_at ? 'text-gray-400 dark:text-gray-400 line-through' : 'text-gray-700 dark:text-gray-300'}`}>
